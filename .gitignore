@@ -2,3 +2,5 @@
 /_site/
 *.html
 .DS_Store
+
+**/*.quarto_ipynb
