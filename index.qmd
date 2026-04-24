@@ -1,0 +1,20 @@
+---
+title: "Yee Seng Chan"
+about:
+  template: trestles
+  image-shape: round
+  links:
+    - icon: github
+      text: GitHub
+      href: https://github.com/chanys
+    - icon: linkedin
+      text: LinkedIn
+      href: https://linkedin.com/in/yeesengchan
+---
+
+I'm an applied AI scientist working on agent systems and LLM reliability. My background spans [insert: brief, e.g. "a PhD in NLP, DARPA-funded research in machine reading, and several years of industry work on conversational AI systems"].
+
+I currently spend my time on the methodology of building AI agents that actually work — evaluation, failure analysis, and the engineering decisions that sit around the LLM (the "harness"). Most recently, this has meant studying how harness design choices affect reliability in bounded-corpus deep research agents.
+
+This site is where I publish writing on applied AI, agent reliability, and the craft of shipping systems under real-world constraints.
+
