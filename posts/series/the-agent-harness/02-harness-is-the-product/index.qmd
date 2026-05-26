@@ -1,0 +1,144 @@
+---
+title: "The harness is the product"
+description: "The case that the harness, not the model, is what you actually ship: state, tools, gates, traces, recovery, and the thing users actually feel."
+date: 2026-04-18
+order: 2
+---
+
+{{< include ../_series.qmd >}}
+
+A stronger model does not automatically give you a reliable agent.
+
+The previous article catalogued six ways agent demos break in production. The intake agent forgot a fact the user gave it on turn 2. The scheduling assistant double-booked a meeting after an ambiguous timeout. The docs Q&A agent gave a confident, well-formed, wrong answer. In each case, the visible failure was a model failure. In each case, the actual failure was somewhere else: in state, in workflow, in tool design, in evidence tracking, in verification, in observability.
+
+The instinct after each failure is to reach for a stronger model. Sometimes that helps, a little. More often, the failure returns in a slightly different shape, because the failure was never really about the model.
+
+The reframe worth keeping is small but consequential.
+
+**Agent = model + harness.**
+
+The model is the reasoning engine. The harness is the system the model lives inside, and the artifact the team actually owns. Models get swapped, get cheaper, get faster. The harness is what carries the team's accumulated understanding of how to do this work reliably. For production agents, the harness is the product.
+
+## Prompts guide. Harnesses constrain.
+
+A prompt is a wish about how the model should behave. A harness is a constraint that decides whether the model's output gets through. Both matter. They are not substitutes.
+
+A prompt can say: *Do not issue refunds.* A harness can make the refund tool unavailable.
+
+A prompt can say: *Ask for clarification if the target meeting is ambiguous.* A harness can reject `reschedule_event` unless there is a unique confirmed event ID.
+
+A prompt can say: *Use only the retrieved documents.* A harness can require every final claim to map to a cited passage.
+
+A prompt can say: *Be careful with retries.* A harness can enforce one write attempt, require an idempotency key, and route ambiguous timeouts to verification instead of retry.
+
+Each pair has the same shape. The prompt expresses intent locally, on a single call. The harness enforces structurally, across every call. Prompts shape behavior; harnesses make some failures impossible to commit and the rest cheap to detect. The shift from prompt engineering to harness engineering is mostly the recognition that the second kind of work has more leverage on production reliability than the first.
+
+## Scope is the first harness decision
+
+Before the harness can be designed, the job has to be bounded. Scope answers three questions:
+1. What exact job does this agent do?
+2. What artifact or outcome should exist when it succeeds?
+3. What is it explicitly not allowed to do?
+
+For the intake agent, a scoped version reads:
+
+"A discovery-stage intake agent that conducts an initial conversation with a user reporting a support issue and produces a structured handoff for a human support agent. It may ask clarifying questions, retrieve approved account information, and summarize confirmed facts and open questions. It may not commit to remediation, issue credits or refunds, change account state, or attempt to resolve the issue itself."
+
+That paragraph does a surprising amount of harness work before any architecture exists. It tells state what to track, tells the tool layer which actions should exist, tells validators what to block, and tells evaluation what success looks like. Scope is the first decision because every other harness decision is downstream of it.
+
+### Same harness idea, different scope, different shape
+
+The harness isn't a universal blob. Its shape depends on the job.
+
+The intake agent needs a conversational harness. It tracks confirmed facts, uncertain facts, open questions, and contradictions; routes uncertainty to clarification rather than action; and keeps the agent from drifting into resolution it isn't authorized to do.
+
+The scheduling assistant needs a side-effect harness. It identifies the target event before any write, exposes narrow tools with idempotency keys, gates writes behind phase logic, and verifies outcomes after ambiguous responses.
+
+The docs Q&A agent needs a grounding harness. It tracks which passages were retrieved, maps claims to evidence, refuses to synthesize when the evidence is thin, and produces traces that show the chain from question to passage to claim.
+
+Same principle, different scope. The harness shape follows the job.
+
+## The harness has four jobs
+
+Once the scope is clear, the harness has four jobs.
+
+It shapes what the model sees. It bounds what the model can do. It verifies what happened. It preserves what the team learned.
+
+These four jobs cover almost everything a production agent harness has to do. The components most teams end up building (state, context assembly, workflow logic, tool contracts, gates, validators, traces, evaluation suites) are mechanisms in service of these four jobs.
+
+**First, shape the input.** The model should not receive a random pile of transcript, retrieved documents, tools, and instructions. The harness decides what the model sees at each step: the relevant state, the current workflow phase, the allowed tools, the retrieved evidence, and the local instruction for the next decision. The next article in this series goes deeper into state, the most important shaping mechanism.
+
+**Second, bound the action.** The model can propose a next move; the runtime decides whether that move is allowed. The harness controls the action space through workflow phases, tool contracts, validators, gates, approval packets, and permissions. This is how the system prevents a plausible model proposal from turning into an unsafe side effect.
+
+**Third, verify the outcome.** A tool call returning success is not the same as the world being in the intended state. The harness checks what happened: read-after-write verification for side effects, groundedness checks for answers, state updates after tool calls, and safe fallback paths when the outcome is ambiguous.
+
+**Fourth, preserve the lesson.** Reliable systems get better because failures leave artifacts behind. The harness records traces, versions, decisions, tool inputs and outputs, verification results, and regression cases. Without this, every failure becomes an argument. With it, the team can find the first bad move and make the system harder to break next time.
+
+Underneath all four sits the serving layer: auth, session isolation, durable state, resume semantics. It is not a separate reliability job so much as the runtime foundation that lets the four jobs survive real users and real sessions.
+
+## Prompt, context, and harness engineering
+
+Within the harness, there are three nested levels of engineering. Knowing which level a problem actually lives at saves a lot of wasted iteration.
+
+At the innermost level is **prompt engineering**: writing the instructions a model sees during a single inference. Wording, structure, examples, output format. This is real work, but it is localized. A prompt change shapes a single call.
+
+Around it sits **context engineering**: deciding what lands in the model's context at each step. Not just the prompt, but also the system instructions, the relevant slice of state, the right pieces of memory, the few retrieved passages, the tools available in this phase. The framing question: what configuration of context is most likely to produce the desired behavior at this step?
+
+Around context engineering sits **harness engineering**: the rest of the application. When context gets assembled. Which tools are available right now. Which actions are allowed in this phase. How writes get verified. How state persists across calls and sessions. How the system meets a CLI, an API, and a chat client at the same time. How failures get recovered. How traces get written. How the regression suite catches yesterday's incident before it becomes tomorrow's incident.
+
+![Three nested levels of engineering. Each level encompasses the previous. A good harness contains good context engineering, which contains good prompts.](nested.png){#fig-nested-levels fig-alt="Three concentric nested boxes or rings showing levels of engineering. The innermost level is prompt engineering, enclosed by a larger level for context engineering, enclosed by the outermost level for the harness. The nesting shows each level containing the one inside it: a good harness contains good context engineering, which contains good prompts."}
+
+With those three levels in view, reliability can be defined more sharply than "the agent works most of the time."
+
+## What reliability actually means here
+
+With the harness frame in place, "reliability" can be defined more sharply than "the agent works most of the time."
+
+**A reliable agent system takes the right bounded action, fails safely when it cannot, leaves enough evidence to debug what happened, and becomes harder to break after each incident.**
+
+Four parts. Each is a harness property, not a model property. And each maps onto one of the four jobs.
+
+**Bounded action** means the system does the right kind of thing within scope. That is the bound job: tool access lists, action gating, phase logic, approval gates.
+
+**Safe failure** means the system fails in a controlled way: ask, defer, mark uncertainty, escalate, stop because a budget was hit. That is bound plus verify. The bound job prevents the worst actions; the verify job catches the actions that slip through.
+
+**Debuggable trace** means every serious run leaves enough record to reconstruct what happened. That is the preserve job.
+
+**Harder to break next time** means each failure leaves the system structurally different: a regression test, a tightened gate, a sharper tool contract. That is the preserve job too, in its compounding form.
+
+The four jobs are not just an inventory. They are the conditions for reliability.
+
+## This is not a call for overengineering
+
+There is an obvious risk in this argument. If the harness is important, teams may build too much harness too early. That isn't the point. A v1 agent needs the smallest version of all four jobs, not every possible component for each.
+
+The minimum harness for the intake agent is roughly: a clear scope, structured state with confidence labels, a few workflow phases, no write tools, a basic handoff artifact, step traces, and a small regression set. That's it.
+
+The minimum harness for the scheduling assistant is different: target identification, narrow write tools with idempotency, one-attempt write policy, read-after-write verification, and traces of tool inputs and outputs.
+
+The minimum harness for the docs Q&A agent is different again: retrieval provenance, claim-to-evidence mapping, a "no supported answer" behavior for thin evidence, auth-aware retrieval, groundedness validation, and traceable citations.
+
+## Which parts of the harness age?
+
+Not every part of the harness has the same shelf life.
+
+Some pieces get lighter as models improve. Tool-selection scaffolding matters less when models choose tools reliably. Format validators matter less when structured output is dependable. Long prompt chains matter less when models can handle more reasoning in one call. These are compensations for model limitations, so stronger models naturally reduce their importance.
+
+Other pieces do not go away, because they are not compensating for weak models. A smarter model still cannot unsend a calendar invite, undo a payment, or retract a customer-facing message. It still cannot reconstruct last month’s behavior without a trace. It still needs runtime boundaries around what it is allowed to do. These are not capability problems. They are reliability problems, and reliability problems do not get solved by a smarter model.
+
+## Closing: where the rest of the series goes
+
+The next three articles drill into the components that do the four jobs.
+
+Article 3 is about state, the substrate of shape the input. State is the difference between an agent that knows what it knows and an agent that keeps rediscovering reality from raw text every turn.
+
+Article 4 is about gates and tools, the mechanisms for bound the action and verify the outcome. Prompts can guide model behavior. Only runtime checks can enforce it.
+
+Article 5 closes the series with traces and the hardening loop, the mechanics of preserve the lesson. Traces are how one bad run becomes a permanent improvement to the system.
+
+## References
+
+- Anthropic. "Building Effective Agents." December 2024. <https://www.anthropic.com/engineering/building-effective-agents>
+- Anthropic. "Effective Context Engineering for AI Agents." 2025. <https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents>
+- Boeckeler, Birgitta. "The Engineering of AI Agents: Context, Harnessing, and Autonomy." InfoQ, May 2026. <https://www.youtube.com/watch?v=_R83pFpUWyM>
+- Iusztin, Paul. "Agentic Harness Engineering." Decoding AI, 2025. <https://www.decodingai.com/p/agentic-harness-engineering>

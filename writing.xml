@@ -9,8 +9,8 @@
 <link>https://yeesengchan.com/writing.html</link>
 <atom:link href="https://yeesengchan.com/writing.xml" rel="self" type="application/rss+xml"/>
 <description>Essays on how modern language models work, and on building and evaluating the systems around them.</description>
-<generator>quarto-1.9.38</generator>
-<lastBuildDate>Sun, 05 Apr 2026 00:00:00 GMT</lastBuildDate>
+<generator>quarto-1.9.37</generator>
+<lastBuildDate>Sun, 05 Apr 2026 04:00:00 GMT</lastBuildDate>
 <item>
   <title>Information extraction didn’t disappear. It moved inside the workflow.</title>
   <dc:creator>Yee Seng Chan</dc:creator>
@@ -305,7 +305,7 @@ Zhang, Zikun, Wei You, Tongtao Wu, Xiaolong Wang, Jianxin Li, and Min Zhang. 202
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/05-information-extraction/</guid>
-  <pubDate>Sun, 05 Apr 2026 00:00:00 GMT</pubDate>
+  <pubDate>Sun, 05 Apr 2026 04:00:00 GMT</pubDate>
 </item>
 <item>
   <title>The fine-tuning stack: one loss, different data</title>
@@ -464,7 +464,7 @@ Zhou, Chunting, Pengfei Liu, Puxin Xu, et al. 2023. <span>“LIMA: Less Is More 
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/04-fine-tuning-stack/</guid>
-  <pubDate>Tue, 31 Mar 2026 00:00:00 GMT</pubDate>
+  <pubDate>Tue, 31 Mar 2026 04:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Retrieval is older than RAG: from DPR to end-to-end</title>
@@ -654,7 +654,7 @@ Siriwardhana, Shamane, Rivindu Weerasekera, Elliott Wen, Tharindu Kaluarachchi, 
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/03-retrieval/</guid>
-  <pubDate>Fri, 27 Mar 2026 00:00:00 GMT</pubDate>
+  <pubDate>Fri, 27 Mar 2026 04:00:00 GMT</pubDate>
 </item>
 <item>
   <title>The encoder didn’t die. It became the embedding model</title>
@@ -795,7 +795,7 @@ Wang, Liang, Nan Yang, Xiaolong Huang, et al. 2022. <span>“Text Embeddings by 
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/02-encoder-embeddings/</guid>
-  <pubDate>Mon, 23 Mar 2026 00:00:00 GMT</pubDate>
+  <pubDate>Mon, 23 Mar 2026 04:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Pretraining objectives: why decoder-only won</title>
@@ -1006,7 +1006,7 @@ Tay, Yi, Mostafa Dehghani, Vinh Q. Tran, et al. 2023. <span>“UL2: Unifying Lan
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/</guid>
-  <pubDate>Wed, 18 Mar 2026 00:00:00 GMT</pubDate>
+  <pubDate>Wed, 18 Mar 2026 04:00:00 GMT</pubDate>
 </item>
 <item>
   <title>How reasoning models learn to use tools</title>
@@ -1355,7 +1355,7 @@ Qian, Cheng, Emre Can Acikgoz, Qi He, et al. 2026. <span>“ToolRL: Reward Is Al
 </div></section></div> ]]></description>
   <category>How LLMs learn to reason</category>
   <guid>https://yeesengchan.com/posts/series/how-llms-learn-to-reason/05-tool-use/</guid>
-  <pubDate>Sat, 14 Mar 2026 00:00:00 GMT</pubDate>
+  <pubDate>Sat, 14 Mar 2026 04:00:00 GMT</pubDate>
 </item>
 <item>
   <title>R1-Zero was the result. R1 was the product</title>
@@ -1507,7 +1507,7 @@ Wang, Xuezhi, and Denny Zhou. 2024. <span>“Chain-of-Thought Reasoning Without 
 </div></section></div> ]]></description>
   <category>How LLMs learn to reason</category>
   <guid>https://yeesengchan.com/posts/series/how-llms-learn-to-reason/04-r1/</guid>
-  <pubDate>Tue, 10 Mar 2026 00:00:00 GMT</pubDate>
+  <pubDate>Tue, 10 Mar 2026 04:00:00 GMT</pubDate>
 </item>
 <item>
   <title>DPO: RLHF collapsed into one loss</title>
@@ -1688,7 +1688,7 @@ Tunstall, Lewis, Edward Beeching, Nathan Lambert, et al. 2023. <span>“Zephyr: 
 </div></section></div> ]]></description>
   <category>How LLMs learn to reason</category>
   <guid>https://yeesengchan.com/posts/series/how-llms-learn-to-reason/03-dpo/</guid>
-  <pubDate>Fri, 06 Mar 2026 00:00:00 GMT</pubDate>
+  <pubDate>Fri, 06 Mar 2026 05:00:00 GMT</pubDate>
 </item>
 <item>
   <title>GRPO: the algorithm behind reasoning models</title>
@@ -1879,7 +1879,7 @@ Shao, Zhihong, Peiyi Wang, Qihao Zhu, et al. 2024. <span>“DeepSeekMath: Pushin
 </div></section></div> ]]></description>
   <category>How LLMs learn to reason</category>
   <guid>https://yeesengchan.com/posts/series/how-llms-learn-to-reason/02-grpo/</guid>
-  <pubDate>Mon, 02 Mar 2026 00:00:00 GMT</pubDate>
+  <pubDate>Mon, 02 Mar 2026 05:00:00 GMT</pubDate>
 </item>
 <item>
   <title>PPO is REINFORCE plus five fixes</title>
@@ -2310,7 +2310,7 @@ Schulman, John, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. 
 </div></section></div> ]]></description>
   <category>How LLMs learn to reason</category>
   <guid>https://yeesengchan.com/posts/series/how-llms-learn-to-reason/01-ppo/</guid>
-  <pubDate>Tue, 24 Feb 2026 00:00:00 GMT</pubDate>
+  <pubDate>Tue, 24 Feb 2026 05:00:00 GMT</pubDate>
 </item>
 <item>
   <title>REINFORCE: the gradient that drives training</title>
@@ -2465,7 +2465,7 @@ Figure&nbsp;2
  ]]></description>
   <category>How LLMs learn to reason</category>
   <guid>https://yeesengchan.com/posts/series/how-llms-learn-to-reason/00-reinforce-gradient/</guid>
-  <pubDate>Fri, 20 Feb 2026 00:00:00 GMT</pubDate>
+  <pubDate>Fri, 20 Feb 2026 05:00:00 GMT</pubDate>
 </item>
 <item>
   <title>REINFORCE: the world before the gradient</title>
@@ -3024,7 +3024,7 @@ font-style: inherit;"># 4. Update parameters</span></span>
  ]]></description>
   <category>How LLMs learn to reason</category>
   <guid>https://yeesengchan.com/posts/series/how-llms-learn-to-reason/00-reinforce-foundations/</guid>
-  <pubDate>Mon, 16 Feb 2026 00:00:00 GMT</pubDate>
+  <pubDate>Mon, 16 Feb 2026 05:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>

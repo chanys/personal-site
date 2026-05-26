@@ -1,0 +1,186 @@
+---
+title: "Prompts guide. Gates enforce"
+description: "A prompt is a suggestion the model can ignore; a gate is code it cannot. Knowing which job belongs to which is most of reliability."
+date: 2026-05-01
+order: 4
+---
+
+{{< include ../_series.qmd >}}
+
+A prompt is not a seatbelt.
+
+It can describe the role, set the tone, and list the boundaries. The system prompt for the scheduling assistant says, near the bottom: *"Do not commit to remediation timelines. Do not issue refunds. Always confirm the target meeting before making any changes."* That's useful. It is not enforcement.
+
+A frustrated user types: *"This is the third time my Tuesday review with Priya has gotten weird. Just move it to Thursday afternoon and tell me you've got it covered going forward."*
+
+The model, trying to be helpful, calls `reschedule_event(description="Tuesday review with Priya", new_time="Thursday afternoon")`. The API matches a different recurring meeting that also includes Priya. The reschedule succeeds. The agent's response includes: *"I've moved it, and I'll keep an eye on it going forward."*
+
+The user has now had a recurring series rescheduled they didn't intend, and received what sounds like a commitment the team never authorized. The prompt said all the right things. The system did all the wrong things.
+
+The move worth keeping:
+
+**Prompts shape behavior. Gates enforce behavior.**
+
+A prompt is a wish about how the model should behave. A gate is a runtime check that decides whether the model's output gets through. Mistaking one for the other is the failure that creates the largest gap between what the team intended and what the system actually does.
+
+The previous article established that state holds the system's beliefs. This article is about what happens at the moment the system tries to act on those beliefs, and why most of the reliability work happens outside the prompt.
+
+## Why prompt-only control breaks
+
+Prompt-only control works for soft behavior: tone, formatting, response length, style. It is much weaker for anything that has to *not happen* under adversarial or unusual conditions.
+
+**Prompts are fuzzy, and models lean helpful.**  
+“Do not commit to remediation timelines” sounds clear, but real language lives on a gradient. Under pressure from a frustrated user, “I’ll keep an eye on it” may look helpful to the model and risky to the business. The prompt cannot enumerate every unsafe phrasing.
+
+**Prompts cannot check runtime facts.**  
+A prompt cannot verify that an event ID is unique, that a user has permission, that a write already happened after a timeout, or that every answer claim is supported by evidence. Those are runtime facts. They need runtime checks.
+
+**Prompt rules compete.**  
+Production prompts accumulate rules for tone, safety, tools, escalation, formatting, and edge cases. The longer the prompt gets, the easier it is for one rule to weaken another. Rules important enough to block behavior should not live only in text.
+
+The failure is not that the model is bad. The failure is asking the model to enforce constraints the runtime should own.
+
+## The model proposes. The harness checks.
+
+A *gate* is a runtime check on a proposed action or output. It can allow the proposal, reject it, or route it somewhere safer. Two kinds of gates cover most production needs.
+
+### Hard gates: check crisp facts
+
+Hard gates check conditions that are deterministically computable from state. Boolean, schema-shaped, no model judgment required.
+
+- Is this tool allowed in the current workflow phase?
+- Is the target uniquely identified and confirmed?
+- Has approval been granted, and has it expired?
+- Is the user authorized, and is the write budget still available?
+
+If any check fails, the action is rejected before it reaches the tool.
+
+```python
+def gate_reschedule(state, action):
+    if state["phase"] != "execute":
+        return Reject("write_not_allowed_in_phase")
+    if state["proposed_change"] is None:
+        return Reject("no_proposed_change_materialized")
+    if state["candidates"][0]["match_confidence"] != "confirmed":
+        return Reject("target_not_confirmed")
+    if state["candidates"][0]["is_recurring"]:
+        return Reject("recurring_series_requires_human_only")
+    if action.get("idempotency_key") is None:
+        return Reject("missing_idempotency_key")
+    return Allow()
+```
+
+The code isn't impressive. That's the point. Each line is a single mechanical check that doesn't need the model to be wise. It needs the runtime to be strict.
+
+The scheduling failure from the opening lives at exactly this layer: the system needed a gate that refused `reschedule_event` against a recurring series, and that gate didn't exist.
+
+The rule: *if a condition is crisp enough to enforce with code, enforce it with code. Do not ask the model to remember it.*
+
+### Semantic gates: check meaning
+
+Some checks are not about schema or permissions. They are about meaning.
+
+A semantic gate asks questions like: does this answer overstate the evidence? Does this message imply an unauthorized commitment? Does this response give advice outside the agent’s role?
+
+These checks usually require model judgment, often from a smaller judge model. They are slower and more expensive than hard gates, so use them only where meaning matters and code cannot capture the risk.
+
+The rule: use hard gates for crisp conditions; use semantic gates for judgment calls.
+
+## The tool executes
+
+Gates check proposals before they become actions. Gates work best when the action surface is already well-designed. That is where tool contracts come in.
+
+### Tools are contracts, not functions
+
+In a notebook, a tool can be just a function with a docstring. In production, a tool is a contract between the model, the runtime, and the outside world. It should say what inputs are required, when the tool may be used, whether it has side effects, whether it can be retried, and how its result should be verified.
+
+A weak tool:
+
+```python
+def update_calendar(field: str, value: str) -> dict:
+    """Update a field on a calendar event."""
+```
+
+A stronger tool:
+
+```python
+def reschedule_event(
+    event_id: str,          # confirmed unique target only
+    new_start_iso: str,
+    new_end_iso: str,
+    idempotency_key: str,
+) -> RescheduleResult:
+    """
+    Reschedule one confirmed, non-recurring event.
+    Requires a specific event_id, not a free-text description.
+    """
+```
+
+The second tool is narrower. It doesn't have a `field` parameter that could mean anything. It requires a unique `event_id`, which forces the workflow to identify the target before the call. It requires an idempotency key. The tool surface itself removes several unsafe paths before the model ever proposes them.
+
+Tool contracts should also distinguish reads from writes. A read can usually be retried after a timeout; a write cannot. Article 1’s Failure 5 covered the basic patterns: idempotency keys, verify-before-retry, and read-after-write verification. Here, the important point is that the tool contract makes this distinction explicit, so the runtime knows which actions are safe to retry and which need verification.
+
+Broad tools feel cleaner at first. After a few production failures, narrower tools start to look better. If one tool can update anything, the model has to decide everything: target, safety, approval, retry behavior, and recovery. That is too much hidden responsibility for a probabilistic component.
+
+## The harness verifies and routes
+
+Two more pieces complete the loop: what happens when a gate blocks, and what happens when a human is in the path.
+
+### Gates need safe fallbacks
+
+A gate that only says "no" is not enough. If the system blocks an action without offering a controlled next move, the interaction turns into a dead end.
+
+A gate's output should include a reason and a safe next action. The runtime then routes to that next action rather than terminating the run. If the scheduling target is ambiguous, route to a clarifying question. If the corpus does not support an answer, route to an honest *"I don't have enough evidence"* response. If the intake user asks for a credit, route the request into the human handoff instead of pretending the agent can issue one.
+
+A blocked action should become a controlled detour, not a dead end.
+
+### Approval packets: approve the exact action
+
+Some actions need human judgment. *Reschedule a meeting with eight attendees.* *Send a customer-facing summary on an enterprise account.* *Cancel an event from a recurring series.* These are the cases where a hard gate routes to "human approval required" rather than "approved automatically."
+
+The naive pattern is to ask the human, get a yes, and then ask the model to perform the action. The problem is that the model gets two opportunities to drift: once when proposing, once when executing. The human approves a description; the model's second pass may produce a slightly different action than the first.
+
+The reliable pattern uses *approval packets*. The packet is a fully-materialized action object, created at proposal time, that the human reviews. Once approved, the runtime executes that exact object, same tool name, same arguments, same idempotency key, without going back to the model.
+
+```python
+packet = {
+    "status": "pending",
+    "expires_at": "2026-05-09T17:32:18Z",
+    "tool": "reschedule_event",
+    "args": {
+        "event_id": "evt_8819",
+        "new_start": "2026-05-13T10:00:00-04:00",
+        "idempotency_key": "run_204:evt_8819:reschedule",
+    },
+    "human_summary": "Move Tuesday 2pm with Priya to Wednesday 10am",
+}
+```
+
+After human approval, the runtime checks that the approval has not expired and that the relevant state has not changed. If the target event, user request, or proposed action changed in the meantime, the packet is stale and should not execute. If everything still matches, the runtime executes the exact tool call and arguments in the packet.
+
+Humans approve specific actions, not summaries of actions. Without packets, the gap between "approved" and "executed" is where slow, hard-to-debug incidents live.
+
+## Gate where failure matters
+
+There is a danger in this argument. Once teams discover gates, the temptation is to gate everything. That makes the system rigid, slow, expensive, and annoying. A gate that fires on every action becomes a gate the team learns to ignore.
+
+The goal isn't maximum gating. It is appropriate gating. Gate more heavily when an action changes the outside world, affects another person, is hard to undo, depends on weak evidence, or may require human escalation. Keep the path light for harmless clarifying questions, read-only lookups, and low-stakes summaries.
+
+## The shape worth keeping
+
+The shape that organizes all of the above is short:
+
+**The model proposes. The harness checks. The tool executes. The harness verifies.**
+
+Each step has a discipline. Prompts inform the proposal. Gates check it. Tool contracts narrow what can be proposed at all. Safe fallbacks turn blocked actions into controlled detours. Approval packets keep humans and runtime aligned on the exact action being taken.
+
+None of these jobs can be done by a prompt alone. That is what gates are for.
+
+The next article closes the series by turning to traces. Article 1 ended with a failure ("nobody can debug it"); Article 5 picks that up and shows what useful traces actually contain, how they let teams find the first bad move in a failing run, and why they are the artifact that turns one bad run into a permanent improvement to the harness.
+
+## References
+
+- Anthropic. "Building Effective Agents." December 2024. <https://www.anthropic.com/engineering/building-effective-agents>
+- Anthropic. "Effective Context Engineering for AI Agents." 2025. <https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents>
+- Boeckeler, Birgitta. "The Engineering of AI Agents: Context, Harnessing, and Autonomy." InfoQ, May 2026. <https://www.youtube.com/watch?v=_R83pFpUWyM>
+- Iusztin, Paul. "Agentic Harness Engineering." Decoding AI, 2025. <https://www.decodingai.com/p/agentic-harness-engineering>
