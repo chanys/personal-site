@@ -1,0 +1,23 @@
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+
+::: {.series-nav}
+::: {.series-label}
+Part of a series
+:::
+::: {.series-name}
+Research foundations of modern LLMs
+:::
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+1. [Pretraining objectives: Why decoder-only won](../01-pretraining-objectives/)
+2. [The encoder didn't die. It became the embedding model](../02-encoder-embeddings/)
+3. [Retrieval is older than RAG: From DPR to end-to-end](../03-retrieval/)
+4. [The fine-tuning stack: One loss, different data](../04-fine-tuning-stack/)
+5. [Information extraction didn't disappear. It moved inside the workflow](../05-information-extraction/)
+:::

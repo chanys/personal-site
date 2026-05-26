@@ -1,0 +1,148 @@
+---
+title: "How reasoning models learn to use tools"
+description: "Reasoning and tool-calling are different skills. RL teaches the timing."
+date: 2026-03-14
+order: 7
+draft: false
+---
+
+{{< include ../_series.qmd >}}
+
+Ask Claude what last night's score was, or to look up the latest version of some Python library, and watch what it does. It writes a search query, calls out to a search tool, reads the results, sometimes searches again to clarify, and only then answers you. The whole sequence happens inside one response.
+
+The behavior isn't scripted. Real assistants have scaffolding around the model (tool schemas, system instructions, routing, sometimes policy rules), but the core behavior is something the model learned in training. There's no `if user_asked_for_current_info: search()` branch anywhere. The model learned that for some questions, calling out to a tool produces better answers than guessing.
+
+[The previous piece](/posts/series/how-llms-learn-to-reason/04-r1/index.qmd) covered how DeepSeek-R1 used reinforcement learning to consolidate reasoning behavior (backtracking, self-correction, longer chains of thought) out of a base model trained only on math and code problems. The headline finding was that outcome-only RL on verifiable tasks produces models that learn to think.
+
+This piece is about what happens when you point that same training recipe at tool use. It works, with two interesting twists.
+
+## The recipe extends: Search-R1
+
+The cleanest demonstration is Search-R1 [@jin_etal_2025_searchr1]. Take the R1 training recipe, but instead of letting the model think to itself, let it call a search engine in the middle of its reasoning.
+
+The training data is question-answering, specifically the kind that requires looking facts up. "Curious is a women's fragrance by a singer born in what city and state?" The model can't reasonably know the answer from memorized training data and needs to chain together facts it doesn't have.
+
+The trajectory is interleaved: reason for a bit, decide a search would help, issue a query, read the retrieved passages, reason more, maybe search again, eventually answer. In practice:
+
+```markdown
+<think> I need to find the singer behind the fragrance "Curious". </think>
+<search> Curious fragrance singer </search>
+<information> [Wikipedia: Curious is a fragrance by Britney Spears...] </information>
+<think> So I need to find where Britney Spears was born. </think>
+<search> Britney Spears birthplace </search>
+<information> [...Spears was born in McComb, Mississippi...] </information>
+<think> McComb, Mississippi. That's the answer. </think>
+<answer> McComb, Mississippi </answer>
+```
+
+The training loop:
+
+```python
+for each training question:
+    trajectory = []
+    while not answered:
+        generate next chunk from the model
+        append chunk to trajectory
+        if chunk contains <search> query </search>:
+            results = retriever(query)
+            append <information> results </information> to trajectory
+        if chunk contains <answer> ... </answer>:
+            answered = True
+    reward = exact_match(extracted_answer, ground_truth)
+    update the policy, but only on tokens the model wrote,
+    NOT on tokens that came from retrieved passages
+```
+
+The last line is the wrinkle worth understanding.
+
+Setup-wise, this is the R1 recipe with one change. Same policy-gradient RL (Search-R1 tests both PPO and GRPO, with PPO more stable in their main setting). Same outcome-only reward (exact match between predicted and ground-truth answer). No process rewards, no learned reward model, no human-graded trajectories. The only difference is that when the model produces `</search>`, the training loop pauses generation, runs the query, and pastes the top results back into the trajectory before the model continues.
+
+And it works. Trained on Natural Questions and HotpotQA, evaluated across seven QA datasets, Qwen2.5-7B with Search-R1 (PPO) gets 43% average accuracy versus 30% for vanilla retrieval-augmented generation and 28% for R1-style RL with no search at all. The gap is consistent across both in-distribution and out-of-distribution test sets.
+
+What's striking is what the model learned without being told. The reward checks only the final answer. Nothing in the training signal says "search more often" or "search more carefully." But over training, the average number of searches per trajectory grows. The model learns to search when uncertain, to search again if the first results aren't good enough, and sometimes to do a verifying search after it thinks it has the answer.
+
+None of this was hand-designed. The policy gradient finds these behaviors because trajectories that include them tend to end with correct answers more often than trajectories that don't. The same mechanism that gave R1 its self-correcting math behavior gives Search-R1 its search behavior.
+
+### The retrieved-token mask
+
+The trajectory contains tokens the model didn't write: the retrieved Wikipedia passages between `<information>` tags. Run the policy gradient over every token, and you're training the model to assign higher probability to those passages too. That's nonsense as a learning signal. The model didn't choose those tokens, and the retrieved text isn't even consistent across rollouts of the same prompt.
+
+The fix is to mask retrieved tokens out of the loss. Only update on tokens the model actually generated. The full PPO/GRPO objective is more involved, but the core idea is an indicator in front of each token's contribution:
+
+$$\text{Loss} \;=\; -\sum_{t=1}^{|y|} I(y_t) \,\cdot\, [\,\text{policy-gradient signal at token } t\,]$$
+
+where $I(y_t) = 1$ if the model generated token $y_t$, and $I(y_t) = 0$ if the token came from a retrieved passage. Without the indicator, retrieved tokens contribute to the gradient and pull the policy toward whatever was in the search results. With it, only tokens the model actually chose contribute.
+
+Without the mask, the same model gets 34% average accuracy. With it, 43%. Nine points from one indicator function.
+
+The principle generalizes. Anytime your RL setup includes tokens from outside the model (search results, tool outputs, environment state, function returns), you have to be careful which ones enter the gradient. Get it wrong and the model regresses toward whatever distribution those external tokens come from.
+
+## When the action space gets richer: ToolRL
+
+Search-R1 works because search is a forgiving tool. The action space is small (queries to one engine). Verification is sharp (did the final answer match?). Search itself is robust, since even mediocre queries usually retrieve something useful.
+
+Real tool use is messier. An agentic model might have access to dozens of tools, each with named parameters, some required and some optional, taking strings or numbers or structured objects. The model can fail by picking the wrong tool, by using wrong parameters, by getting parameter names right but values wrong, or by forgetting to call a tool that was needed.
+
+ToolRL [@qian_etal_2025] looked at training in this richer setting. Two findings: one expected, one surprising.
+
+### The expected finding: smaller pieces of credit
+
+Search-R1's reward only checks the final answer. For richer tool use, that signal is too sparse. The model takes too many distinct actions between question and answer for "did it work in the end" to tell it which specific action was good or bad.
+
+ToolRL breaks the reward into pieces. For each tool call the model makes, compare it to a ground-truth tool call from the training data and grade three things separately:
+
+- **Tool name:** did the model pick the right tool?
+- **Parameter names:** did it use the right arguments?
+- **Parameter values:** did it fill them in correctly?
+
+The total correctness reward for a tool call is the sum:
+
+$$r_{\text{tool call}} \;=\; r_{\text{name}} \;+\; r_{\text{param-name}} \;+\; r_{\text{param-value}}$$
+
+The tool-name match is an intersection over union, the fraction of tool names the model picked that overlap with the ones it should have:
+
+$$r_{\text{name}} \;=\; \frac{|N_{\text{predicted}} \,\cap\, N_{\text{ground-truth}}|}{|N_{\text{predicted}} \,\cup\, N_{\text{ground-truth}}|}$$
+
+Pick exactly the right set of tools and you get 1. Pick none and you get 0. The parameter-name match works the same way, with overlap between predicted and ground-truth parameter keys. The parameter-value match is stricter: exact equality between values, for the parameters that matched. Add the three components together, normalize, and you have a single scalar reward that scales smoothly from "nothing matched" to "everything matched perfectly."
+
+The ablation: compared against a coarser version that only gives credit when the entire tool call matches exactly, the fine-grained reward trains faster and reaches higher final accuracy. The coarser version starves the model of useful gradient. When most of your trajectories fail somehow, partial credit for the parts you got right keeps the gradient informative.
+
+### The surprising finding: longer thinking hurts
+
+In [the R1 piece](/posts/series/how-llms-learn-to-reason/04-r1/index.qmd) I argued that reasoning models think longer at inference because longer trajectories happened to correlate with correct answers, and the policy gradient followed the correlation. You'd expect this to extend to tool use: more thinking, more careful tool calls, better outcomes.
+
+ToolRL tested this directly by adding a length reward, a small bonus for trajectories that produce longer thinking traces before tool calls. Here's what happened on a tool-use benchmark called BFCL:
+
+| Setup | Accuracy (Qwen2.5-3B) |
+|---|---|
+| Standard (no length reward) | **53.0%** |
+| Fixed length reward | 48.9% |
+| Dynamic length reward (escalating over training) | 48.2% |
+
+The length rewards work. The traces visibly get longer. But accuracy gets worse, not better.
+
+This reshapes how to think about the R1 piece. In math and code, longer reasoning traces meant more exploration before commitment, which translated cleanly into accuracy. In tool use, the same instinct backfires. The model about to commit to a tool call doesn't always benefit from talking itself through one more time. It can talk itself out of the right call, or elaborate a wrong call into a worse one.
+
+Thinking helps when the structure of the task rewards thinking. Math problems reward exploration before commitment. Tool use rewards picking the right tool, getting the arguments right, and getting on with it.
+
+You can see hints of this in production models. Claude and GPT-4 produce different amounts of reasoning depending on whether you've asked them to do math or look up a fact. The faster response on a tool-use task isn't laziness, it's efficiency. Optimal trace length is task-shaped.
+
+## What this means for the models you use
+
+When you watch Claude search the web, call a calculator, or run code, there's a version of this kind of training behind it. Not literally Search-R1 or ToolRL (production training pipelines are more complex and not public), but the conceptual approach is the same: RL on rollouts where the model has tool access and there's a clear definition of what a successful interaction looks like.
+
+This explains some uneven patterns. Models are smoother with tools they saw a lot of during training (search, code execution, basic file operations) and rougher with niche or company-specific tools that didn't get the same coverage. They're also better at tools where success is checkable. For instance, a search returning useful results is verifiable.
+
+The harness around the model (tool schemas, validation, retries, fallback rules) does some of this work too. But none of it substitutes for the model itself having the right reflexes: knowing when to call which tool, what arguments to pass, and when to skip the tool entirely. That part has to come from training.
+
+## What's next, and the series wrap
+
+This is the last piece in the series on RL training for LLMs. The arc:
+
+- [**REINFORCE foundations**](/posts/series/how-llms-learn-to-reason/00-reinforce-foundations/index.qmd): the setup these algorithms live in. MDPs, returns, credit assignment, value vs policy, the RL objective.
+- [**REINFORCE gradient**](/posts/series/how-llms-learn-to-reason/00-reinforce-gradient/index.qmd): the policy gradient derived. REINFORCE is weighted supervised learning.
+- [**PPO**](/posts/series/how-llms-learn-to-reason/01-ppo/index.qmd): the workhorse policy-gradient algorithm; REINFORCE plus five fixes for variance and data efficiency.
+- [**GRPO**](/posts/series/how-llms-learn-to-reason/02-grpo/index.qmd): the variant that drops the value network and powered DeepSeek's reasoning models.
+- [**DPO**](/posts/series/how-llms-learn-to-reason/03-dpo/index.qmd): the offline simplification that collapses RLHF into a single supervised loss.
+- [**R1**](/posts/series/how-llms-learn-to-reason/04-r1/index.qmd): what GRPO produces when you point it at math and code, with reasoning behavior consolidating into a long-chain-of-thought policy.
+- **Search-R1 and ToolRL:** what happens when you extend the recipe to tool use.

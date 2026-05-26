@@ -1,0 +1,66 @@
+<svg viewBox="0 0 1000 596" xmlns="http://www.w3.org/2000/svg" font-family="Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <style>.title { font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif; }</style>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 L2.5,5 Z" fill="#9AA0AE"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="596" fill="#ffffff"/>
+
+  <text class="title" x="40" y="54" font-size="32" font-weight="700" fill="#161B2B">One bad answer, five different bugs</text>
+
+  <!-- ===================== PIPELINE / SYMPTOM ===================== -->
+  <rect x="40" y="92" width="240" height="58" rx="12" fill="#ffffff" stroke="#C7CAD6" stroke-width="1.3"/>
+  <text x="160" y="127" font-size="18" fill="#1B2030" text-anchor="middle">Question</text>
+
+  <text x="336" y="111" font-size="13" fill="#6B7280" text-anchor="middle">retrieval</text>
+  <line x1="284" y1="121" x2="388" y2="121" stroke="#9AA0AE" stroke-width="1.8" marker-end="url(#ar)"/>
+
+  <rect x="392" y="92" width="240" height="58" rx="12" fill="#ffffff" stroke="#C7CAD6" stroke-width="1.3"/>
+  <text x="512" y="127" font-size="18" fill="#1B2030" text-anchor="middle">Retrieved context</text>
+
+  <text x="688" y="111" font-size="13" fill="#6B7280" text-anchor="middle">generation</text>
+  <line x1="636" y1="121" x2="740" y2="121" stroke="#9AA0AE" stroke-width="1.8" marker-end="url(#ar)"/>
+
+  <rect x="744" y="92" width="216" height="58" rx="12" fill="#ffffff" stroke="#DC2626" stroke-width="1.8"/>
+  <text x="852" y="127" font-size="18" font-weight="700" fill="#B91C1C" text-anchor="middle">“30 days”  ✗</text>
+
+  <!-- ===================== GROUP HEADERS ===================== -->
+  <text x="40" y="190" font-size="15" font-weight="700" letter-spacing="1.2" fill="#3730A3">RETRIEVAL</text>
+  <text x="520" y="190" font-size="15" font-weight="700" letter-spacing="1.2" fill="#0F766E">GENERATION</text>
+
+  <!-- Retrieval recall -->
+  <rect x="40" y="206" width="440" height="92" rx="12" fill="#ffffff" stroke="#4F46E5" stroke-width="1.6"/>
+  <text x="64" y="244" font-size="22" font-weight="700" fill="#3730A3">Retrieval recall</text>
+  <text x="64" y="270" font-size="16" fill="#5B6170">needed passage missing</text>
+  <text x="64" y="292" font-size="16" font-weight="600" fill="#3730A3">→ chunking · embeddings · reranker</text>
+
+  <!-- Retrieval precision -->
+  <rect x="40" y="312" width="440" height="92" rx="12" fill="#ffffff" stroke="#4F46E5" stroke-width="1.6"/>
+  <text x="64" y="350" font-size="22" font-weight="700" fill="#3730A3">Retrieval precision</text>
+  <text x="64" y="376" font-size="16" fill="#5B6170">right evidence buried in noise</text>
+  <text x="64" y="398" font-size="16" font-weight="600" fill="#3730A3">→ ranking · top-k · filters</text>
+
+  <!-- Grounding -->
+  <rect x="520" y="206" width="440" height="92" rx="12" fill="#ffffff" stroke="#0D9488" stroke-width="1.6"/>
+  <text x="544" y="244" font-size="22" font-weight="700" fill="#0F766E">Grounding</text>
+  <text x="544" y="270" font-size="16" fill="#5B6170">ignored or overreached the context</text>
+  <text x="544" y="292" font-size="16" font-weight="600" fill="#0F766E">→ generation prompt · grounding</text>
+
+  <!-- Answer relevance -->
+  <rect x="520" y="312" width="440" height="92" rx="12" fill="#ffffff" stroke="#0D9488" stroke-width="1.6"/>
+  <text x="544" y="350" font-size="22" font-weight="700" fill="#0F766E">Answer relevance</text>
+  <text x="544" y="376" font-size="16" fill="#5B6170">answered an adjacent question</text>
+  <text x="544" y="398" font-size="16" font-weight="600" fill="#0F766E">→ conditioning · response style</text>
+
+  <!-- Abstention (spans both) -->
+  <rect x="40" y="420" width="920" height="92" rx="12" fill="#ffffff" stroke="#D97706" stroke-width="1.8"/>
+  <text x="64" y="458" font-size="22" font-weight="700" fill="#B45309">Abstention</text>
+  <text x="64" y="484" font-size="16" fill="#5B6170">answered when it should have escalated</text>
+  <text x="64" y="506" font-size="16" font-weight="600" fill="#B45309">→ escalation · refusal rules</text>
+
+  <!-- ===================== FOOTER ===================== -->
+  <line x1="80" y1="540" x2="920" y2="540" stroke="#EBECF2" stroke-width="1"/>
+  <text x="500" y="570" font-size="17" font-style="italic" fill="#5B6170" text-anchor="middle">Same surface failure. Different root causes. Different fixes.</text>
+</svg>

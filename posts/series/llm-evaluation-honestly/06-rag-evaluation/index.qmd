@@ -1,0 +1,57 @@
+---
+title: "Your RAG score hides the diagnosis"
+description: "Score the pipeline, not the answer."
+date: 2026-06-01
+order: 6
+draft: true
+---
+
+{{< include ../_series.qmd >}}
+
+Most RAG dashboards score one thing: whether the answer was good. The same bad answer can come from retrieval (missed the right passage, returned too much noise) or from the generator (ignored the context, answered the wrong question, answered when it should have declined). A single quality score hides which.
+
+The running example is a documentation Q&A agent for a data-retention policy: 90 days for trial accounts, 30 days for standard, escalation for enterprise accounts on legal hold.
+
+## Capture the full RAG trace
+
+A RAG eval needs the question, the retrieved context, and the final answer. Without the retrieved context, you can't tell whether retrieval failed, the generator failed, or the system should have refused.
+
+The trace also needs enough metadata to reproduce the result against the same knowledge base: document and chunk IDs, retrieval scores, top-k settings, embedding model, reranker version, metadata filters, and the exact text passed to the generator. For agentic RAG, capture tool selection too; if the agent picked the wrong source, retrieval metrics inside the right index will look fine while the system still fails.
+
+## Five questions locate the failure
+
+Comparing the question, context, and answer gives five diagnostic questions, each pointing to a different failure mode and a different fix.
+
+![One bad answer, five different bugs. The same wrong answer ("30 days" to a trial-account question) can come from five places along the RAG pipeline, each with a different fix. Retrieval side: recall (needed passage missing, fix chunking, embeddings, reranker) and precision (right evidence buried in noise, fix ranking, top-k, filters). Generation side: grounding (ignored or overreached the context, fix the generation prompt) and answer relevance (answered an adjacent question, fix conditioning). Abstention, the most-skipped check, spans the whole pipeline: the system answered when it should have escalated.](rag_diagnostic_map.png){#fig-rag-diagnostic fig-alt="A diagnostic map. A pipeline strip: Question, then retrieval arrow, then Retrieved context, then generation arrow, then a red box quote 30 days unquote marked wrong. Below, two grouped columns. RETRIEVAL: Retrieval recall, needed passage missing, fix chunking, embeddings, reranker; Retrieval precision, right evidence buried in noise, fix ranking, top-k, filters. GENERATION: Grounding, ignored or overreached the context, fix generation prompt and grounding; Answer relevance, answered an adjacent question, fix conditioning and response style. A full-width amber card, Abstention, answered when it should have escalated, fix escalation and refusal rules. Footer: same surface failure, different root causes, different fixes."}
+
+| Area | Question | Diagnoses | Fix targets |
+|---|---|---|---|
+| Retrieval recall | Did we retrieve the needed evidence? | Missing evidence | Chunking, embeddings, query rewriting, reranker, metadata filters |
+| Retrieval precision | Did we retrieve mostly relevant context? | Noisy context | Ranking, top-k, filtering, duplicate or noisy chunks |
+| Grounding | Is the answer supported by the retrieved context? | Hallucination, overreach, or ignored evidence | Generation prompt, grounding behavior, judge calibration |
+| Answer relevance | Did the answer address the user's question? | Generic or adjacent answer | Prompting, question conditioning, response style |
+| Abstention | Should the system have declined or escalated? | Confident answer to an unanswerable question | Out-of-scope examples, escalation rules, refusal behavior |
+
+Retrieval comes first because the generator can't use evidence it never sees. For the retention-policy agent, *"How long do trial-account records stay available?"* should retrieve the trial-account passage. If it doesn't appear in the top-k, that's a recall failure; the fix is [better chunking, embeddings, query rewriting, or reranking](/posts/series/research-foundations-of-modern-llms/03-retrieval/index.qmd), not a better generation prompt. If the passage is present but a standard-account passage dominates and the answer says "30 days," the failure is partly precision and partly grounding.
+
+For most documentation Q&A systems, start with retrieval recall, grounding, answer relevance, and abstention. Add retrieval precision when noisy context becomes a visible problem. Keep the five separate; the metric that drops is the one that points to the next debugging step.
+
+## Don't skip abstention
+
+Abstention is the most commonly missing piece of a RAG eval, and the most damaging to skip. Most eval sets contain only questions the system should answer, which quietly rewards over-answering: the system is never tested on cases where the right move is to decline, ask for clarification, or escalate.
+
+For the retention-policy agent: *"How long are records retained for enterprise account ABC-2026-447 while it is on legal hold?"* Account-specific legal-hold questions require escalation, so the correct response is to escalate, not to answer.
+
+Include negative cases in the eval set deliberately: ambiguous questions, out-of-scope questions, escalation-required questions, and questions where the retrieved context is insufficient. Without them, the eval set teaches the system that confident answers are always rewarded.
+
+## The retrieval environment drifts too
+
+RAG evaluation has one extra source of drift: the knowledge base changes. Documents get added, edited, deprecated. Chunking changes. Embedding models change. Rerankers change. The same question can retrieve different chunks next month even with no agent change.
+
+Every RAG result should be tied to the retrieval environment that produced it: the metadata captured in the trace. Without that record, a regression is hard to interpret: did the agent get worse, or did the index change underneath it?
+
+## What comes next
+
+A composite RAG score is fine as a summary, but it can't drive debugging. The next time someone reports *RAG quality is 84%*, ask: *which part is 84%, and what would we fix if it dropped?*
+
+[The next article](/posts/series/llm-evaluation-honestly/07-eval-drift/index.qmd) closes the series on the eval system itself: judges go stale, traffic shifts, documents change, and old eval cases stop representing the current product. The agent isn't the only thing that drifts.

@@ -1,0 +1,74 @@
+<svg viewBox="0 0 1000 620" xmlns="http://www.w3.org/2000/svg" font-family="Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <style>.title { font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif; }</style>
+    <marker id="fwd" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 L2.5,5 Z" fill="#4F46E5"/>
+    </marker>
+    <marker id="fb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 L2.5,5 Z" fill="#D97706"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="620" fill="#ffffff"/>
+
+  <text class="title" x="40" y="52" font-size="32" font-weight="700" fill="#161B2B">The minimum viable eval loop</text>
+  <text x="40" y="86" font-size="18" fill="#6B7280">The first useful eval system is a loop, not a dashboard.</text>
+
+  <!-- ===================== FORWARD ARROWS ===================== -->
+  <line x1="318" y1="188" x2="360" y2="188" stroke="#4F46E5" stroke-width="2" marker-end="url(#fwd)"/>
+  <line x1="640" y1="188" x2="682" y2="188" stroke="#4F46E5" stroke-width="2" marker-end="url(#fwd)"/>
+  <line x1="822" y1="246" x2="822" y2="398" stroke="#4F46E5" stroke-width="2" marker-end="url(#fwd)"/>
+  <line x1="682" y1="456" x2="640" y2="456" stroke="#4F46E5" stroke-width="2" marker-end="url(#fwd)"/>
+  <line x1="360" y1="456" x2="318" y2="456" stroke="#4F46E5" stroke-width="2" marker-end="url(#fwd)"/>
+
+  <!-- ===================== FEEDBACK EDGE ===================== -->
+  <line x1="178" y1="398" x2="178" y2="246" stroke="#D97706" stroke-width="2.6" marker-end="url(#fb)"/>
+  <text x="200" y="316" font-size="16" font-weight="700" fill="#B45309">new production</text>
+  <text x="200" y="338" font-size="16" font-weight="700" fill="#B45309">failures re-enter</text>
+
+  <!-- ===================== NODE 1: Traces ===================== -->
+  <rect x="40" y="132" width="276" height="112" rx="14" fill="#ffffff" stroke="#4F46E5" stroke-width="1.8"/>
+  <circle cx="178" cy="158" r="16" fill="#4F46E5"/>
+  <text x="178" y="164" font-size="17" font-weight="700" fill="#ffffff" text-anchor="middle">1</text>
+  <text x="178" y="200" font-size="23" font-weight="700" fill="#1B2030" text-anchor="middle">Traces</text>
+  <text x="178" y="228" font-size="16" fill="#5B6170" text-anchor="middle">more than the final answer</text>
+
+  <!-- ===================== NODE 2: Labels ===================== -->
+  <rect x="362" y="132" width="276" height="112" rx="14" fill="#ffffff" stroke="#4F46E5" stroke-width="1.8"/>
+  <circle cx="500" cy="158" r="16" fill="#4F46E5"/>
+  <text x="500" y="164" font-size="17" font-weight="700" fill="#ffffff" text-anchor="middle">2</text>
+  <text x="500" y="200" font-size="23" font-weight="700" fill="#1B2030" text-anchor="middle">Labels</text>
+  <text x="500" y="228" font-size="16" fill="#5B6170" text-anchor="middle">pass / fail + a short critique</text>
+
+  <!-- ===================== NODE 3: Failure modes ===================== -->
+  <rect x="684" y="132" width="276" height="112" rx="14" fill="#ffffff" stroke="#4F46E5" stroke-width="1.8"/>
+  <circle cx="822" cy="158" r="16" fill="#4F46E5"/>
+  <text x="822" y="164" font-size="17" font-weight="700" fill="#ffffff" text-anchor="middle">3</text>
+  <text x="822" y="200" font-size="23" font-weight="700" fill="#1B2030" text-anchor="middle">Failure modes</text>
+  <text x="822" y="228" font-size="16" fill="#5B6170" text-anchor="middle">patterns across many labels</text>
+
+  <!-- ===================== NODE 4: Checks &amp; judges ===================== -->
+  <rect x="684" y="400" width="276" height="112" rx="14" fill="#ffffff" stroke="#4F46E5" stroke-width="1.8"/>
+  <circle cx="822" cy="426" r="16" fill="#4F46E5"/>
+  <text x="822" y="432" font-size="17" font-weight="700" fill="#ffffff" text-anchor="middle">4</text>
+  <text x="822" y="468" font-size="23" font-weight="700" fill="#1B2030" text-anchor="middle">Checks &amp; judges</text>
+  <text x="822" y="496" font-size="16" fill="#5B6170" text-anchor="middle">code checks + LLM judges</text>
+
+  <!-- ===================== NODE 5: Regression cases ===================== -->
+  <rect x="362" y="400" width="276" height="112" rx="14" fill="#ffffff" stroke="#4F46E5" stroke-width="1.8"/>
+  <circle cx="500" cy="426" r="16" fill="#4F46E5"/>
+  <text x="500" y="432" font-size="17" font-weight="700" fill="#ffffff" text-anchor="middle">5</text>
+  <text x="500" y="468" font-size="23" font-weight="700" fill="#1B2030" text-anchor="middle">Regression cases</text>
+  <text x="500" y="496" font-size="16" fill="#5B6170" text-anchor="middle">real failures, frozen as tests</text>
+
+  <!-- ===================== NODE 6: Review &amp; decide ===================== -->
+  <rect x="40" y="400" width="276" height="112" rx="14" fill="#ffffff" stroke="#4F46E5" stroke-width="1.8"/>
+  <circle cx="178" cy="426" r="16" fill="#4F46E5"/>
+  <text x="178" y="432" font-size="17" font-weight="700" fill="#ffffff" text-anchor="middle">6</text>
+  <text x="178" y="468" font-size="23" font-weight="700" fill="#1B2030" text-anchor="middle">Review &amp; decide</text>
+  <text x="178" y="496" font-size="16" fill="#5B6170" text-anchor="middle">merge, hold, or roll back</text>
+
+  <!-- ===================== FOOTER ===================== -->
+  <line x1="80" y1="558" x2="920" y2="558" stroke="#EBECF2" stroke-width="1"/>
+  <text x="500" y="586" font-size="17" font-style="italic" fill="#5B6170" text-anchor="middle">Start small. Use real failures. Make every new failure feed back into the loop.</text>
+</svg>

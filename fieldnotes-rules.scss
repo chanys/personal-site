@@ -1,0 +1,575 @@
+/*-- scss:rules --*/
+
+// ===========================================================================
+//  FIELD NOTES — shared rules
+//  Imported by theme.scss and theme-dark.scss. All colours are read from the
+//  --fn-* custom properties each theme defines, so this file is theme-neutral
+//  and lives in exactly one place.
+// ===========================================================================
+
+// --- Atmosphere: a whisper of paper grain (base64 SVG → no url() for Quarto
+//     to mistake for a file dependency) ------------------------------------
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: var(--fn-grain-opacity);
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNDAiIGhlaWdodD0iMTQwIj48ZmlsdGVyIGlkPSJuIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iMC44MiIgbnVtT2N0YXZlcz0iMiIgc3RpdGNoVGlsZXM9InN0aXRjaCIvPjxmZUNvbG9yTWF0cml4IHR5cGU9InNhdHVyYXRlIiB2YWx1ZXM9IjAiLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTQwIiBoZWlnaHQ9IjE0MCIgZmlsdGVyPSJ1cmwoI24pIi8+PC9zdmc+");
+  mix-blend-mode: multiply;
+}
+
+::selection { background: color-mix(in srgb, var(--fn-accent) 20%, transparent); }
+
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-feature-settings: "kern" 1, "liga" 1, "onum" 1;
+  text-rendering: optimizeLegibility;
+}
+
+// --- Reading measure ------------------------------------------------------
+main.content { max-width: 44rem; margin-inline: auto; }
+body.quarto-listing-page main.content,
+body.about-page main.content { max-width: 50rem; }
+// Series index and Writing index both use `page-layout: full` to escape the
+// global grid body-width, then we constrain back here so only these listing
+// pages are widened. Article pages keep the default 44rem reading measure.
+body.series-index main.content,
+body.writing-index main.content { max-width: 1040px; margin-inline: auto; }
+// Home is the trestles about-template: same widening mechanism as the listing
+// pages (page-layout: full to escape body-width, then cap here). On home the
+// `main.content` IS the right (.about-contents) column, so this caps that
+// column rather than a single-column page.
+body.home main.content { max-width: 1040px; margin-inline: 0; }
+#quarto-content { padding-top: 1.25rem; }
+
+// --- Headings -------------------------------------------------------------
+h1, h2, h3, h4, .quarto-title h1.title {
+  font-family: "Fraunces", Iowan Old Style, Georgia, serif;
+  font-variation-settings: "opsz" 80, "SOFT" 40, "WONK" 1;
+  letter-spacing: -0.012em;
+  color: var(--fn-ink);
+}
+h1, .quarto-title h1.title {
+  font-size: clamp(2.1rem, 5.2vw, 3rem);
+  font-weight: 600;
+  line-height: 1.04;
+  margin-bottom: 0.35rem;
+}
+h2 { font-size: 1.62rem; }
+// Section-divider visual for long-form content (About, Projects, posts).
+// Excluded on the home hero and listing pages, where H2s are not section
+// breaks. Halved from the previous values for a tighter section rhythm;
+// paragraph leading is unchanged. Projects is opted in explicitly because
+// it carries Quarto's .fullcontent body class (no TOC sidebar) and would
+// otherwise fall under the listing-style exclusion.
+body:not(.home):not(.writing-index):not(.series-index):not(.fullcontent) main.content h2,
+body.projects-page main.content h2 {
+  margin-top: 1.4rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--fn-hairline);
+}
+h3 { font-size: 1.26rem; margin-top: 2rem; }
+p, li { font-variant-numeric: oldstyle-nums; }
+
+a {
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+  background-position: 0 1.12em;
+  transition: background-size 0.18s ease, color 0.18s ease;
+}
+a:hover { background-size: 0 1px; color: var(--fn-accent-deep); }
+.navbar a, .nav-link, .quarto-title-meta a, a.about-link,
+.series-nav a { background-image: none; }
+
+// --- Navbar ---------------------------------------------------------------
+.navbar {
+  border-bottom: 1px solid var(--fn-hairline);
+  padding-top: 0.55rem;
+  padding-bottom: 0.55rem;
+  backdrop-filter: saturate(140%) blur(6px);
+  background: var(--fn-navbar-bg) !important;
+}
+.navbar-brand {
+  font-family: "Fraunces", Georgia, serif;
+  font-variation-settings: "opsz" 60, "WONK" 1;
+  font-weight: 600;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+  color: var(--fn-ink) !important;
+}
+.navbar .nav-link {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fn-ink-soft) !important;
+  padding-left: 0.95rem !important;
+  padding-right: 0.95rem !important;
+  transition: color 0.16s ease;
+}
+.navbar .nav-link:hover,
+.navbar .nav-link.active { color: var(--fn-accent) !important; }
+.navbar .nav-link.active { font-weight: 500; }
+
+// --- Title block ----------------------------------------------------------
+#title-block-header {
+  margin-bottom: 2.4rem;
+  padding-bottom: 1.6rem;
+  border-bottom: 2px solid var(--fn-ink);
+}
+// On standard content pages, tighten the gap between the intro rule and the
+// first body block to match the section-divider rhythm above.
+body:not(.home):not(.writing-index):not(.series-index):not(.fullcontent) #title-block-header,
+body.projects-page #title-block-header {
+  margin-bottom: 1.2rem;
+}
+.quarto-title-meta,
+.quarto-title .date,
+.quarto-categories {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: var(--fn-ink-soft);
+}
+.quarto-title-block .description,
+.subtitle.lead {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.18rem;
+  color: var(--fn-ink-soft);
+  margin-top: 0.5rem;
+}
+.quarto-categories .quarto-category {
+  background: transparent;
+  border: 1px solid var(--fn-hairline);
+  border-radius: 100px;
+  padding: 0.12rem 0.7rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 1;
+  color: var(--fn-ink-soft);
+}
+.quarto-categories .quarto-category:hover { border-color: var(--fn-accent); color: var(--fn-accent); }
+
+// --- Listing: a journal index --------------------------------------------
+// Applies to Writing and to each series landing's parts list (both use the
+// default-type listing). The top-level Series page renders via a custom EJS
+// template and does NOT match `.quarto-listing-default`.
+//
+// NOTE on selector: Quarto's listing markup puts `.list` and
+// `.quarto-listing-default` on the *same* div, not as ancestor/descendant — so
+// `.quarto-listing-default .list .quarto-post` silently fails to match. The
+// correct chain is `.quarto-listing-default .quarto-post`.
+.quarto-listing { margin-top: 2rem; }
+.quarto-listing-default .quarto-post {
+  // Tight gap between the metadata column and the title/body.
+  gap: 1.25rem;
+  padding: 1.4rem 0;
+  border-bottom: 1px solid var(--fn-hairline);
+}
+.quarto-listing-default .quarto-post:first-of-type { padding-top: 0.6rem; }
+.quarto-listing-default .quarto-post .thumbnail { display: none; }
+.quarto-listing-default .quarto-post .body { padding: 0; }
+
+// Writing index runs longer than a series landing, so tighten row spacing
+// there only — series parts lists keep the roomier defaults above.
+body.writing-index .quarto-listing-default .quarto-post { padding: 0.75rem 0; }
+body.writing-index .quarto-listing-default .quarto-post:first-of-type { padding-top: 0.3rem; }
+body.writing-index .quarto-post .listing-categories { margin-top: 0.45rem; }
+
+// Date column is a fixed width so every title starts at the same x position
+// regardless of month length ("FEBRUARY 20" vs "MARCH 2"). Sized to hold the
+// widest expected date in the IBM Plex Mono uppercase style below
+// ("2026 · SEPTEMBER 30") with a little breathing room. The metadata block
+// stays a vertical stack (date over reading-time).
+.quarto-listing-default .quarto-post .metadata {
+  flex-basis: 10rem;
+  flex-grow: 0;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+// Series index uses a custom EJS template (`series-listing.ejs`) that emits
+// `.series-banner` plates: cover image on the left, with the meta row, title,
+// and description stacked to the right inside `.series-banner-body`. No card
+// chrome, paper ground, hairline rule between entries, title is the primary
+// link, image link is decorative (aria-hidden) but a stretched-link pseudo
+// makes the entire banner clickable.
+body.series-index .series-banner-list { margin-top: 2rem; }
+body.series-index .series-banner {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.75rem;
+  padding: 1.5rem 0 1.75rem;
+  border-top: 1px solid var(--fn-hairline);
+}
+body.series-index .series-banner:first-child {
+  border-top: none;
+  padding-top: 0.25rem;
+}
+body.series-index .series-banner-cover {
+  flex: 0 0 220px;
+  margin: 0;
+}
+body.series-index .series-banner-cover a {
+  display: block;
+  background: none; // override the underline-gradient link treatment
+}
+// Image fills its column width; height follows aspect ratio. No cropping (no
+// object-fit:cover, no forced aspect-ratio) so the plate frame and corner
+// captions stay visible.
+body.series-index .series-banner-cover img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+}
+body.series-index .series-banner-body {
+  flex: 1;
+  min-width: 0;
+}
+// Below the body-text breakpoint the side-by-side layout gets cramped, so
+// fall back to the previous stacked plate.
+@media (max-width: 640px) {
+  body.series-index .series-banner { flex-direction: column; gap: 0.85rem; }
+  body.series-index .series-banner-cover { flex: 0 0 auto; width: 100%; }
+  body.series-index .series-banner-cover img { max-height: 400px; width: auto; margin-inline: auto; }
+}
+body.series-index .series-banner-meta {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fn-ink-soft);
+  margin: 0.15rem 0 0.45rem;
+}
+body.series-index .series-banner-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 1.7rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.012em;
+  margin: 0 0 0.55rem;
+}
+body.series-index .series-banner-title a {
+  color: var(--fn-ink);
+  background: none;
+  text-decoration: none;
+}
+// Stretched-link pattern: the title's anchor covers the whole banner so the
+// entire plate is clickable, while only the title text is the focusable link.
+body.series-index .series-banner-title a::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+body.series-index .series-banner:hover .series-banner-title a { color: var(--fn-accent); }
+body.series-index .series-banner-description {
+  font-size: 1.04rem;
+  color: var(--fn-ink-soft);
+  line-height: 1.6;
+  margin: 0;
+  max-width: 50rem;
+}
+.quarto-post .listing-date,
+.quarto-post .metadata {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fn-ink-soft);
+  margin-bottom: 0.35rem;
+}
+.quarto-post .listing-title,
+.quarto-post h3.listing-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.012em;
+  margin: 0.1rem 0 0.45rem;
+}
+.quarto-post .listing-title a { color: var(--fn-ink); background: none; }
+.quarto-post:hover .listing-title a { color: var(--fn-accent); }
+.quarto-post .listing-description {
+  font-size: 1.02rem;
+  color: var(--fn-ink-soft);
+  line-height: 1.6;
+  max-width: 40rem;
+}
+.quarto-post .listing-reading-time {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.72rem;
+  color: var(--fn-ink-soft);
+}
+.quarto-post .listing-categories { margin-top: 0.7rem; }
+.quarto-post .listing-categories .listing-category {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fn-ink-soft);
+  border: 1px solid var(--fn-hairline);
+  border-radius: 100px;
+  padding: 0.1rem 0.6rem;
+  margin-right: 0.35rem;
+  opacity: 1;
+}
+.quarto-post .listing-categories .listing-category:hover { border-color: var(--fn-accent); color: var(--fn-accent); }
+
+.quarto-listing-category { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.78rem; }
+.quarto-listing-category .category { color: var(--fn-ink-soft); padding: 0.15rem 0; }
+.quarto-listing-category .category:hover,
+.quarto-listing-category .category.active { color: var(--fn-accent); }
+.quarto-listing-category-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 0.95rem;
+  text-transform: none;
+  color: var(--fn-ink);
+}
+
+// --- Series navigation box (included into series parts) -------------------
+.series-nav {
+  border: 1px solid var(--fn-hairline);
+  border-left: 3px solid var(--fn-accent);
+  border-radius: 3px;
+  background: var(--fn-card);
+  padding: 1.1rem 1.3rem 1.2rem;
+  margin: 0 0 2.4rem;
+}
+.series-nav .series-label {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--fn-ink-soft);
+  margin: 0 0 0.15rem;
+}
+.series-nav .series-name {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 1.12rem;
+  font-weight: 600;
+  color: var(--fn-ink);
+  margin: 0 0 0.7rem;
+}
+.series-nav ol {
+  list-style: none;
+  counter-reset: part;
+  margin: 0;
+  padding: 0;
+}
+.series-nav ol li {
+  counter-increment: part;
+  padding: 0.22rem 0 0.22rem 2.1rem;
+  position: relative;
+  font-size: 0.96rem;
+  line-height: 1.4;
+}
+.series-nav ol li::before {
+  content: counter(part, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 0.22rem;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.74rem;
+  color: var(--fn-ink-soft);
+}
+.series-nav ol li.current {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 600;
+}
+.series-nav ol li.current::before { color: var(--fn-accent); }
+.series-nav ol li.current::after {
+  content: "you are here";
+  margin-left: 0.6rem;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--fn-accent);
+}
+.series-nav a { color: var(--fn-ink); }
+.series-nav a:hover { color: var(--fn-accent); }
+
+// --- Projects meta row ----------------------------------------------------
+.project-meta {
+  display: inline-block;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.76rem;
+  letter-spacing: 0.04em;
+  color: var(--fn-ink-soft);
+}
+.project-meta code {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  color: inherit !important;
+}
+// Each project reads as one grouped unit: heading, meta row, body paragraph,
+// links sit close together. The large gap above each h2 (the section
+// divider above) is what separates one project from the next.
+body.projects-page main.content > section.level2 {
+  h2 { margin-bottom: 0.25rem; }
+  p { margin-top: 0; margin-bottom: 0.4rem; }
+  p:last-child { margin-bottom: 0; }
+}
+
+// --- Prose details --------------------------------------------------------
+p { margin-bottom: 1.25rem; }
+blockquote, .blockquote {
+  border-left: 2px solid var(--fn-accent);
+  padding: 0.1rem 0 0.1rem 1.4rem;
+  margin: 1.8rem 0;
+  color: var(--fn-ink-soft);
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 1.12rem;
+}
+code:not(.sourceCode):not(pre code) {
+  background: var(--fn-paper-sink);
+  border: 1px solid var(--fn-hairline);
+  border-radius: 3px;
+  padding: 0.08em 0.36em;
+  font-size: 0.86em;
+  color: var(--fn-accent-deep);
+}
+div.sourceCode, pre.sourceCode {
+  border: 1px solid var(--fn-hairline);
+  border-left: 3px solid var(--fn-accent);
+  border-radius: 3px;
+  background: var(--fn-card);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+hr { border: none; border-top: 1px solid var(--fn-hairline); margin: 3rem auto; width: 100%; }
+.content > hr::after {
+  content: "\2767";
+  display: block;
+  width: 0;
+  margin: -0.85rem auto 0;
+  text-align: center;
+  color: var(--fn-ink-soft);
+  background: var(--fn-paper);
+  padding: 0 0.6rem;
+  font-size: 0.9rem;
+}
+// Quarto wraps figures in nested flex columns. Flex items default to
+// min-width: auto (= intrinsic content size), so a raster image wider than
+// the article column inflates every wrapper, and Bootstrap's `.img-fluid {
+// max-width: 100% }` can't clip what its containing block has already grown
+// to. Allow the wrappers to shrink.
+.quarto-figure,
+.quarto-figure > *,
+.quarto-figure figure,
+.quarto-figure figure > * { min-width: 0; }
+
+table { font-size: 0.92rem; border-collapse: collapse; }
+table thead th {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 2px solid var(--fn-ink) !important;
+}
+table tbody td { border-bottom: 1px solid var(--fn-hairline); }
+
+.footnote-ref { color: var(--fn-accent); }
+// Quarto's stock appendix ships with a cream `background-color` fill that
+// reads as an empty pale strip above the References heading (especially on
+// the dark theme). Inherit the page paper instead; the container's
+// border-top still sets the appendix apart structurally.
+#quarto-appendix.default {
+  background-color: transparent;
+  border-top-color: var(--fn-hairline);
+}
+// The appendix H2 would otherwise also get the long-form section-divider
+// treatment above (margin-top, padding-top, hairline border-top), doubling
+// the hairline above "References". Reset those on this specific heading.
+#quarto-appendix.default .quarto-appendix-heading {
+  border-top: none;
+  padding-top: 0;
+}
+#footnotes, section.footnotes {
+  margin-top: 3.5rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--fn-hairline);
+  font-size: 0.92rem;
+  color: var(--fn-ink-soft);
+}
+#footnotes::before {
+  content: "Notes";
+  display: block;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-bottom: 0.8rem;
+}
+.callout {
+  border: 1px solid var(--fn-hairline);
+  border-left: 3px solid var(--fn-accent);
+  border-radius: 3px;
+  background: var(--fn-card);
+}
+.callout .callout-title { font-family: "Fraunces", Georgia, serif; font-weight: 600; }
+
+// --- TOC ------------------------------------------------------------------
+#TOC, .toc-active #quarto-margin-sidebar {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.76rem;
+}
+#toc-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 0.86rem;
+  text-transform: none;
+  color: var(--fn-ink);
+  font-weight: 600;
+}
+#TOC a.nav-link { color: var(--fn-ink-soft); border-left: 1px solid var(--fn-hairline); padding-left: 0.85rem; }
+#TOC a.nav-link:hover, #TOC a.nav-link.active { color: var(--fn-accent); border-left-color: var(--fn-accent); }
+
+// --- About / trestles -----------------------------------------------------
+.about-entity { gap: 1.1rem; }
+.about-entity .about-image { border-radius: 50%; border: 1px solid var(--fn-hairline); }
+.about-entity .about-link {
+  border: 1px solid var(--fn-hairline) !important;
+  border-radius: 100px;
+  color: var(--fn-ink) !important;
+  padding: 0.32rem 0.95rem !important;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.76rem;
+  letter-spacing: 0.04em;
+  transition: all 0.16s ease;
+}
+.about-entity .about-link:hover { border-color: var(--fn-accent) !important; color: var(--fn-accent) !important; }
+
+// --- Footer ---------------------------------------------------------------
+.nav-footer {
+  border-top: 1px solid var(--fn-hairline);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.76rem;
+  letter-spacing: 0.03em;
+  color: var(--fn-ink-soft);
+  margin-top: 4rem;
+}
+.nav-footer a { color: var(--fn-ink-soft); background: none; }
+.nav-footer a:hover { color: var(--fn-accent); }
+
+// --- One quiet page-load reveal ------------------------------------------
+@keyframes fn-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  #title-block-header { animation: fn-rise 0.6s ease both; }
+  main.content > *:not(#title-block-header) { animation: fn-rise 0.6s ease both; animation-delay: 0.08s; }
+  .quarto-post { animation: fn-rise 0.5s ease both; }
+}

@@ -1,0 +1,136 @@
+<svg viewBox="0 0 900 560" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <marker id="ar-gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#888"/>
+    </marker>
+    <marker id="ar-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3a7ca5"/>
+    </marker>
+    <marker id="ar-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5a7a48"/>
+    </marker>
+  </defs>
+
+  <text x="450" y="22" font-size="19.6" font-weight="600" text-anchor="middle" fill="#222">Three eras of information extraction</text>
+
+  <!-- ============ Pre-BERT era ============ -->
+  <rect x="15" y="40" width="280" height="500" rx="8" fill="#f7f7f7" stroke="#bbb" stroke-width="1"/>
+  <text x="155" y="62" font-size="18.2" font-weight="600" text-anchor="middle" fill="#444">Pre-BERT (≤ 2018)</text>
+  <text x="155" y="78" font-size="14" font-style="italic" text-anchor="middle" fill="#777">extraction pipeline as the product</text>
+
+  <rect x="30" y="95" width="250" height="30" rx="4" fill="white" stroke="#888"/>
+  <text x="155" y="115" font-size="15.4" text-anchor="middle" fill="#333">NER · CRF/HMM + features</text>
+  <line x1="155" y1="125" x2="155" y2="133" stroke="#888" marker-end="url(#ar-gray)"/>
+
+  <rect x="30" y="136" width="250" height="30" rx="4" fill="white" stroke="#888"/>
+  <text x="155" y="156" font-size="15.4" text-anchor="middle" fill="#333">Coreference</text>
+  <line x1="155" y1="166" x2="155" y2="174" stroke="#888" marker-end="url(#ar-gray)"/>
+
+  <rect x="30" y="177" width="250" height="30" rx="4" fill="white" stroke="#888"/>
+  <text x="155" y="197" font-size="15.4" text-anchor="middle" fill="#333">Relation extraction</text>
+  <line x1="155" y1="207" x2="155" y2="215" stroke="#888" marker-end="url(#ar-gray)"/>
+
+  <rect x="30" y="218" width="250" height="30" rx="4" fill="white" stroke="#888"/>
+  <text x="155" y="238" font-size="15.4" text-anchor="middle" fill="#333">Event extraction</text>
+  <line x1="155" y1="248" x2="155" y2="256" stroke="#888" marker-end="url(#ar-gray)"/>
+
+  <rect x="30" y="259" width="250" height="34" rx="4" fill="#e8e8e8" stroke="#555" stroke-width="1.5"/>
+  <text x="155" y="280" font-size="15.4" font-weight="600" text-anchor="middle" fill="#333">Knowledge base</text>
+
+  <line x1="35" y1="318" x2="275" y2="318" stroke="#bbb" stroke-dasharray="3,3"/>
+  <text x="155" y="338" font-size="15.4" font-weight="600" text-anchor="middle" fill="#555">Labor</text>
+  <text x="155" y="360" font-size="14" text-anchor="middle" fill="#555">Annotate per task, per type</text>
+  <text x="155" y="382" font-size="14" text-anchor="middle" fill="#555">Feature engineering</text>
+  <text x="155" y="404" font-size="14" text-anchor="middle" fill="#555">(POS, parse, gazetteers)</text>
+  <text x="155" y="426" font-size="14" text-anchor="middle" fill="#555">Train task-specific specialist</text>
+  <text x="155" y="448" font-size="14" text-anchor="middle" fill="#555">Tune the pipeline</text>
+  <text x="155" y="470" font-size="14" text-anchor="middle" fill="#555">Repeat per new domain</text>
+  <text x="155" y="506" font-size="14" font-style="italic" text-anchor="middle" fill="#888">"IE is the product"</text>
+
+  <!-- ============ BERT era ============ -->
+  <rect x="310" y="40" width="280" height="500" rx="8" fill="#eef4fa" stroke="#90b8d8" stroke-width="1"/>
+  <text x="450" y="62" font-size="18.2" font-weight="600" text-anchor="middle" fill="#3a7ca5">BERT era (2018-2022)</text>
+  <text x="450" y="78" font-size="14" font-style="italic" text-anchor="middle" fill="#3a7ca5">same pipeline, learned representations</text>
+
+  <rect x="325" y="95" width="250" height="30" rx="4" fill="white" stroke="#3a7ca5"/>
+  <text x="450" y="115" font-size="15.4" text-anchor="middle" fill="#333">NER · Encoder + token clf</text>
+  <line x1="450" y1="125" x2="450" y2="133" stroke="#3a7ca5" marker-end="url(#ar-blue)"/>
+
+  <rect x="325" y="136" width="250" height="30" rx="4" fill="white" stroke="#3a7ca5"/>
+  <text x="450" y="156" font-size="15.4" text-anchor="middle" fill="#333">Coref · Encoder + scorer</text>
+  <line x1="450" y1="166" x2="450" y2="174" stroke="#3a7ca5" marker-end="url(#ar-blue)"/>
+
+  <rect x="325" y="177" width="250" height="30" rx="4" fill="white" stroke="#3a7ca5"/>
+  <text x="450" y="197" font-size="15.4" text-anchor="middle" fill="#333">RE · Encoder + span-pair clf</text>
+  <line x1="450" y1="207" x2="450" y2="215" stroke="#3a7ca5" marker-end="url(#ar-blue)"/>
+
+  <rect x="325" y="218" width="250" height="30" rx="4" fill="white" stroke="#3a7ca5"/>
+  <text x="450" y="238" font-size="15.4" text-anchor="middle" fill="#333">EE · Encoder + joint heads</text>
+  <line x1="450" y1="248" x2="450" y2="256" stroke="#3a7ca5" marker-end="url(#ar-blue)"/>
+
+  <rect x="325" y="259" width="250" height="34" rx="4" fill="#dde9f3" stroke="#3a7ca5" stroke-width="1.5"/>
+  <text x="450" y="280" font-size="15.4" font-weight="600" text-anchor="middle" fill="#3a7ca5">Knowledge base</text>
+
+  <line x1="330" y1="318" x2="570" y2="318" stroke="#90b8d8" stroke-dasharray="3,3"/>
+  <text x="450" y="338" font-size="15.4" font-weight="600" text-anchor="middle" fill="#3a7ca5">Labor</text>
+  <text x="450" y="360" font-size="14" text-anchor="middle" fill="#3a4a5a">Same annotation effort</text>
+  <text x="450" y="382" font-size="14" text-anchor="middle" fill="#3a4a5a">No more feature engineering</text>
+  <text x="450" y="404" font-size="14" text-anchor="middle" fill="#3a4a5a">Fine-tune encoder per task</text>
+  <text x="450" y="426" font-size="14" text-anchor="middle" fill="#3a4a5a">Cross-lingual transfer practical</text>
+  <text x="450" y="448" font-size="14" text-anchor="middle" fill="#3a4a5a">(XLM-R, mBERT)</text>
+  <text x="450" y="470" font-size="14" text-anchor="middle" fill="#3a4a5a">Pipeline shape unchanged</text>
+  <text x="450" y="506" font-size="14" font-style="italic" text-anchor="middle" fill="#3a7ca5">"better tools, same labor"</text>
+
+  <!-- ============ LLM era ============ -->
+  <rect x="605" y="40" width="280" height="500" rx="8" fill="#f1f5ed" stroke="#a8c08e" stroke-width="1"/>
+  <text x="745" y="62" font-size="18.2" font-weight="600" text-anchor="middle" fill="#5a7a48">LLM era (2023-)</text>
+  <text x="745" y="78" font-size="14" font-style="italic" text-anchor="middle" fill="#5a7a48">extraction as the structured layer</text>
+
+  <!-- Input -->
+  <rect x="620" y="95" width="250" height="30" rx="4" fill="white" stroke="#5a7a48"/>
+  <text x="745" y="115" font-size="15.4" text-anchor="middle" fill="#333">Raw text / transcript</text>
+
+  <!-- Fan-out arrows -->
+  <line x1="700" y1="125" x2="660" y2="142" stroke="#5a7a48" marker-end="url(#ar-green)"/>
+  <line x1="745" y1="125" x2="745" y2="142" stroke="#5a7a48" marker-end="url(#ar-green)"/>
+  <line x1="790" y1="125" x2="830" y2="142" stroke="#5a7a48" marker-end="url(#ar-green)"/>
+
+  <!-- LLM calls -->
+  <rect x="618" y="146" width="78" height="28" rx="4" fill="white" stroke="#5a7a48"/>
+  <text x="657" y="164" font-size="14" text-anchor="middle" fill="#333">LLM call</text>
+
+  <rect x="706" y="146" width="78" height="28" rx="4" fill="white" stroke="#5a7a48"/>
+  <text x="745" y="164" font-size="14" text-anchor="middle" fill="#333">LLM call</text>
+
+  <rect x="794" y="146" width="78" height="28" rx="4" fill="white" stroke="#5a7a48"/>
+  <text x="833" y="164" font-size="14" text-anchor="middle" fill="#333">LLM call</text>
+
+  <text x="745" y="190" font-size="12.6" font-style="italic" text-anchor="middle" fill="#666">JSON schema per call</text>
+
+  <!-- Merge arrows -->
+  <line x1="657" y1="195" x2="715" y2="215" stroke="#5a7a48" marker-end="url(#ar-green)"/>
+  <line x1="745" y1="195" x2="745" y2="215" stroke="#5a7a48" marker-end="url(#ar-green)"/>
+  <line x1="833" y1="195" x2="775" y2="215" stroke="#5a7a48" marker-end="url(#ar-green)"/>
+
+  <!-- Frames + metadata -->
+  <rect x="620" y="219" width="250" height="48" rx="4" fill="white" stroke="#5a7a48" stroke-width="1.5"/>
+  <text x="745" y="237" font-size="15.4" font-weight="600" text-anchor="middle" fill="#333">Frames + metadata</text>
+  <text x="745" y="250" font-size="12.6" font-style="italic" text-anchor="middle" fill="#666">past · present · future</text>
+  <text x="745" y="264" font-size="12.6" font-style="italic" text-anchor="middle" fill="#666">source · section</text>
+
+  <line x1="745" y1="269" x2="745" y2="275" stroke="#5a7a48" marker-end="url(#ar-green)"/>
+
+  <!-- Downstream -->
+  <rect x="620" y="278" width="250" height="32" rx="4" fill="#e3edd9" stroke="#5a7a48" stroke-width="1.5"/>
+  <text x="745" y="299" font-size="15.4" font-weight="600" text-anchor="middle" fill="#5a7a48">Downstream system</text>
+
+  <line x1="625" y1="318" x2="865" y2="318" stroke="#a8c08e" stroke-dasharray="3,3"/>
+  <text x="745" y="338" font-size="15.4" font-weight="600" text-anchor="middle" fill="#5a7a48">Labor</text>
+  <text x="745" y="360" font-size="14" text-anchor="middle" fill="#3e5a35">Schema design</text>
+  <text x="745" y="382" font-size="14" text-anchor="middle" fill="#3e5a35">Prompt engineering per call</text>
+  <text x="745" y="404" font-size="14" text-anchor="middle" fill="#3e5a35">Evaluation (smaller, irreducible)</text>
+  <text x="745" y="426" font-size="14" text-anchor="middle" fill="#3e5a35">Workflow orchestration</text>
+  <text x="745" y="448" font-size="14" text-anchor="middle" fill="#3e5a35">Cost-aware routing</text>
+  <text x="745" y="470" font-size="14" text-anchor="middle" fill="#3e5a35">Annotation → eval, not training</text>
+  <text x="745" y="506" font-size="14" font-style="italic" text-anchor="middle" fill="#5a7a48">"IE is the structured layer"</text>
+</svg>

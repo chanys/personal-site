@@ -1,9 +1,30 @@
 ---
 title: "Writing"
+description: "Essays on how modern language models work, and on building and evaluating the systems around them."
+page-layout: full
+format:
+  html:
+    body-classes: writing-index
 listing:
-  contents: posts
+  # Standalone posts (posts/<slug>/index.qmd) and individual series *parts*
+  # (posts/series/<slug>/<part>/index.qmd). Series *landings* are intentionally
+  # excluded — they live on /series and would otherwise duplicate the index.
+  contents:
+    - "posts/*/index.qmd"
+    - "posts/series/*/*/index.qmd"
   sort: "date desc"
   type: default
   categories: true
-  feed: true
+  sort-ui: false
+  filter-ui: false
+  feed:
+    title: "Yee Seng Chan — Writing"
+    description: "Essays on how modern language models work, and on building and evaluating the systems around them."
+  fields: [date, title, description, categories]
+  date-format: "YYYY · MMM D"
+  page-size: 25
 ---
+
+::: {.column-body}
+Individual essays, newest first. Multi-part arguments are collected under [Series](series.qmd).
+:::

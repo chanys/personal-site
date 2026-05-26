@@ -1,0 +1,25 @@
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+
+::: {.series-nav}
+::: {.series-label}
+Part of a series
+:::
+::: {.series-name}
+How LLMs learn to reason
+:::
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+1. [REINFORCE: the world before the gradient](../00-reinforce-foundations/)
+2. [REINFORCE: the gradient that drives training](../00-reinforce-gradient/)
+3. [PPO is REINFORCE plus five fixes](../01-ppo/)
+4. [GRPO: The algorithm behind reasoning models](../02-grpo/)
+5. [DPO: RLHF collapsed into one loss](../03-dpo/)
+6. [R1-Zero was the result. R1 was the product](../04-r1/)
+7. [How reasoning models learn to use tools](../05-tool-use/)
+:::

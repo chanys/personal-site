@@ -1,0 +1,80 @@
+<svg viewBox="0 0 800 420" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, -apple-system, sans-serif">
+  <!-- Title -->
+  <text x="400" y="32" font-size="19.6" font-weight="600" text-anchor="middle" fill="#222">LoRA: low-rank adaptation, and what it costs to fine-tune a 7B model</text>
+
+  <!-- ============== LEFT PANEL: LoRA decomposition ============== -->
+  <g>
+    <rect x="20" y="50" width="370" height="350" rx="8" fill="#fafafa" stroke="#ddd" stroke-width="1"/>
+    <text x="205" y="74" font-size="16.8" font-weight="600" text-anchor="middle" fill="#333">LoRA: W = W₀ + BA</text>
+
+    <!-- W_0 (frozen, large) -->
+    <rect x="50" y="100" width="120" height="120" rx="6" fill="#e8f0f8" stroke="#3a7ca5" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <text x="110" y="155" font-size="19.6" font-weight="600" text-anchor="middle" fill="#222">W₀</text>
+    <text x="110" y="175" font-size="14" text-anchor="middle" fill="#666">d × k</text>
+    <text x="110" y="210" font-size="14" font-style="italic" text-anchor="middle" fill="#888">frozen</text>
+
+    <!-- Plus sign -->
+    <text x="195" y="170" font-size="30.8" font-weight="600" text-anchor="middle" fill="#444">+</text>
+
+    <!-- B (trainable, narrow tall) -->
+    <rect x="220" y="100" width="40" height="120" rx="4" fill="#fdd9d9" stroke="#a83232" stroke-width="2"/>
+    <text x="240" y="165" font-size="18.2" font-weight="600" text-anchor="middle" fill="#222">B</text>
+    <text x="240" y="180" font-size="12.6" text-anchor="middle" fill="#666">d × r</text>
+
+    <!-- Multiply sign -->
+    <text x="280" y="170" font-size="22.4" text-anchor="middle" fill="#444">·</text>
+
+    <!-- A (trainable, wide short) -->
+    <rect x="295" y="148" width="80" height="24" rx="4" fill="#fdd9d9" stroke="#a83232" stroke-width="2"/>
+    <text x="335" y="166" font-size="18.2" font-weight="600" text-anchor="middle" fill="#222">A</text>
+
+    <text x="335" y="186" font-size="12.6" text-anchor="middle" fill="#666">r × k</text>
+
+    <!-- Annotation for B and A -->
+    <text x="305" y="240" font-size="14" font-style="italic" text-anchor="middle" fill="#a83232">trainable, r ≪ min(d,k)</text>
+
+    <!-- Footnote / explanation -->
+    <line x1="40" y1="254" x2="370" y2="254" stroke="#ddd" stroke-width="1"/>
+    <text x="50" y="274" font-size="15.4" fill="#444">Trainable: r(d + k), not d · k</text>
+    <text x="50" y="298" font-size="15.4" fill="#444">For d = k = 4096, r = 8:</text>
+    <text x="65" y="322" font-size="15.4" fill="#222">• Full: 4096 × 4096 ≈ 16.8M params</text>
+    <text x="65" y="346" font-size="15.4" fill="#222">• LoRA: 8 × (4096 + 4096) ≈ 65K params</text>
+    <text x="65" y="370" font-size="15.4" font-weight="600" fill="#a83232">~250× reduction in trainable params</text>
+  </g>
+
+  <!-- ============== RIGHT PANEL: memory bar chart ============== -->
+  <g>
+    <rect x="410" y="50" width="370" height="350" rx="8" fill="#fafafa" stroke="#ddd" stroke-width="1"/>
+    <text x="595" y="74" font-size="16.8" font-weight="600" text-anchor="middle" fill="#333">Memory to fine-tune a 7B model</text>
+
+    <!-- Y-axis -->
+    <line x1="470" y1="100" x2="470" y2="320" stroke="#888" stroke-width="1"/>
+    <line x1="470" y1="320" x2="760" y2="320" stroke="#888" stroke-width="1"/>
+
+    <!-- Y-axis labels -->
+    <text x="465" y="105" font-size="14" text-anchor="end" fill="#666">~84 GB</text>
+    <text x="465" y="245" font-size="14" text-anchor="end" fill="#666">~14 GB</text>
+    <text x="465" y="298" font-size="14" text-anchor="end" fill="#666">~4 GB</text>
+    <text x="465" y="324" font-size="14" text-anchor="end" fill="#666">0</text>
+
+    <!-- Reference grid lines -->
+    <line x1="470" y1="100" x2="760" y2="100" stroke="#ddd" stroke-width="0.5" stroke-dasharray="3,3"/>
+    <line x1="470" y1="245" x2="760" y2="245" stroke="#ddd" stroke-width="0.5" stroke-dasharray="3,3"/>
+    <line x1="470" y1="295" x2="760" y2="295" stroke="#ddd" stroke-width="0.5" stroke-dasharray="3,3"/>
+
+    <!-- Bar 1: Full FT (84 GB → height ~220) -->
+    <rect x="495" y="100" width="60" height="220" fill="#fdd9d9" stroke="#a83232" stroke-width="1.5"/>
+    <text x="525" y="346" font-size="15.4" text-anchor="middle" fill="#444">Full FT</text>
+    <text x="525" y="368" font-size="12.6" text-anchor="middle" fill="#888">FP32 naive</text>
+
+    <!-- Bar 2: LoRA (14 GB → height ~75) -->
+    <rect x="595" y="245" width="60" height="75" fill="#fff4d6" stroke="#b08800" stroke-width="1.5"/>
+    <text x="625" y="346" font-size="15.4" text-anchor="middle" fill="#444">LoRA</text>
+    <text x="625" y="368" font-size="12.6" text-anchor="middle" fill="#888">FP16 base</text>
+
+    <!-- Bar 3: QLoRA (4 GB → height ~25) -->
+    <rect x="695" y="295" width="60" height="25" fill="#cfe8d4" stroke="#2e7d4f" stroke-width="1.5"/>
+    <text x="725" y="346" font-size="15.4" text-anchor="middle" fill="#444">QLoRA</text>
+    <text x="725" y="368" font-size="12.6" text-anchor="middle" fill="#888">4-bit base</text>
+  </g>
+</svg>

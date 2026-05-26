@@ -1,0 +1,84 @@
+---
+title: "Don't ask an LLM judge what code can check"
+description: "If a check can be written as code, an LLM judge is a slower, noisier, costlier way to an answer."
+date: 2026-05-22
+order: 3
+draft: true
+---
+
+{{< include ../_series.qmd >}}
+
+Most bad LLM judges are doing a simpler evaluator's job. They are asked whether JSON is valid. Whether a required field is present. Whether a tool was called. Whether a prohibited phrase appears in the final answer. Whether a handoff record contains an order ID.
+
+That is not judgment. That is checking.
+
+When a team asks an LLM judge to do what code could have checked, it gets the worst of both worlds: slower, noisier, more expensive, and harder to debug.
+
+LLM judges are useful when the evaluator needs to understand meaning in context. They are wasted when the failure has a structural shape. If the failure can be detected with code, use code. Save judges for failures that require understanding meaning.
+
+## Start with the failure mode
+
+The wrong question is *"Should we use an LLM judge here?"* The right question is *"What exactly are we trying to detect?"*
+
+- **Code check** when the failure has a structural shape: a missing required field, an invalid category, a prohibited phrase in the response.
+- **LLM judge** when the failure requires reading language in context: tone mismatch, redundant clarifying questions, subtle policy violations.
+
+## Use code for structural failures
+
+A code-based evaluator is a function. Take a trace, return a score with a reason.
+
+```python
+def check_handoff_schema(trace) -> Score:
+    required = {"case_id", "user_email", "issue_category", "summary"}
+    handoff = trace.outputs["handoff_record"]
+    missing = required - handoff.keys()
+    if missing:
+        return Score(passed=False, reason=f"Missing fields: {missing}")
+    return Score(passed=True, reason="Handoff record well-formed")
+```
+
+Five lines. Runs in milliseconds. Deterministic: same input, same output, every time. Debuggable: when it fails, the reason tells you exactly what to look at. Free: no API calls, no token costs, no rate limits. Runs on every trace, on every CI build, on every production trace if you want.
+
+Code and judges aren't always alternatives. **Sometimes they're layers.** A regex check for refund-promise language catches explicit cases (*"Your refund has been approved"*); it misses subtler implications (*"We'll make sure you get your money back"*). The fix isn't to abandon the regex for a judge. Run the cheap regex on every trace; run a more expensive judge only when the trace involves a refund request and the regex didn't fire. The principle: run cheap checks broadly, run judges where they add value.
+
+## Use LLM judges for semantic failures
+
+Some failure modes don't have a structural shape. For instance, the user is frustrated but the agent responds in an upbeat and causal manner.
+
+A judge worth trusting is binary (pass or fail, not 1-5) and grounded in labeled examples from the dataset [the previous article](/posts/series/llm-evaluation-honestly/02-eval-dataset/index.qmd) produced. [The next article](/posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.qmd) covers the prompt design and the calibration step: comparing the judge's verdicts to human labels before treating its numbers as measurement. Until then, the discipline is simple: don't deploy a judge whose agreement with humans you haven't measured.
+
+## Keep each evaluator narrow
+
+The mistake is building one big judge called `quality_judge_v3` and asking it to score everything: tone, helpfulness, schema validity, routing. That judge produces a number. It does not produce a diagnosis.
+
+It's the same reason you don't write a single function called `is_correct()` in production code. Composite signals are harder to act on, harder to debug, and harder to improve.
+
+Suppose the intake agent's "overall quality" judge drops from 87% to 81% over a release. What changed? Tone got worse? Helpfulness got worse? Grounding got worse? Some combination? The composite verdict can't tell you. You read failures by hand, you guess, and you propose a fix without knowing which dimension you're targeting.
+
+Specialized evaluators fix this. The tone judge tracks tone. The redundant-question judge tracks redundancy. When tone scores drop and redundancy scores hold steady, you know what changed. When you fix the tone issue, the tone judge tells you whether the fix worked.
+
+![One number can't tell you what broke. The composite quality_judge_v3 score drops from 87% to 81% over a release, which leaves you asking "what changed?" and reading failures by hand to guess. The narrow stack of evaluators, run on the same release, shows Tone dropping from 87 to 60 while Redundancy, Schema, Routing, and Escalation all held steady. Same release, same data; the diagnosis only exists in the narrow view.](composite_vs_narrow.png){#fig-composite-vs-narrow fig-alt="Two contrasting cards. Left card, red border: composite judge quality_judge_v3, showing one big number 87 percent dropping to 81 percent, minus 6 points over one release, then the question what changed in large italic red, with a note that you have to read failures by hand and guess. Right card, green border: narrow evaluators, listing five dimensions with their before-and-after scores. Tone drops 87 to 60, marked with a red down arrow and minus 27. Redundancy 89 to 88, Schema 96 to 96, Routing 86 to 87, Escalation 80 to 80, all held steady. Verdict in green: tone regressed, fix tone. Caption: composite scores tell you something moved, narrow evaluators tell you what."}
+
+The cost is more API calls per trace, one per judge instead of one total. In practice this is cheap, because most evaluation runs sample only a fraction of production traffic. The per-trace cost matters less than signal quality.
+
+A reasonable evaluator stack for the intake agent might look like:
+
+| Evaluator | Failure mode | Mechanism |
+|---|---|---|
+| `no_refund_promise` | Forbidden refund-approval language | Code (regex) |
+| `handoff_schema` | Required handoff fields populated | Code (schema check) |
+| `order_id_confirmed` | Order ID confirmed before handoff | Code (state predicate) |
+| `escalation_honored` | Escalation when user requests human | Code (state predicate) |
+| `tone_appropriate` | Tone matches user's emotional register | LLM judge |
+| `no_redundant_question` | Clarifying question wasn't already answered | LLM judge |
+| `classification_correct` | Issue routed to the right category | Reference-based check |
+
+Seven evaluators, each answering one question. When the dashboard shows a regression, you can identify which question's answer changed.
+
+One related discipline: when a regression case enters the suite, tag it by the layer where the failure originated, not the layer where it became visible. A malformed handoff at turn 5 caused by a classifier misread at turn 3 should be tagged as a classifier failure.
+
+## Code first, judges when you need them
+
+[Your LLM judge is a classifier](/posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.qmd) covers the next layer: making judges trustworthy when you do need them. A judge that produces verdicts in the right format isn't the same as a judge that produces correct verdicts.
+
+The next time someone proposes a judge, first ask: *could code answer this?*

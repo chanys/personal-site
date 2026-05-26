@@ -1,0 +1,84 @@
+<svg viewBox="0 0 1000 456" xmlns="http://www.w3.org/2000/svg" font-family="Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <style>.title { font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif; }</style>
+  </defs>
+
+  <rect width="1000" height="456" fill="#ffffff"/>
+
+  <text class="title" x="40" y="54" font-size="32" font-weight="700" fill="#161B2B">Production stopped at step one</text>
+
+  <!-- Lane labels -->
+  <text x="40" y="138" font-size="13" font-weight="700" letter-spacing="1.2" fill="#0F766E">JOINT TRAINING</text>
+  <text x="40" y="198" font-size="13" font-weight="700" letter-spacing="1.2" fill="#B45309">LATE INTERACTION</text>
+  <text x="40" y="258" font-size="13" font-weight="700" letter-spacing="1.2" fill="#3730A3">BI-ENCODER DENSE</text>
+  <text x="40" y="318" font-size="13" font-weight="700" letter-spacing="1.2" fill="#6B7280">LEXICAL</text>
+
+  <!-- Lane lines (right of axis break) -->
+  <line x1="250" y1="134" x2="970" y2="134" stroke="#B6E0D5" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="250" y1="194" x2="970" y2="194" stroke="#F5D7A0" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="250" y1="254" x2="970" y2="254" stroke="#C9CFF6" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="250" y1="314" x2="970" y2="314" stroke="#E5E7EF" stroke-width="1" stroke-dasharray="4 4"/>
+
+  <!-- Paper nodes -->
+  <!-- BM25 (lexical, 2009) -->
+  <rect x="150" y="298" width="60" height="32" rx="8" fill="#ffffff" stroke="#9AA0AE" stroke-width="1.4"/>
+  <text x="180" y="320" font-size="15" font-weight="700" fill="#374151" text-anchor="middle">BM25</text>
+
+  <!-- REALM (joint training, Feb 2020) -->
+  <rect x="289" y="118" width="72" height="32" rx="8" fill="#ffffff" stroke="#0D9488" stroke-width="1.4"/>
+  <text x="325" y="140" font-size="15" font-weight="700" fill="#0F766E" text-anchor="middle">REALM</text>
+
+  <!-- DPR (bi-encoder, Apr 2020) — EMPHASIZED -->
+  <rect x="340" y="238" width="60" height="32" rx="8" fill="#EEF1FE" stroke="#4F46E5" stroke-width="2.2"/>
+  <text x="370" y="260" font-size="15" font-weight="700" fill="#3730A3" text-anchor="middle">DPR</text>
+
+  <!-- ColBERT (late interaction, Apr 2020) -->
+  <rect x="380" y="178" width="90" height="32" rx="8" fill="#ffffff" stroke="#D97706" stroke-width="1.4"/>
+  <text x="425" y="200" font-size="15" font-weight="700" fill="#B45309" text-anchor="middle">ColBERT</text>
+
+  <!-- RAG (joint training, May 2020) -->
+  <rect x="440" y="118" width="60" height="32" rx="8" fill="#ffffff" stroke="#0D9488" stroke-width="1.4"/>
+  <text x="470" y="140" font-size="15" font-weight="700" fill="#0F766E" text-anchor="middle">RAG</text>
+
+  <!-- ColBERTv2 (late interaction, Dec 2021) -->
+  <rect x="580" y="178" width="110" height="32" rx="8" fill="#ffffff" stroke="#D97706" stroke-width="1.4"/>
+  <text x="635" y="200" font-size="15" font-weight="700" fill="#B45309" text-anchor="middle">ColBERTv2</text>
+
+  <!-- End-to-end RAG (joint training, Oct 2022) -->
+  <rect x="725" y="118" width="150" height="32" rx="8" fill="#ffffff" stroke="#0D9488" stroke-width="1.4"/>
+  <text x="800" y="140" font-size="15" font-weight="700" fill="#0F766E" text-anchor="middle">End-to-end RAG</text>
+
+  <!-- RA-DIT (joint training, Oct 2023) -->
+  <rect x="910" y="118" width="80" height="32" rx="8" fill="#ffffff" stroke="#0D9488" stroke-width="1.4"/>
+  <text x="950" y="140" font-size="15" font-weight="700" fill="#0F766E" text-anchor="middle">RA-DIT</text>
+
+  <!-- "production sits here" annotation below DPR -->
+  <line x1="370" y1="272" x2="370" y2="282" stroke="#4F46E5" stroke-width="1.4"/>
+  <text x="370" y="296" font-size="13" font-style="italic" font-weight="700" fill="#3730A3" text-anchor="middle">production sits here</text>
+
+  <!-- X-axis with break -->
+  <line x1="125" y1="358" x2="215" y2="358" stroke="#C7CAD6" stroke-width="1.2"/>
+  <line x1="250" y1="358" x2="970" y2="358" stroke="#C7CAD6" stroke-width="1.2"/>
+  <line x1="218" y1="364" x2="232" y2="352" stroke="#C7CAD6" stroke-width="1.2"/>
+  <line x1="233" y1="364" x2="247" y2="352" stroke="#C7CAD6" stroke-width="1.2"/>
+
+  <!-- Year ticks -->
+  <line x1="180" y1="358" x2="180" y2="364" stroke="#C7CAD6" stroke-width="1.2"/>
+  <text x="180" y="380" font-size="14" fill="#6B7280" text-anchor="middle">2009</text>
+
+  <line x1="395" y1="358" x2="395" y2="364" stroke="#C7CAD6" stroke-width="1.2"/>
+  <text x="395" y="380" font-size="14" fill="#6B7280" text-anchor="middle">2020</text>
+
+  <line x1="565" y1="358" x2="565" y2="364" stroke="#C7CAD6" stroke-width="1.2"/>
+  <text x="565" y="380" font-size="14" fill="#6B7280" text-anchor="middle">2021</text>
+
+  <line x1="730" y1="358" x2="730" y2="364" stroke="#C7CAD6" stroke-width="1.2"/>
+  <text x="730" y="380" font-size="14" fill="#6B7280" text-anchor="middle">2022</text>
+
+  <line x1="890" y1="358" x2="890" y2="364" stroke="#C7CAD6" stroke-width="1.2"/>
+  <text x="890" y="380" font-size="14" fill="#6B7280" text-anchor="middle">2023</text>
+
+  <!-- Footer -->
+  <line x1="80" y1="410" x2="920" y2="410" stroke="#EBECF2" stroke-width="1"/>
+  <text x="500" y="438" font-size="17" font-style="italic" fill="#5B6170" text-anchor="middle">Production rode the bi-encoder and stopped at DPR. The joint-training lineage is what got skipped.</text>
+</svg>

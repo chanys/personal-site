@@ -1,0 +1,25 @@
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+
+::: {.series-nav}
+::: {.series-label}
+Part of a series
+:::
+::: {.series-name}
+LLM evaluation, honestly
+:::
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+1. [Stop vibe-checking your agent](../01-stop-vibe-checking/)
+2. [Read traces before you write the labeling guide](../02-eval-dataset/)
+3. [Don't ask an LLM judge what code can check](../03-judge-vs-code/)
+4. [Your LLM judge is a classifier](../04-judge-is-classifier/)
+5. [Eval scores are samples, not truth](../05-scores-are-samples/)
+6. [Your RAG score hides the diagnosis](../06-rag-evaluation/)
+7. [Your eval system also drifts](../07-eval-drift/)
+:::

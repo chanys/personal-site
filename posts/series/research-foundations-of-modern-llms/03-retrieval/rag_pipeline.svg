@@ -1,0 +1,100 @@
+<svg viewBox="0 0 1000 560" xmlns="http://www.w3.org/2000/svg" font-family="Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <style>.title { font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif; }</style>
+    <marker id="ar" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M0,0 L10,5 L0,10 L2.5,5 Z" fill="#6B7280"/>
+    </marker>
+    <marker id="ar-green" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M0,0 L10,5 L0,10 L2.5,5 Z" fill="#10B981"/>
+    </marker>
+  </defs>
+
+  <!-- White background -->
+  <rect width="1000" height="560" fill="#ffffff"/>
+
+  <!-- Title -->
+  <text class="title" x="500" y="38" font-size="26" font-weight="700" fill="#161B2B" text-anchor="middle">Production RAG pipeline</text>
+
+  <!-- ===== OFFLINE INDEXING ===== -->
+  <text x="40" y="86" font-size="16" font-style="italic" fill="#6B7280">Offline indexing</text>
+
+  <!-- Documents -->
+  <rect x="60" y="110" width="160" height="74" rx="8" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.4"/>
+  <text x="140" y="153" font-size="19" fill="#1B2030" text-anchor="middle">Documents</text>
+
+  <line x1="220" y1="147" x2="265" y2="147" stroke="#6B7280" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- Chunker -->
+  <rect x="265" y="110" width="160" height="74" rx="8" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.4"/>
+  <text x="345" y="143" font-size="19" fill="#1B2030" text-anchor="middle">Chunker</text>
+  <text x="345" y="165" font-size="14" fill="#6B7280" text-anchor="middle">256–512 tokens</text>
+
+  <line x1="425" y1="147" x2="470" y2="147" stroke="#6B7280" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- Embedder (offline) -->
+  <rect x="470" y="110" width="160" height="74" rx="8" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.4"/>
+  <text x="550" y="143" font-size="19" fill="#1B2030" text-anchor="middle">Embedder</text>
+  <text x="550" y="165" font-size="14" fill="#6B7280" text-anchor="middle">frozen</text>
+
+  <line x1="630" y1="147" x2="675" y2="147" stroke="#6B7280" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- Vector DB (storage, green) -->
+  <rect x="675" y="110" width="160" height="74" rx="8" fill="#D1FAE5" stroke="#10B981" stroke-width="1.6"/>
+  <text x="755" y="143" font-size="19" font-weight="700" fill="#1B2030" text-anchor="middle">Vector DB</text>
+  <text x="755" y="165" font-size="14" fill="#6B7280" text-anchor="middle">HNSW index</text>
+
+  <!-- ===== HORIZONTAL DASHED DIVIDER ===== -->
+  <line x1="40" y1="232" x2="960" y2="232" stroke="#9AA0AE" stroke-width="1" stroke-dasharray="6 5"/>
+
+  <!-- ===== ONLINE QUERY ===== -->
+  <text x="40" y="272" font-size="16" font-style="italic" fill="#6B7280">Online query</text>
+
+  <!-- Query (input, amber) -->
+  <rect x="30" y="296" width="130" height="74" rx="8" fill="#FEF3C7" stroke="#D97706" stroke-width="1.4"/>
+  <text x="95" y="339" font-size="19" fill="#1B2030" text-anchor="middle">Query</text>
+
+  <line x1="160" y1="333" x2="205" y2="333" stroke="#6B7280" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- Embedder (online) -->
+  <rect x="205" y="296" width="160" height="74" rx="8" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.4"/>
+  <text x="285" y="329" font-size="19" fill="#1B2030" text-anchor="middle">Embedder</text>
+  <text x="285" y="351" font-size="14" fill="#6B7280" text-anchor="middle">same model</text>
+
+  <line x1="365" y1="333" x2="410" y2="333" stroke="#6B7280" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- Top-k -->
+  <rect x="410" y="296" width="140" height="74" rx="8" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.4"/>
+  <text x="480" y="329" font-size="19" fill="#1B2030" text-anchor="middle">Top-k</text>
+  <text x="480" y="351" font-size="14" fill="#6B7280" text-anchor="middle">k = 10–50</text>
+
+  <line x1="550" y1="333" x2="595" y2="333" stroke="#6B7280" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- Rerank (optional, dashed border) -->
+  <rect x="595" y="296" width="160" height="74" rx="8" fill="#ffffff" stroke="#9AA0AE" stroke-width="1.4" stroke-dasharray="6 4"/>
+  <text x="675" y="329" font-size="19" fill="#1B2030" text-anchor="middle">Rerank</text>
+  <text x="675" y="351" font-size="14" fill="#6B7280" text-anchor="middle">cross-encoder</text>
+  <text x="675" y="392" font-size="14" font-style="italic" fill="#9AA0AE" text-anchor="middle">optional</text>
+
+  <line x1="755" y1="333" x2="800" y2="333" stroke="#6B7280" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- Assembly -->
+  <rect x="800" y="296" width="160" height="74" rx="8" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.4"/>
+  <text x="880" y="329" font-size="19" fill="#1B2030" text-anchor="middle">Assembly</text>
+  <text x="880" y="351" font-size="14" fill="#6B7280" text-anchor="middle">prompt template</text>
+
+  <!-- ===== DOWN ARROW: Assembly → LLM ===== -->
+  <line x1="880" y1="372" x2="880" y2="438" stroke="#6B7280" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- LLM (pink/red) -->
+  <rect x="800" y="440" width="160" height="74" rx="8" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.4"/>
+  <text x="880" y="473" font-size="19" fill="#1B2030" text-anchor="middle">LLM</text>
+  <text x="880" y="495" font-size="14" fill="#6B7280" text-anchor="middle">frozen</text>
+
+  <!-- LLM → Answer arrow (leftward) -->
+  <line x1="800" y1="477" x2="725" y2="477" stroke="#6B7280" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="715" y="483" font-size="19" font-weight="700" fill="#1B2030" text-anchor="end">Answer</text>
+
+  <!-- ===== DASHED GREEN CURVED ARROW: Vector DB → Top-k ===== -->
+  <path d="M 755 186 C 755 232, 480 248, 480 294" fill="none" stroke="#10B981" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#ar-green)"/>
+  <text x="617" y="226" font-size="14" font-style="italic" fill="#10B981" text-anchor="middle">retrieved from index</text>
+</svg>

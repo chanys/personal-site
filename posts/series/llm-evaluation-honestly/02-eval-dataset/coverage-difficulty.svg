@@ -1,0 +1,62 @@
+<svg viewBox="0 0 1000 672" xmlns="http://www.w3.org/2000/svg" font-family="Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <style>.title { font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif; }</style>
+  </defs>
+
+  <rect width="1000" height="672" fill="#ffffff"/>
+
+  <text class="title" x="40" y="54" font-size="32" font-weight="700" fill="#161B2B">Design the dataset on two axes</text>
+  <text x="40" y="90" font-size="18" fill="#6B7280">A useful eval set is designed on two axes, not sampled flat.</text>
+
+  <!-- COVERAGE -->
+  <rect x="40" y="116" width="440" height="480" rx="16" fill="#ffffff" stroke="#4F46E5" stroke-width="1.8"/>
+  <text x="260" y="174" font-size="34" font-weight="700" fill="#3730A3" text-anchor="middle">COVERAGE</text>
+  <text x="260" y="212" font-size="18" fill="#5B6170" text-anchor="middle">what situations the set must contain</text>
+  <line x1="64" y1="240" x2="456" y2="240" stroke="#EBECF2" stroke-width="1"/>
+
+  <circle cx="64" cy="282" r="5" fill="#4F46E5"/>
+  <text x="84" y="288" font-size="21" font-weight="700" fill="#1B2030">Main tasks</text>
+  <text x="84" y="314" font-size="16" fill="#5B6170">book · reschedule · cancel</text>
+
+  <circle cx="64" cy="354" r="5" fill="#4F46E5"/>
+  <text x="84" y="360" font-size="21" font-weight="700" fill="#1B2030">Common ambiguity</text>
+  <text x="84" y="386" font-size="16" fill="#5B6170">which Alex · vague time · forwarded thread</text>
+
+  <circle cx="64" cy="426" r="5" fill="#4F46E5"/>
+  <text x="84" y="432" font-size="21" font-weight="700" fill="#1B2030">High-risk failures</text>
+  <text x="84" y="458" font-size="16" fill="#5B6170">wrong calendar · premature confirm · perm error</text>
+
+  <rect x="64" y="500" width="392" height="72" rx="12" fill="#EEF1FE"/>
+  <text x="260" y="534" font-size="18" font-weight="700" fill="#1B2030" text-anchor="middle">Set target counts per slice</text>
+  <text x="260" y="558" font-size="15.5" fill="#4B5563" text-anchor="middle">decide before collecting</text>
+
+  <!-- DIFFICULTY -->
+  <rect x="520" y="116" width="440" height="480" rx="16" fill="#ffffff" stroke="#0D9488" stroke-width="1.8"/>
+  <text x="740" y="174" font-size="34" font-weight="700" fill="#0F766E" text-anchor="middle">DIFFICULTY</text>
+  <text x="740" y="212" font-size="18" fill="#5B6170" text-anchor="middle">how hard each case is</text>
+  <line x1="544" y1="240" x2="936" y2="240" stroke="#EBECF2" stroke-width="1"/>
+
+  <circle cx="544" cy="278" r="5" fill="#0D9488"/>
+  <text x="564" y="284" font-size="21" font-weight="700" fill="#1B2030">Easy</text>
+  <text x="564" y="308" font-size="16" fill="#5B6170">guards against regressions</text>
+
+  <circle cx="544" cy="334" r="5" fill="#0D9488"/>
+  <text x="564" y="340" font-size="21" font-weight="700" fill="#1B2030">Medium</text>
+  <text x="564" y="364" font-size="16" fill="#5B6170">shows if it's improving</text>
+
+  <circle cx="544" cy="390" r="5" fill="#0D9488"/>
+  <text x="564" y="396" font-size="21" font-weight="700" fill="#1B2030">Hard</text>
+  <text x="564" y="420" font-size="16" fill="#5B6170">the frontier</text>
+
+  <circle cx="544" cy="446" r="5" fill="#0D9488"/>
+  <text x="564" y="452" font-size="21" font-weight="700" fill="#1B2030">Safety</text>
+  <text x="564" y="476" font-size="16" fill="#5B6170">must refuse or escalate</text>
+
+  <rect x="544" y="500" width="392" height="72" rx="12" fill="#E9FBF6"/>
+  <text x="740" y="534" font-size="18" font-weight="700" fill="#1B2030" text-anchor="middle">Keep a visible mix</text>
+  <text x="740" y="558" font-size="15.5" fill="#4B5563" text-anchor="middle">too easy saturates, too hard hides progress</text>
+
+  <!-- FOOTER -->
+  <line x1="80" y1="624" x2="920" y2="624" stroke="#EBECF2" stroke-width="1"/>
+  <text x="500" y="652" font-size="18" font-style="italic" fill="#5B6170" text-anchor="middle">Raw production clusters in easy + main-task. Design the rest in deliberately.</text>
+</svg>

@@ -1,0 +1,59 @@
+<svg viewBox="0 0 1000 820" xmlns="http://www.w3.org/2000/svg" font-family="Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <style>
+      .mono { font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace; }
+    </style>
+  </defs>
+
+  <rect width="1000" height="820" fill="#ffffff"/>
+
+  <!-- ============================ HEADERS ============================ -->
+  <text x="270" y="56" font-size="26" font-weight="700" fill="#1B2030" text-anchor="middle">Bad log</text>
+  <text x="730" y="56" font-size="26" font-weight="700" fill="#1B2030" text-anchor="middle">Useful trace step</text>
+
+  <line x1="80" y1="78" x2="460" y2="78" stroke="#E5E7EF" stroke-width="1.2"/>
+  <line x1="540" y1="78" x2="920" y2="78" stroke="#E5E7EF" stroke-width="1.2"/>
+
+  <!-- ============================ LEFT CARD: Bad log ============================ -->
+  <rect x="80" y="110" width="380" height="430" rx="8" fill="#FFFCFC" stroke="#DC2626" stroke-width="1.5"/>
+
+  <g class="mono" font-size="16" fill="#1B2030">
+    <text x="105" y="158">14:23:18 run_551 query received</text>
+    <text x="105" y="198">14:23:19 run_551 tool_call:</text>
+    <text x="125" y="222">retrieval, status: success</text>
+    <text x="105" y="262">14:23:21 run_551 response generated</text>
+    <text x="105" y="302">14:23:21 run_551 run completed</text>
+  </g>
+
+  <text x="270" y="404" font-size="18" font-style="italic" fill="#6B7280" text-anchor="middle">events recorded;</text>
+  <text x="270" y="434" font-size="18" font-style="italic" fill="#6B7280" text-anchor="middle">no decisions, no context,</text>
+  <text x="270" y="464" font-size="18" font-style="italic" fill="#6B7280" text-anchor="middle">no verification, no state</text>
+
+  <!-- ============================ RIGHT CARD: Useful trace step ============================ -->
+  <rect x="540" y="110" width="380" height="680" rx="8" fill="#ffffff" stroke="#4F46E5" stroke-width="1.5"/>
+
+  <g class="mono" font-size="16" fill="#1B2030">
+    <text x="562" y="146">step_kind: synthesize</text>
+    <text x="562" y="174">versions: {prompt, index, validator}</text>
+    <text x="562" y="202">state_before:</text>
+    <text x="582" y="230">phase: synthesize</text>
+    <text x="582" y="258">query: "trial accounts retention?"</text>
+    <text x="582" y="286">retrieved_passages:</text>
+    <text x="602" y="314">psg_1102 (trial_accounts)</text>
+    <text x="602" y="342">psg_0871 (general)</text>
+    <text x="602" y="370" fill="#9AA0AE">... 3 more (general)</text>
+    <text x="562" y="402">context_pack:</text>
+    <text x="582" y="430">retrieved_refs: [psg_1102, ...]</text>
+    <text x="582" y="458" fill="#B91C1C">passage_metadata_included: False</text>
+    <text x="562" y="490">action_chosen:</text>
+    <text x="582" y="518">type: draft_grounded_answer</text>
+    <text x="582" y="546">reason: "5 passages retrieved..."</text>
+    <text x="562" y="578">verification:</text>
+    <text x="582" y="606">all_claims_cited: True</text>
+    <text x="582" y="634" fill="#B91C1C">category_alignment_check: not_run</text>
+    <text x="562" y="666">state_after:</text>
+    <text x="582" y="694">phase: validate</text>
+    <text x="582" y="722" fill="#B91C1C">claims: [{evidence: [psg_0871]}]</text>
+    <text x="582" y="750">drafted_answer: "30 days..."</text>
+  </g>
+</svg>

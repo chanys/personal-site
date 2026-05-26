@@ -1,0 +1,76 @@
+<svg viewBox="0 0 1000 480" xmlns="http://www.w3.org/2000/svg" font-family="Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <style>.title { font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif; }</style>
+    <marker id="ar" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M0,0 L10,5 L0,10 L2.5,5 Z" fill="#9AA0AE"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="480" fill="#ffffff"/>
+
+  <text class="title" x="40" y="54" font-size="30" font-weight="700" fill="#161B2B">DPO collapsed the RLHF pipeline</text>
+
+  <!-- ============================ CARD A: PPO + RLHF ============================ -->
+  <rect x="40" y="88" width="440" height="300" rx="14" fill="#ffffff" stroke="#D97706" stroke-width="1.6"/>
+  <text x="260" y="124" font-size="24" font-weight="700" fill="#1B2030" text-anchor="middle">PPO + RLHF</text>
+
+  <text x="260" y="158" font-size="12" font-weight="700" letter-spacing="1.5" fill="#9AA0AE" text-anchor="middle">PIPELINE</text>
+
+  <!-- Pipeline: preferences -> reward model -> PPO + rollouts -->
+  <rect x="60" y="170" width="100" height="40" rx="8" fill="#ffffff" stroke="#C7CAD6" stroke-width="1.1"/>
+  <text x="110" y="195" font-size="13.5" fill="#1B2030" text-anchor="middle">preferences</text>
+  <line x1="160" y1="190" x2="190" y2="190" stroke="#9AA0AE" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <rect x="190" y="170" width="100" height="40" rx="8" fill="#ffffff" stroke="#C7CAD6" stroke-width="1.1"/>
+  <text x="240" y="195" font-size="13.5" fill="#1B2030" text-anchor="middle">reward model</text>
+  <line x1="290" y1="190" x2="320" y2="190" stroke="#9AA0AE" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <rect x="320" y="170" width="100" height="40" rx="8" fill="#ffffff" stroke="#C7CAD6" stroke-width="1.1"/>
+  <text x="370" y="195" font-size="13.5" fill="#1B2030" text-anchor="middle">PPO + rollouts</text>
+
+  <text x="260" y="240" font-size="12" font-weight="700" letter-spacing="1.5" fill="#9AA0AE" text-anchor="middle">MODELS IN MEMORY</text>
+
+  <!-- 4 model boxes: policy, value (trained, filled indigo) | reward, reference (frozen, gray) -->
+  <rect x="78" y="252" width="80" height="44" rx="8" fill="#EEF1FE" stroke="#4F46E5" stroke-width="1.4"/>
+  <text x="118" y="280" font-size="14" font-weight="700" fill="#3730A3" text-anchor="middle">policy</text>
+
+  <rect x="173" y="252" width="80" height="44" rx="8" fill="#EEF1FE" stroke="#4F46E5" stroke-width="1.4"/>
+  <text x="213" y="280" font-size="14" font-weight="700" fill="#3730A3" text-anchor="middle">value</text>
+
+  <rect x="268" y="252" width="80" height="44" rx="8" fill="#ffffff" stroke="#C7CAD6" stroke-width="1.2"/>
+  <text x="308" y="280" font-size="14" font-weight="600" fill="#6B7280" text-anchor="middle">reward</text>
+
+  <rect x="363" y="252" width="80" height="44" rx="8" fill="#ffffff" stroke="#C7CAD6" stroke-width="1.2"/>
+  <text x="403" y="280" font-size="14" font-weight="600" fill="#6B7280" text-anchor="middle">reference</text>
+
+  <text x="260" y="338" font-size="14.5" fill="#5B6170" text-anchor="middle">2 trained  ·  4 in memory  ·  online rollouts</text>
+
+  <!-- ============================ CARD B: DPO ============================ -->
+  <rect x="520" y="88" width="440" height="300" rx="14" fill="#ffffff" stroke="#0D9488" stroke-width="1.6"/>
+  <text x="740" y="124" font-size="24" font-weight="700" fill="#1B2030" text-anchor="middle">DPO</text>
+
+  <text x="740" y="158" font-size="12" font-weight="700" letter-spacing="1.5" fill="#9AA0AE" text-anchor="middle">PIPELINE</text>
+
+  <!-- Pipeline: preferences -> DPO loss -->
+  <rect x="600" y="170" width="120" height="40" rx="8" fill="#ffffff" stroke="#C7CAD6" stroke-width="1.1"/>
+  <text x="660" y="195" font-size="13.5" fill="#1B2030" text-anchor="middle">preferences</text>
+  <line x1="720" y1="190" x2="760" y2="190" stroke="#9AA0AE" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <rect x="760" y="170" width="120" height="40" rx="8" fill="#ffffff" stroke="#C7CAD6" stroke-width="1.1"/>
+  <text x="820" y="195" font-size="13.5" fill="#1B2030" text-anchor="middle">DPO loss</text>
+
+  <text x="740" y="240" font-size="12" font-weight="700" letter-spacing="1.5" fill="#9AA0AE" text-anchor="middle">MODELS IN MEMORY</text>
+
+  <!-- 2 model boxes: policy (trained), reference (frozen) -->
+  <rect x="630" y="252" width="100" height="44" rx="8" fill="#EEF1FE" stroke="#4F46E5" stroke-width="1.4"/>
+  <text x="680" y="280" font-size="14" font-weight="700" fill="#3730A3" text-anchor="middle">policy</text>
+
+  <rect x="750" y="252" width="100" height="44" rx="8" fill="#ffffff" stroke="#C7CAD6" stroke-width="1.2"/>
+  <text x="800" y="280" font-size="14" font-weight="600" fill="#6B7280" text-anchor="middle">reference</text>
+
+  <text x="740" y="338" font-size="14.5" fill="#5B6170" text-anchor="middle">1 trained  ·  2 in memory  ·  no rollouts</text>
+
+  <!-- ============================ Footer ============================ -->
+  <line x1="80" y1="416" x2="920" y2="416" stroke="#EBECF2" stroke-width="1"/>
+  <text x="500" y="446" font-size="17" font-style="italic" fill="#5B6170" text-anchor="middle">Same KL-regularized objective. Half the moving parts.</text>
+</svg>

@@ -1,0 +1,121 @@
+---
+title: "Stop vibe-checking your agent"
+description: "Eyeballing a handful of runs feels like evaluation and isn't."
+date: 2026-05-15
+order: 1
+draft: true
+---
+
+{{< include ../_series.qmd >}}
+
+Some teams evaluate by feel: read a few runs after a prompt change, form an impression, ship. It works until something changes: a prompt update seems better but nobody can prove it, or a refactor might break something nobody can name.
+
+The first useful eval system replaces feel with a loop: [traces](/posts/series/the-agent-harness/05-traces/index.qmd), labels, failure modes, checks and judges, regression cases, and a regular review that feeds new failures back in.
+
+This series is about evaluating LLM agents: turning the observable behavior the [harness](/posts/series/the-agent-harness/index.qmd) captures into evidence.
+
+The running example: a customer support intake agent that classifies issues, asks clarifying questions, captures relevant facts, and produces a handoff record for a human. No refunds, no side-effecting tools.
+
+## What eval is for
+
+A score is useful only if it changes what the team does next. Eval supports different decisions at different stages: during development, whether a new prompt is better; before merge, whether old failures came back; in production, whether new failure patterns are emerging.
+
+The operational test for any metric: *When this number moves, what decision changes?* If the answer is merge, hold, investigate, roll back, or add a regression case, the metric is useful. If the answer is "nothing," it does not belong on the dashboard.
+
+## The minimum viable eval loop
+
+A useful eval system starts with traces and ends with decisions. The first version needs six pieces: traces, labels, failure modes, checks and judges, regression cases, and a regular review.
+
+![The minimum viable eval loop. Traces become labels, labels reveal failure modes, failure modes become checks and judges, checks and judges produce regression cases, and a regular review turns recent failures into decisions. The loop only works if it closes: new production failures re-enter as traces and regression cases rather than disappearing into Slack.](eval_mvp_loop.png){#fig-eval-loop fig-alt="A closed six-stage cycle. Stage 1 Traces, more than the final answer. Stage 2 Labels, pass or fail plus a short critique. Stage 3 Failure modes, patterns across many labels. Stage 4 Checks and judges, code checks plus LLM judges. Stage 5 Regression cases, real failures frozen as tests. Stage 6 Review and decide, merge, hold, or roll back. An arrow flows clockwise through all six, and a highlighted return edge from Review and decide back to Traces is labelled new production failures re-enter, closing the loop. Caption: start small, use real failures, make every new failure feed back into the loop."}
+
+### 1. Traces
+
+A trace records one agent run: state, retrieved context, actions, tool calls, verification, and the final state it saved. It shows how the agent got there, not just where it ended up.
+
+An agent's final message often hides the real failure. The intake agent might say: *"Thanks, I captured your request and will route it to our support team for review."* The trace may show that it classified the issue as "billing" instead of "refund," failed to copy the order ID into the handoff, and marked the user's frustration as "low" despite the message *"I've asked about this three times already."*
+
+Reading only the final answer misses the first bad move. A malformed handoff at turn five may trace back to a misclassification at turn three.
+
+![The final answer hides the first bad move. A final-answer check sees only the agent's closing message, which reads fine and would pass. The trace shows the run was already broken: at turn 3 the issue was misclassified as billing instead of refund (the first bad move), which propagated to a mismarked frustration level at turn 4 and a handoff with the order ID dropped at turn 5. The turn-5 failure traces back to the turn-3 misclassification.](trace_first_bad_move.png){#fig-first-bad-move fig-alt="Two panels. Top, what a final-answer check sees: the agent message, quote, Thanks, I captured your request and will route it to the support team, unquote, with a green PASS badge. Bottom, what the trace shows: four turn cards. Turns 1 to 2, issue captured, ok. Turn 3, classified billing, marked wrong with should be refund, tagged FIRST BAD MOVE. Turn 4, frustration set to low, marked wrong, user said asked three times. Turn 5, handoff written, marked wrong, order ID dropped. An arrow runs from Turn 5 back to Turn 3 labelled traces back to. Caption: eval that reads only the final answer misses the first bad move."}
+
+### 2. Labels
+
+A label is a human judgment attached to a trace: pass or fail, plus a short critique. For example: *"Failed: agent routed the case as billing instead of refund at turn three; downstream handoff omitted refund-request status."* That critique tells the team what failed, where, and what to watch for. A score of 3 out of 5 does not.
+
+### 3. Failure modes
+
+After reading thirty or forty labeled traces, **failure modes** emerge: refund language the agent should not have used, redundant clarifying questions, dropped order IDs, missing handoff fields. Without them, every problem collapses into "the prompt is bad."
+
+[A later article](/posts/series/llm-evaluation-honestly/02-eval-dataset/index.qmd) goes deeper on building this dataset: which traces to sample, how to label them, and how failure modes emerge from reading real runs.
+
+### 4. Checks and judges
+
+Each important failure mode should become either a check or a judge.
+
+- **A check** is a function that examines a trace and returns pass or fail without an LLM call. Use checks for structural failures: refund language appears, a required field is missing, the handoff schema is invalid, or the order ID was dropped.
+- **A judge** is a separate LLM that examines a trace and returns a verdict on something a function cannot reliably decide. Use judges for semantic failures: the clarifying question was redundant, the tone was wrong, or the agent answered the wrong question.
+
+![Check or judge? A check is a deterministic function with no LLM call, used for structural failures (refund language present, required field missing, order ID dropped); it is cheap and should run on every change. A judge is a separate LLM call, used for semantic failures (redundant clarifying question, wrong tone, answered the wrong question); it needs calibration against human labels before it can be trusted.](check_or_judge.png){#fig-check-or-judge fig-alt="Two cards. Left, CHECK: a function, no LLM call; use for structural failures; examples refund language present, required field missing, order ID dropped; cheap and deterministic, run it on every change. Right, JUDGE: a separate LLM call; use for semantic failures; examples redundant clarifying question, wrong tone, answered the wrong question; needs calibration against human labels. Footer rule: structural goes to a check, semantic goes to a judge; if code can decide it, don't ask an LLM."}
+
+For example, "the agent must never promise a refund" should be a code check:
+
+```python
+def evaluate_no_refund_promise(trace) -> Score:
+    response = trace.outputs.get("agent_response", "")
+    matches = find_matches(response, REFUND_PROMISE_PATTERNS)
+
+    if matches:
+        return Score(
+            passed=False,
+            reason=f"Refund-promise language: {matches}",
+        )
+
+    return Score(passed=True, reason="No refund-promise language")
+```
+
+Checks are cheap and deterministic. Run them on every important change.
+
+Judges need **calibration**: run the judge on traces humans have already labeled, then look at where it agrees, where it misses failures humans caught, and where it flags cases humans considered acceptable. Calibration tells you whether the judge is reliable enough to support the decision you want it to support.
+
+[Don't ask an LLM judge what code can check](/posts/series/llm-evaluation-honestly/03-judge-vs-code/index.qmd) focuses on when a failure should become a code check versus an LLM judge. [Your LLM judge is a classifier](/posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.qmd) goes deeper on judge calibration.
+
+### 5. Regression cases
+
+A regression case is a real failure saved so future versions have to pass it.
+
+If the intake agent once promised a refund, dropped an order ID, or asked for information the user already provided, that trace becomes a fixed case in the regression suite. Ten or fifteen real failures are enough to make the system harder to break in the same way twice.
+
+Run the regression suite before important merges. If the new version fails cases the old version passed, the team should understand why before shipping.
+
+[Eval scores are samples, not truth](/posts/series/llm-evaluation-honestly/05-scores-are-samples/index.qmd) covers what changes once raw pass rates are no longer enough and you need to think about uncertainty, sample size, and meaningful differences between versions.
+
+### 6. Review and decisions
+
+The loop only matters if it changes what the team does. A failed check blocks a merge, a spike in redundant-question failures triggers investigation, a new production failure becomes a regression case, a judge disagreement becomes a calibration example.
+
+Pull a small sample of recent failures regularly, read them end-to-end, and ask whether they reveal a pattern the current dataset misses. The habit is simple: new failures feed back into the eval loop instead of disappearing into Slack.
+
+[Your eval system also drifts](/posts/series/llm-evaluation-honestly/07-eval-drift/index.qmd) returns to this production loop: how new failures from real usage become new eval cases, alerts, and hardening work.
+
+### A concrete first version
+
+The first version for the intake agent might look like this:
+
+| Piece | First version |
+|---|---|
+| Traces | ~50 intake traces, synthetic if pre-launch or sampled from production once traffic exists |
+| Labels | Pass/fail plus short critiques explaining the first bad move |
+| Failure modes | Recurring patterns of mistakes (e.g. "promises refunds", "drops order IDs") |
+| Checks and judges | Code checks for the structural ones; one calibrated judge for redundant clarifying questions |
+| Regression cases | 10–15 real historical failures fixed as test cases |
+| Review | Regular review of recent failures and judge disagreements |
+
+The numbers are illustrative. The shape matters: start small, use real failures, make every new failure feed back into the loop.
+
+## The smallest useful promise
+
+Having a minimal eval loop in place is enough to change how the team builds. "Does v2 feel better?" becomes "Which failure modes improved, which regressed, and do we trust the measurement?" Eval stops being a side research exercise and becomes part of the engineering loop.
+
+**The harness made the agent's behavior observable, the eval system turns that behavior into evidence, and the hardening loop turns evidence into a system harder to break.**
+
+The [next article](/posts/series/llm-evaluation-honestly/02-eval-dataset/index.qmd) goes one layer deeper: the eval dataset.

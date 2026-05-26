@@ -1,0 +1,18 @@
+<div class="series-banner-list">
+<% for (const item of items) { %>
+<article class="series-banner">
+<% if (item.image) { %>
+<div class="series-banner-cover"><a href="<%= item.path %>" aria-hidden="true" tabindex="-1"><img src="<%= item.image %>" alt="" loading="lazy"></a></div>
+<% } %>
+<div class="series-banner-body">
+<% if (item.parts) { %>
+<div class="series-banner-meta"><span class="series-banner-parts"><%= item.parts %> <%= item.parts == 1 ? 'part' : 'parts' %></span></div>
+<% } %>
+<h2 class="series-banner-title no-anchor"><a href="<%= item.path %>"><%= item.title %></a></h2>
+<% if (item.description) { %>
+<p class="series-banner-description"><%= item.description %></p>
+<% } %>
+</div>
+</article>
+<% } %>
+</div>

@@ -1,0 +1,26 @@
+---
+title: "Research foundations of modern LLMs"
+description: "What modern LLMs inherited from earlier NLP research, and why those ideas reorganized into today's stack instead of disappearing."
+image: 02-foundations.png
+image-alt: "Cover image for the series: Research foundations of modern LLMs"
+order: 2
+parts: 5
+date: 2026-03-11
+toc: false
+listing:
+  contents:
+    - "*/index.qmd"
+  sort: "order"
+  type: default
+  categories: false
+  sort-ui: false
+  filter-ui: false
+  fields: [title, date, description]
+  feed:
+    title: "Research foundations of modern LLMs — series"
+    description: "What modern LLMs inherited from earlier NLP research, and why those ideas reorganized into today's stack instead of disappearing."
+---
+
+A lot of what looks new in modern LLMs is older NLP research that did not disappear, it changed position. Encoders, retrieval, fine-tuning, and information extraction were each treated as the main event at some point, and each is now a component inside a larger system rather than the system itself. This series traces where those ideas went and why the rearrangement is the part worth understanding.
+
+Read in order:

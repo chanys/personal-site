@@ -1,0 +1,15 @@
+# Shared front-matter for everything under posts/
+# (Quarto merges this into each post automatically.)
+title-block-banner: false
+toc: true
+toc-title: "Contents"
+toc-depth: 2
+toc-location: right
+date-format: "YYYY · MMMM D"
+code-copy: true
+code-overflow: wrap
+code-line-numbers: false
+citations-hover: true
+crossref:
+  chapters: false
+author: "Yee Seng Chan"

@@ -1,0 +1,172 @@
+---
+title: "Prompts guide. Gates enforce"
+description: "A prompt is a suggestion the model can ignore; a gate is code it cannot."
+date: 2026-05-01
+order: 4
+draft: true
+---
+
+{{< include ../_series.qmd >}}
+
+A prompt can guide behavior. It cannot enforce behavior.
+
+The scheduling assistant's prompt says, "Always confirm the target meeting before making any changes." A user asks it to move "my Tuesday review with Priya" to Thursday afternoon. The model calls `reschedule_event(description="Tuesday review with Priya", new_time="Thursday afternoon")`; the API matches a different recurring meeting with Priya; the agent replies, "I've moved it, and I'll keep an eye on it going forward."
+
+The failure is not the wording of the prompt. The runtime allowed an unsafe action. A gate should have blocked `reschedule_event` until the target event was uniquely confirmed, non-recurring, and represented by a specific event ID.
+
+Prompts shape behavior. Gates enforce behavior.
+
+The [previous article](/posts/series/the-agent-harness/03-state-not-transcript/index.qmd) established that state holds the system's beliefs. This article is about the runtime checks that decide whether the system can act on those beliefs.
+
+## Why prompt-only control breaks
+
+Prompt-only control works best for soft behavior: tone, formatting, response length, and style. It is weak for the following.
+
+- **Fuzzy boundaries:** "Do not commit to remediation timelines" sounds clear, but real language is messy.
+- **Runtime facts:** a prompt cannot verify that an event ID is unique, that a user has permission, that a write already happened after a timeout, or that every answer claim is supported by evidence.
+- **Competing rules:** production prompts accumulate rules for tone, safety, tools, escalation, formatting, and edge cases. Rules important enough to block behavior should not live only in text.
+
+The system asked the model to enforce constraints the runtime should own.
+
+## The model proposes. The harness checks.
+
+A gate checks a proposed action or output at runtime. It can allow the proposal, reject it, or route it to a safer path. Two kinds of gates cover most production needs.
+
+### Hard gates: check crisp facts
+
+Hard gates check conditions that are computable from state. They do not need model judgment.
+
+- Is this tool allowed in the current workflow phase?
+- Is the target uniquely identified and confirmed?
+- Has approval been granted, and has it expired?
+- Is the user authorized, and is the write budget still available?
+
+If a check fails, the action is rejected before it reaches the tool.
+
+```python
+def gate_reschedule(state, action):
+    if state["phase"] != "execute":
+        return Reject("write_not_allowed_in_phase")
+    if state["proposed_change"] is None:
+        return Reject("no_proposed_change_materialized")
+    if state["candidates"][0]["match_confidence"] != "confirmed":
+        return Reject("target_not_confirmed")
+    if state["candidates"][0]["is_recurring"]:
+        return Reject("recurring_series_requires_human_only")
+    if action.get("idempotency_key") is None:
+        return Reject("missing_idempotency_key")
+    return Allow()
+```
+
+Each line is a mechanical check. If a condition is crisp enough to enforce with code, enforce it with code.
+
+### Semantic gates: check meaning
+
+Semantic gates check meaning rather than schema or permissions. They answer questions like:
+
+- Does this answer overstate the evidence?
+- Does this message imply an unauthorized commitment?
+- Does this response give advice outside the agent's role?
+
+These checks usually require model judgment. They are slower and more expensive than hard gates, so use them when the risk is semantic and code cannot capture it.
+
+Use hard gates for crisp conditions. Use semantic gates for judgment calls.
+
+## The tool executes
+
+Gates check proposals before they become actions. Tool contracts narrow what the model can safely propose in the first place.
+
+### Tools are contracts, not functions
+
+In a notebook, a tool can be a function with a docstring. In production, a tool is a contract between the model, the runtime, and the outside world. It should define required inputs, allowed use, side effects, retry behavior, and verification.
+
+A weak tool:
+
+```python
+def update_calendar(field: str, value: str) -> dict:
+    """Update a field on a calendar event."""
+```
+
+A stronger tool:
+
+```python
+def reschedule_event(
+    event_id: str,          # confirmed unique target only
+    new_start_iso: str,
+    new_end_iso: str,
+    idempotency_key: str,
+) -> RescheduleResult:
+    """
+    Reschedule one confirmed, non-recurring event.
+    Requires a specific event_id, not a free-text description.
+    """
+```
+
+The second tool removes unsafe paths. It requires a specific `event_id`, which forces the workflow to identify the target before the call. It requires an idempotency key. It does not expose a broad `field` parameter that could update anything.
+
+Tool contracts should also distinguish reads from writes. Reads can usually be retried after a timeout. Writes need more care. A write should carry an idempotency key, and an ambiguous timeout should route to verification before retry.
+
+Broad tools push hidden responsibility onto the model. Narrow tools move more of that responsibility into the harness.
+
+## The harness verifies and routes
+
+Gates and tools do not finish the loop. The system also needs controlled fallbacks and safe human approval.
+
+### Gates need safe fallbacks
+
+A blocked action should route to a safe next step.
+
+If the scheduling target is ambiguous, route to a clarifying question. If the corpus does not support an answer, route to an honest "I don't have enough evidence" response. If the intake user asks for a credit, route the request into the human handoff.
+
+A gate should return a reason and a next action. A blocked action should become a controlled detour, not a dead end.
+
+### Approval packets: approve the exact action
+
+Some actions need human judgment: rescheduling a meeting with eight attendees, sending a customer-facing summary on an enterprise account, or canceling an event from a recurring series.
+
+The weak pattern asks the human for approval, then asks the model to perform the action. That gives the model a second chance to drift. The human approves one description, and the model may execute a slightly different action.
+
+The safer pattern uses an approval packet. The packet is a fully materialized action object that the human reviews. After approval, the runtime executes that exact object: same tool name, same arguments, same idempotency key.
+
+```python
+packet = {
+    "status": "pending",
+    "expires_at": "2026-05-09T17:32:18Z",
+    "tool": "reschedule_event",
+    "args": {
+        "event_id": "evt_8819",
+        "new_start": "2026-05-13T10:00:00-04:00",
+        "idempotency_key": "run_204:evt_8819:reschedule",
+    },
+    "human_summary": "Move Tuesday 2pm with Priya to Wednesday 10am",
+}
+```
+
+Before execution, the runtime checks that the approval has not expired and that the relevant state has not changed. If the target event, user request, or proposed action changed, the packet is stale and should not execute.
+
+Humans approve specific actions, not summaries of actions.
+
+## Gate where failure matters
+
+Gate the actions where failure matters most. Do not gate everything.
+
+Heavy gates belong around actions that change the outside world, affect another person, are hard to undo, depend on weak evidence, or may require human escalation. Keep the path light for harmless clarifying questions, read-only lookups, and low-stakes summaries.
+
+The goal is appropriate gating, not maximum gating. A gate that fires on every action becomes a gate the team learns to ignore.
+
+## The shape worth keeping
+
+The runtime loop is simple:
+
+```text
+The model proposes.
+The harness checks.
+The tool executes.
+The harness verifies.
+```
+
+Prompts inform the proposal. Gates check it. Tool contracts narrow what can be proposed. Safe fallbacks turn blocked actions into controlled detours. Approval packets keep humans and runtime aligned on the exact action.
+
+A prompt alone cannot do those jobs. That is what gates are for.
+
+The next article [Traces are how agents get better](/posts/series/the-agent-harness/05-traces/index.qmd) shows what useful traces contain, how they reveal the first bad move in a failing run, and how one bad run becomes a permanent improvement to the harness.

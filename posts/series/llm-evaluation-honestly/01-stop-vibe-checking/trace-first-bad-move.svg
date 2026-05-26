@@ -1,0 +1,64 @@
+<svg viewBox="0 0 1000 624" xmlns="http://www.w3.org/2000/svg" font-family="Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <style>.title { font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif; }</style>
+    <marker id="dn" viewBox="0 0 10 10" refX="5" refY="8" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,0 L5,9 Z" fill="#9AA0AE"/>
+    </marker>
+    <marker id="rc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 L2.5,5 Z" fill="#D97706"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="624" fill="#ffffff"/>
+
+  <text class="title" x="40" y="50" font-size="29" font-weight="700" fill="#161B2B">The final answer hides the first bad move</text>
+  <text x="40" y="82" font-size="17" fill="#6B7280">An intake-agent run that a final-answer check would pass.</text>
+
+  <!-- ===================== PANEL A: surface ===================== -->
+  <text x="40" y="120" font-size="13" font-weight="600" letter-spacing="1.5" fill="#9AA0AE">WHAT A FINAL-ANSWER CHECK SEES</text>
+  <rect x="40" y="132" width="920" height="92" rx="14" fill="#ffffff" stroke="#16A34A" stroke-width="1.8"/>
+  <text x="68" y="184" font-size="17" font-style="italic" fill="#1B2030">“Thanks, I captured your request and will route it to the support team.”</text>
+  <rect x="812" y="156" width="130" height="44" rx="22" fill="#DCFCE7"/>
+  <text x="877" y="184" font-size="18" font-weight="700" fill="#15803D" text-anchor="middle">✓ PASS</text>
+
+  <!-- transition -->
+  <line x1="500" y1="230" x2="500" y2="256" stroke="#9AA0AE" stroke-width="2" marker-end="url(#dn)"/>
+
+  <!-- ===================== PANEL B: the trace ===================== -->
+  <text x="40" y="280" font-size="13" font-weight="600" letter-spacing="1.5" fill="#9AA0AE">WHAT THE TRACE SHOWS</text>
+
+  <!-- Chip 1: Turns 1-2 (ok) -->
+  <rect x="40" y="294" width="209" height="156" rx="12" fill="#ffffff" stroke="#C7CAD6" stroke-width="1.4"/>
+  <text x="144" y="338" font-size="18" font-weight="700" fill="#1B2030" text-anchor="middle">Turns 1–2</text>
+  <text x="144" y="372" font-size="16" fill="#5B6170" text-anchor="middle">issue captured</text>
+  <text x="144" y="404" font-size="15" font-weight="600" fill="#15803D" text-anchor="middle">✓ ok</text>
+
+  <!-- Chip 2: Turn 3 (first bad move) -->
+  <rect x="277" y="294" width="209" height="156" rx="12" fill="#ffffff" stroke="#DC2626" stroke-width="1.8"/>
+  <text x="381" y="338" font-size="18" font-weight="700" fill="#1B2030" text-anchor="middle">Turn 3</text>
+  <text x="381" y="372" font-size="16" fill="#1B2030" text-anchor="middle">classified billing</text>
+  <text x="381" y="402" font-size="15" font-weight="600" fill="#B91C1C" text-anchor="middle">✗ should be refund</text>
+  <rect x="311" y="416" width="142" height="26" rx="13" fill="#FEE2E2"/>
+  <text x="382" y="434" font-size="12.5" font-weight="700" fill="#B91C1C" text-anchor="middle">FIRST BAD MOVE</text>
+
+  <!-- Chip 3: Turn 4 -->
+  <rect x="514" y="294" width="209" height="156" rx="12" fill="#ffffff" stroke="#DC2626" stroke-width="1.6"/>
+  <text x="618" y="338" font-size="18" font-weight="700" fill="#1B2030" text-anchor="middle">Turn 4</text>
+  <text x="618" y="372" font-size="16" fill="#1B2030" text-anchor="middle">frustration → low</text>
+  <text x="618" y="402" font-size="15" font-weight="600" fill="#B91C1C" text-anchor="middle">✗ user: “asked 3×”</text>
+
+  <!-- Chip 4: Turn 5 -->
+  <rect x="751" y="294" width="209" height="156" rx="12" fill="#ffffff" stroke="#DC2626" stroke-width="1.6"/>
+  <text x="855" y="338" font-size="18" font-weight="700" fill="#1B2030" text-anchor="middle">Turn 5</text>
+  <text x="855" y="372" font-size="16" fill="#1B2030" text-anchor="middle">handoff written</text>
+  <text x="855" y="402" font-size="15" font-weight="600" fill="#B91C1C" text-anchor="middle">✗ order ID dropped</text>
+
+  <!-- root-cause back arrow: Turn 5 -> Turn 3 -->
+  <path d="M855,452 C 855,494 838,500 806,500 L 412,500 C 392,500 381,490 381,456"
+        fill="none" stroke="#D97706" stroke-width="2.2" marker-end="url(#rc)"/>
+  <text x="618" y="482" font-size="15" font-weight="700" fill="#B45309" text-anchor="middle">traces back to</text>
+
+  <!-- ===================== FOOTER ===================== -->
+  <line x1="80" y1="560" x2="920" y2="560" stroke="#EBECF2" stroke-width="1"/>
+  <text x="500" y="588" font-size="16" font-style="italic" fill="#5B6170" text-anchor="middle">Eval that reads only the final answer misses the first bad move.</text>
+</svg>

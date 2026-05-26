@@ -1,0 +1,52 @@
+<svg viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg" font-family="Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M0,0 L10,5 L0,10 L2.5,5 Z" fill="#6B7280"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="500" fill="#ffffff"/>
+
+  <!-- ===== TOP ROW: failure → trace → find first bad move → durable fix ===== -->
+
+  <!-- failure -->
+  <rect x="55" y="80" width="200" height="72" rx="9" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.6"/>
+  <text x="155" y="124" font-size="21" fill="#1B2030" text-anchor="middle">failure</text>
+
+  <line x1="255" y1="116" x2="285" y2="116" stroke="#6B7280" stroke-width="1.6" marker-end="url(#ar)"/>
+
+  <!-- trace -->
+  <rect x="285" y="80" width="200" height="72" rx="9" fill="#ffffff" stroke="#4F46E5" stroke-width="1.6"/>
+  <text x="385" y="124" font-size="21" fill="#1B2030" text-anchor="middle">trace</text>
+
+  <line x1="485" y1="116" x2="515" y2="116" stroke="#6B7280" stroke-width="1.6" marker-end="url(#ar)"/>
+
+  <!-- find first bad move -->
+  <rect x="515" y="80" width="200" height="72" rx="9" fill="#ffffff" stroke="#4F46E5" stroke-width="1.6"/>
+  <text x="615" y="124" font-size="20" fill="#1B2030" text-anchor="middle">find first bad move</text>
+
+  <line x1="715" y1="116" x2="745" y2="116" stroke="#6B7280" stroke-width="1.6" marker-end="url(#ar)"/>
+
+  <!-- durable fix -->
+  <rect x="745" y="80" width="200" height="72" rx="9" fill="#ffffff" stroke="#4F46E5" stroke-width="1.6"/>
+  <text x="845" y="124" font-size="21" fill="#1B2030" text-anchor="middle">durable fix</text>
+
+  <!-- ===== DOWN ARROW: durable fix → regression case ===== -->
+  <line x1="845" y1="154" x2="845" y2="328" stroke="#6B7280" stroke-width="1.6" marker-end="url(#ar)"/>
+
+  <!-- regression case -->
+  <rect x="745" y="330" width="200" height="72" rx="9" fill="#ffffff" stroke="#4F46E5" stroke-width="1.6"/>
+  <text x="845" y="374" font-size="21" fill="#1B2030" text-anchor="middle">regression case</text>
+
+  <!-- ===== THE SYSTEM (center) ===== -->
+  <rect x="385" y="225" width="230" height="100" rx="9" fill="#EEF1FE" stroke="#4F46E5" stroke-width="1.8"/>
+  <text x="500" y="268" font-size="24" font-weight="700" fill="#1B2030" text-anchor="middle">the system</text>
+  <text x="500" y="298" font-size="18" fill="#6B7280" text-anchor="middle">harness + model</text>
+
+  <!-- ===== DASHED ARROW: regression case → the system ===== -->
+  <line x1="745" y1="355" x2="623" y2="300" stroke="#6B7280" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#ar)"/>
+
+  <!-- ===== CAPTION (wrapped to two lines) ===== -->
+  <text x="500" y="450" font-size="19" font-style="italic" fill="#6B7280" text-anchor="middle">each cycle hardens the harness;</text>
+  <text x="500" y="478" font-size="19" font-style="italic" fill="#6B7280" text-anchor="middle">the next failure of this shape is caught earlier or never fires</text>
+</svg>

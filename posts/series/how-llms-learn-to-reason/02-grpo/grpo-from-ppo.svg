@@ -1,0 +1,79 @@
+<svg viewBox="0 0 1000 560" xmlns="http://www.w3.org/2000/svg" font-family="Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <style>.title { font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif; }</style>
+    <marker id="aD" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 L2.5,5 Z" fill="#4F46E5"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="560" fill="#ffffff"/>
+
+  <text class="title" x="40" y="48" font-size="28" font-weight="700" fill="#161B2B">GRPO is PPO with the critic removed</text>
+  <text x="40" y="79" font-size="16" fill="#6B7280">Two deliberate changes from PPO. Everything else carries over unchanged.</text>
+
+  <!-- ===================== PPO PANEL ===================== -->
+  <rect x="40" y="110" width="420" height="315" rx="18" fill="#EEF1FE" stroke="#C9CFF6" stroke-width="1.2"/>
+  <text x="250" y="161" font-size="24" font-weight="700" fill="#3730A3" text-anchor="middle">PPO</text>
+  <text x="64" y="192" font-size="12" font-weight="600" letter-spacing="1.2" fill="#9AA0AE">MODEL ROLES (4)</text>
+
+  <g>
+    <rect x="64" y="204" width="179" height="52" rx="10" fill="#ffffff" stroke="#C9CFF6" stroke-width="1.2"/>
+    <text x="153" y="226" font-size="16" font-weight="700" fill="#1B2030" text-anchor="middle">Policy</text>
+    <text x="153" y="244" font-size="12" fill="#6B7280" text-anchor="middle">trained LLM</text>
+
+    <rect x="257" y="204" width="179" height="52" rx="10" fill="#ffffff" stroke="#C9CFF6" stroke-width="1.2"/>
+    <text x="346" y="226" font-size="16" font-weight="700" fill="#1B2030" text-anchor="middle">Critic</text>
+    <text x="346" y="244" font-size="12" fill="#6B7280" text-anchor="middle">value net</text>
+
+    <rect x="64" y="270" width="179" height="52" rx="10" fill="#ffffff" stroke="#C9CFF6" stroke-width="1.2"/>
+    <text x="153" y="292" font-size="16" font-weight="700" fill="#1B2030" text-anchor="middle">Reference</text>
+    <text x="153" y="310" font-size="12" fill="#6B7280" text-anchor="middle">frozen</text>
+
+    <rect x="257" y="270" width="179" height="52" rx="10" fill="#ffffff" stroke="#C9CFF6" stroke-width="1.2"/>
+    <text x="346" y="292" font-size="16" font-weight="700" fill="#1B2030" text-anchor="middle">Reward</text>
+    <text x="346" y="310" font-size="12" fill="#6B7280" text-anchor="middle">frozen</text>
+  </g>
+
+  <text x="64" y="356" font-size="12" font-weight="600" letter-spacing="1.2" fill="#9AA0AE">ADVANTAGE</text>
+  <text x="64" y="385" font-size="17" font-weight="700" fill="#1B2030">critic → GAE → Â&#8348;</text>
+  <text x="64" y="407" font-size="13.5" fill="#6B7280">one advantage per <tspan font-weight="700" fill="#3730A3">token</tspan></text>
+
+  <!-- ===================== GRPO PANEL ===================== -->
+  <rect x="530" y="110" width="420" height="315" rx="18" fill="#E9FBF6" stroke="#BFE9E0" stroke-width="1.2"/>
+  <text x="740" y="161" font-size="24" font-weight="700" fill="#0F766E" text-anchor="middle">GRPO</text>
+  <text x="554" y="192" font-size="12" font-weight="600" letter-spacing="1.2" fill="#9AA0AE">MODEL ROLES (3)</text>
+
+  <g>
+    <rect x="554" y="204" width="179" height="52" rx="10" fill="#ffffff" stroke="#BFE9E0" stroke-width="1.2"/>
+    <text x="643" y="226" font-size="16" font-weight="700" fill="#1B2030" text-anchor="middle">Policy</text>
+    <text x="643" y="244" font-size="12" fill="#6B7280" text-anchor="middle">trained LLM</text>
+
+    <rect x="747" y="204" width="179" height="52" rx="10" fill="#F4F4F7" stroke="#C7CAD6" stroke-width="1.2" stroke-dasharray="4 3"/>
+    <text x="836" y="226" font-size="16" font-weight="700" fill="#9AA0AE" text-anchor="middle">Critic</text>
+    <line x1="800" y1="221" x2="872" y2="221" stroke="#9AA0AE" stroke-width="1.7"/>
+    <text x="836" y="244" font-size="12" font-weight="700" fill="#DC2626" text-anchor="middle">removed</text>
+
+    <rect x="554" y="270" width="179" height="52" rx="10" fill="#ffffff" stroke="#BFE9E0" stroke-width="1.2"/>
+    <text x="643" y="292" font-size="16" font-weight="700" fill="#1B2030" text-anchor="middle">Reference</text>
+    <text x="643" y="310" font-size="12" fill="#6B7280" text-anchor="middle">frozen</text>
+
+    <rect x="747" y="270" width="179" height="52" rx="10" fill="#ffffff" stroke="#BFE9E0" stroke-width="1.2"/>
+    <text x="836" y="292" font-size="16" font-weight="700" fill="#1B2030" text-anchor="middle">Reward</text>
+    <text x="836" y="310" font-size="12" fill="#6B7280" text-anchor="middle">frozen</text>
+  </g>
+
+  <text x="554" y="356" font-size="12" font-weight="600" letter-spacing="1.2" fill="#9AA0AE">ADVANTAGE</text>
+  <text x="554" y="385" font-size="17" font-weight="700" fill="#1B2030">G rollouts → mean / std → Â</text>
+  <text x="554" y="407" font-size="13.5" fill="#6B7280">one advantage per <tspan font-weight="700" fill="#0F766E">trajectory</tspan></text>
+
+  <!-- ===================== TRANSFORM ARROW ===================== -->
+  <text x="495" y="252" font-size="12" font-weight="600" fill="#6B7280" text-anchor="middle">2 changes</text>
+  <path d="M463 268 L525 268" fill="none" stroke="#4F46E5" stroke-width="2.8" marker-end="url(#aD)"/>
+
+  <!-- ===================== UNCHANGED BAND ===================== -->
+  <rect x="40" y="445" width="910" height="56" rx="14" fill="#FAFBFD" stroke="#E5E7EF" stroke-width="1.1"/>
+  <text x="495" y="479" font-size="15" text-anchor="middle"><tspan fill="#9AA0AE" font-weight="600">Unchanged from PPO:&#160;&#160;</tspan><tspan fill="#374151" font-weight="600">clipping&#160;&#160;·&#160;&#160;importance ratio&#160;&#160;·&#160;&#160;KL anchor&#160;&#160;·&#160;&#160;multi-epoch loop</tspan></text>
+
+  <!-- ===================== FOOTER ===================== -->
+  <text x="495" y="536" font-size="14" font-style="italic" fill="#5B6170" text-anchor="middle">If you understand PPO, you understand most of GRPO.</text>
+</svg>

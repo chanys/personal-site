@@ -1,0 +1,26 @@
+---
+title: "The agent harness"
+description: "Why agent demos break in production, and why the harness, the state, gates, traces, verification, and engineering around the model, is often the actual product."
+image: 04-harness.png
+image-alt: "Cover image for the series: The agent harness"
+order: 4
+parts: 5
+date: 2026-04-14
+toc: false
+listing:
+  contents:
+    - "*/index.qmd"
+  sort: "order"
+  type: default
+  categories: false
+  sort-ui: false
+  filter-ui: false
+  fields: [title, date, description]
+  feed:
+    title: "The agent harness — series"
+    description: "Why agent demos break in production, and why the harness, the state, gates, traces, verification, and engineering around the model, is often the actual product."
+---
+
+A demo agent and a production agent run the same model. The difference is everything around it: how state is carried, where the run is gated, what gets traced, how output is verified before it is trusted. This series argues that this scaffolding, the harness, is usually where reliability is won or lost.
+
+Read in order:

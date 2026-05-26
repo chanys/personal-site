@@ -1,0 +1,26 @@
+---
+title: "What an agent actually is"
+description: "A first-principles definition of an AI agent: control loops, tools, state, and decisions, and what agent frameworks are really doing underneath their abstractions."
+image: 03-agent.png
+image-alt: "Cover image for the series: What an agent actually is"
+order: 3
+parts: 2
+date: 2026-04-05
+toc: false
+listing:
+  contents:
+    - "*/index.qmd"
+  sort: "order"
+  type: default
+  categories: false
+  sort-ui: false
+  filter-ui: false
+  fields: [title, date, description]
+  feed:
+    title: "What an agent actually is — series"
+    description: "A first-principles definition of an AI agent: control loops, tools, state, and decisions, and what agent frameworks are really doing underneath their abstractions."
+---
+
+"Agent" now covers almost anything that calls a model in a loop, which is less a definition than a vibe. This short series defines an agent from first principles, the control loop, the tools, the state it carries, the decisions it actually makes, and then looks at what the popular frameworks are doing once you strip the abstractions away. The aim is to look at a system and see where it sits on the "agentic" spectrum, and therefore where its reliability is going to come under pressure.
+
+Read in order:

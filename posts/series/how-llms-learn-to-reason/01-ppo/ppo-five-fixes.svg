@@ -1,0 +1,81 @@
+<svg viewBox="0 0 1000 532" xmlns="http://www.w3.org/2000/svg" font-family="Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <style>.title { font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif; }</style>
+    <marker id="aI" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 L2.5,5 Z" fill="#4F46E5"/>
+    </marker>
+    <marker id="aT" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 L2.5,5 Z" fill="#0D9488"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="532" fill="#ffffff"/>
+
+  <text class="title" x="40" y="48" font-size="26" font-weight="700" fill="#161B2B">PPO is REINFORCE plus five fixes</text>
+  <text x="40" y="78" font-size="15" fill="#6B7280">Not a new algorithm: REINFORCE plus five fixes for its two scaling problems.</text>
+
+  <!-- Band 1: variance -->
+  <rect x="168" y="110" width="652" height="150" rx="16" fill="#EEF1FE" stroke="#C9CFF6" stroke-width="1.2"/>
+  <circle cx="184" cy="135" r="4.5" fill="#4F46E5"/>
+  <text x="198" y="141" font-size="16" font-weight="700" fill="#3730A3">Problem 1: High variance</text>
+
+  <!-- Band 2: data efficiency -->
+  <rect x="168" y="300" width="652" height="150" rx="16" fill="#E9FBF6" stroke="#BFE9E0" stroke-width="1.2"/>
+  <circle cx="184" cy="335" r="4.5" fill="#0D9488"/>
+  <text x="198" y="341" font-size="16" font-weight="700" fill="#0F766E">Problem 2: Data inefficiency</text>
+
+  <!-- Connectors -->
+  <g fill="none" stroke-width="2.6">
+    <path d="M164 268 C186 268, 186 200, 180 200" stroke="#4F46E5" marker-end="url(#aI)"/>
+    <path d="M378 200 L393 200" stroke="#4F46E5" marker-end="url(#aI)"/>
+    <path d="M592 200 L607 200" stroke="#4F46E5" marker-end="url(#aI)"/>
+    <path d="M806 200 C826 200, 830 264, 836 274" stroke="#4F46E5" marker-end="url(#aI)"/>
+    <path d="M164 292 C186 292, 186 390, 180 390" stroke="#0D9488" marker-end="url(#aT)"/>
+    <path d="M378 390 L393 390" stroke="#0D9488" marker-end="url(#aT)"/>
+    <path d="M592 390 C700 390, 778 348, 836 300" stroke="#0D9488" marker-end="url(#aT)"/>
+  </g>
+
+  <!-- REINFORCE -->
+  <rect x="24" y="235" width="140" height="90" rx="14" fill="#ffffff" stroke="#C7CAD6" stroke-width="1.4"/>
+  <text x="94" y="276" font-size="19" font-weight="700" fill="#161B2B" text-anchor="middle">REINFORCE</text>
+  <text x="94" y="297" font-size="12" fill="#6B7280" text-anchor="middle">policy gradient</text>
+
+  <!-- PPO (white, indigo accent border) -->
+  <rect x="838" y="235" width="140" height="90" rx="14" fill="#ffffff" stroke="#4F46E5" stroke-width="2.2"/>
+  <text x="908" y="276" font-size="22" font-weight="700" fill="#161B2B" text-anchor="middle">PPO</text>
+  <text x="908" y="298" font-size="11.5" fill="#4F46E5" text-anchor="middle">both problems solved</text>
+
+  <!-- Fix 1 -->
+  <rect x="182" y="160" width="194" height="80" rx="12" fill="#ffffff" stroke="#C9CFF6" stroke-width="1.3"/>
+  <text x="196" y="182" font-size="13" font-weight="700" fill="#9AA0AE">1</text>
+  <text x="279" y="198" font-size="15" font-weight="700" fill="#1B2030" text-anchor="middle">Advantage</text>
+  <text x="279" y="220" font-size="13" fill="#6B7280" text-anchor="middle">not the raw return</text>
+
+  <!-- Fix 2 -->
+  <rect x="396" y="160" width="194" height="80" rx="12" fill="#ffffff" stroke="#C9CFF6" stroke-width="1.3"/>
+  <text x="410" y="182" font-size="13" font-weight="700" fill="#9AA0AE">2</text>
+  <text x="493" y="198" font-size="15" font-weight="700" fill="#1B2030" text-anchor="middle">Critic</text>
+  <text x="493" y="220" font-size="13" fill="#6B7280" text-anchor="middle">learns expected return</text>
+
+  <!-- Fix 3 -->
+  <rect x="610" y="160" width="194" height="80" rx="12" fill="#ffffff" stroke="#C9CFF6" stroke-width="1.3"/>
+  <text x="624" y="182" font-size="13" font-weight="700" fill="#9AA0AE">3</text>
+  <text x="707" y="198" font-size="15" font-weight="700" fill="#1B2030" text-anchor="middle">GAE</text>
+  <text x="707" y="220" font-size="13" fill="#6B7280" text-anchor="middle">stable advantage estimate</text>
+
+  <!-- Fix 4 -->
+  <rect x="182" y="350" width="194" height="80" rx="12" fill="#ffffff" stroke="#BFE9E0" stroke-width="1.3"/>
+  <text x="196" y="372" font-size="13" font-weight="700" fill="#9AA0AE">4</text>
+  <text x="279" y="388" font-size="15" font-weight="700" fill="#1B2030" text-anchor="middle">Importance sampling</text>
+  <text x="279" y="410" font-size="13" fill="#6B7280" text-anchor="middle">reuse old rollouts</text>
+
+  <!-- Fix 5 -->
+  <rect x="396" y="350" width="194" height="80" rx="12" fill="#ffffff" stroke="#BFE9E0" stroke-width="1.3"/>
+  <text x="410" y="372" font-size="13" font-weight="700" fill="#9AA0AE">5</text>
+  <text x="493" y="388" font-size="15" font-weight="700" fill="#1B2030" text-anchor="middle">Clipping</text>
+  <text x="493" y="410" font-size="13" fill="#6B7280" text-anchor="middle">bound each update</text>
+
+  <!-- Footer -->
+  <line x1="80" y1="482" x2="920" y2="482" stroke="#EBECF2" stroke-width="1"/>
+  <text x="500" y="506" font-size="14" font-style="italic" fill="#5B6170" text-anchor="middle">Each fix supplies the machinery the next one needs.</text>
+</svg>

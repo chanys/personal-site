@@ -1,0 +1,23 @@
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+
+::: {.series-nav}
+::: {.series-label}
+Part of a series
+:::
+::: {.series-name}
+The agent harness
+:::
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+1. [Why AI agent demos break in production](../01-demos-break/)
+2. [The harness is the product](../02-harness-is-the-product/)
+3. [State, not transcript, is agent memory](../03-state-not-transcript/)
+4. [Prompts guide. Gates enforce](../04-prompts-gate/)
+5. [Traces are how agents get better](../05-traces/)
+:::

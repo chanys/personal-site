@@ -1,0 +1,26 @@
+---
+title: "LLM evaluation, honestly"
+description: "Why your eval scores look good while the system stays unreliable, and what to measure instead."
+image: 05-evaluation.png
+image-alt: "Cover image for the series: LLM evaluation, honestly"
+order: 5
+parts: 7
+date: 2026-05-15
+toc: false
+listing:
+  contents:
+    - "*/index.qmd"
+  sort: "order"
+  type: default
+  categories: false
+  sort-ui: false
+  filter-ui: false
+  fields: [title, date, description]
+  feed:
+    title: "LLM evaluation, honestly — series"
+    description: "Why your eval scores look good while the system stays unreliable, and what to measure instead."
+---
+
+Evaluation can produce a number that goes up while the system stays unreliable. This series is about why that happens: how the dataset, the judge model, and the headline score each mislead you, and what it takes to measure something you can actually trust. It covers LLMs and agents, and treats a passing score as the start of the investigation, not the end of it.
+
+Read in order:

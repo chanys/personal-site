@@ -1,0 +1,33 @@
+<svg viewBox="0 0 1000 416" xmlns="http://www.w3.org/2000/svg" font-family="Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <style>.title { font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif; }</style>
+  </defs>
+
+  <rect width="1000" height="416" fill="#ffffff"/>
+
+  <text class="title" x="40" y="54" font-size="32" font-weight="700" fill="#161B2B">When a score moves, what changed?</text>
+
+  <!-- System (indigo) -->
+  <rect x="40" y="88" width="290" height="240" rx="14" fill="#ffffff" stroke="#4F46E5" stroke-width="1.4"/>
+  <text x="64" y="138" font-size="26" font-weight="700" fill="#3730A3">System</text>
+  <text x="64" y="180" font-size="16" fill="#5B6170">prompt, model, or retriever</text>
+  <text x="64" y="238" font-size="18" font-weight="700" fill="#3730A3">→ debug the agent</text>
+
+  <!-- Traffic (teal) -->
+  <rect x="355" y="88" width="290" height="240" rx="14" fill="#ffffff" stroke="#0D9488" stroke-width="1.4"/>
+  <text x="379" y="138" font-size="26" font-weight="700" fill="#0F766E">Traffic</text>
+  <text x="379" y="180" font-size="16" fill="#5B6170">question mix shifted</text>
+  <text x="379" y="238" font-size="18" font-weight="700" fill="#0F766E">→ update the eval set</text>
+
+  <!-- Eval (amber, emphasized) -->
+  <rect x="670" y="88" width="290" height="240" rx="14" fill="#ffffff" stroke="#D97706" stroke-width="1.8"/>
+  <text x="694" y="138" font-size="26" font-weight="700" fill="#B45309">Eval</text>
+  <text x="694" y="180" font-size="16" fill="#5B6170">policy or labels are stale</text>
+  <text x="694" y="238" font-size="18" font-weight="700" fill="#B45309">→ fix the eval</text>
+  <text x="694" y="284" font-size="14" font-style="italic" fill="#9AA0AE">e.g., policy moved 90 → 120,</text>
+  <text x="694" y="302" font-size="14" font-style="italic" fill="#9AA0AE">but eval still expects 90</text>
+
+  <!-- footer -->
+  <line x1="80" y1="360" x2="920" y2="360" stroke="#EBECF2" stroke-width="1"/>
+  <text x="500" y="390" font-size="17" font-style="italic" fill="#5B6170" text-anchor="middle">A moving metric doesn't always mean the agent moved.</text>
+</svg>

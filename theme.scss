@@ -1,0 +1,65 @@
+/*-- scss:defaults --*/
+
+// ===========================================================================
+//  FIELD NOTES — light theme
+//  Bootstrap/Quarto variables get LITERAL values here (no Sass cross-refs,
+//  so Quarto can relocate them without "used before declaration" warnings).
+//  The design palette lives as CSS custom properties in the rules block.
+// ===========================================================================
+
+$font-family-sans-serif: "Newsreader", Iowan Old Style, Georgia, Cambria, "Times New Roman", serif;
+$font-family-monospace:  "IBM Plex Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+$headings-font-family:   "Fraunces", Iowan Old Style, Georgia, serif;
+
+$font-size-root:   18px;
+$font-size-base:   1rem;
+$line-height-base: 1.72;
+
+$headings-font-weight: 600;
+$headings-line-height: 1.12;
+
+$body-bg:    #FBF6EC;
+$body-color: #1F1B16;
+
+$link-color:        #C23A1B;
+$link-hover-color:  #9B2E14;
+$link-decoration:   none;
+
+$border-color: #E4DBC8;
+
+$code-color:             #9B2E14;
+$code-bg:                #F2EBDB;
+$code-block-bg:          #FAF4E6;
+$code-block-border-left: #C23A1B;
+
+$border-radius:    2px;
+$border-radius-sm: 2px;
+$border-radius-lg: 3px;
+
+$navbar-bg: #FBF6EC;
+$navbar-fg: #1F1B16;
+$navbar-hl: #C23A1B;
+
+$footer-bg: #FBF6EC;
+$footer-fg: #6E6557;
+
+$component-active-bg: #C23A1B;
+
+
+/*-- scss:rules --*/
+
+// Design tokens — light. (Dark theme redefines the same names.)
+:root {
+  --fn-paper:       #FBF6EC;
+  --fn-paper-sink:  #F2EBDB;
+  --fn-card:        #FAF4E6;
+  --fn-ink:         #1F1B16;
+  --fn-ink-soft:    #6E6557;
+  --fn-hairline:    #E4DBC8;
+  --fn-accent:      #C23A1B;
+  --fn-accent-deep: #9B2E14;
+  --fn-grain-opacity: 0.5;
+  --fn-navbar-bg:   rgba(251, 246, 236, 0.86);
+}
+// Shared component rules live in fieldnotes-rules.scss (loaded next via the
+// theme array in _quarto.yml). They read the --fn-* tokens defined above.

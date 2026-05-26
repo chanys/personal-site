@@ -1,5 +1,33 @@
 ---
 title: "About"
+description: ""
+pagetitle: "About | Yee Seng Chan"
+toc: true
+toc-title: "On this page"
 ---
 
-About this site
+I work on reliable LLM systems. The hard part is rarely the model. It is the engineering around it.
+
+My background is a decade of NLP and information extraction judged by external evaluation, more recently applied to LLM workflows in production.
+
+## Information extraction {#information-extraction}
+
+My work has centered on information extraction (IE): turning messy text into structured representations of entities, relations, events, and causes. I did a PhD and a postdoc in NLP, with publications in ACL and EMNLP, then spent a decade at Raytheon BBN as principal investigator on DARPA and IARPA programs. There I created and led NLPLingo, the deep-learning platform that became the foundation for BBN's NLP research. The same problem followed me into startups and clinical work: the surface changed, the structure problem did not.
+
+## Evaluation, from the start {#evaluation}
+
+The work was judged by external evaluation, not by how it looked in a demo. My systems placed at or near the top of international evaluations across event extraction, machine translation evaluation, and word-sense disambiguation, including the zero-shot cross-lingual IE case where the system is scored on a language it never saw in training.
+
+The strictest form was a recurring sealed evaluation: every few months a sponsor scored the system on held-out data we never saw, run on their side with no intervention from us. You find out whether a system is reliable when you cannot touch it while it is being judged. That is why I treat evaluation as an engineering problem, not a leaderboard ritual.
+
+## LLM systems {#llm-systems}
+
+At a clinical-documentation startup I designed and led a multi-step LLM workflow that turns a clinician-patient transcript into a structured clinical note: extraction calls produce typed, metadata-tagged frames that a downstream system routes into place. The model does the extraction; the structure around it is what makes the output trustworthy. I work through this in [Information extraction didn't disappear. It moved inside the workflow](posts/series/research-foundations-of-modern-llms/05-information-extraction/index.qmd).
+
+## Selected work {#selected-work}
+
+- **NLPLingo.** Created and led the deep-learning NLP platform underlying nearly all of BBN's NLP R&D, supporting ~$25M in DARPA and IARPA contract value.
+- **Multilingual event extraction.** Built event-extraction systems that placed at or near the top of international evaluations, including the zero-shot cross-lingual case (English-trained, scored on a language never seen in training).
+- **DARPA/IARPA programs.** Principal investigator and R&D lead on programs including BETTER, CauseEx, CAUSE, NECD, and World Modelers.
+- **Clinical documentation pipeline.** Designed and led a multi-step LLM workflow that turns a clinician-patient transcript into a structured clinical note. Delivered 2× recall of medical facts while maintaining accuracy, with ~50% improvement in run-to-run consistency over the prior production system.
+- **Code.** [TNLP](https://github.com/chanys/tnlp), a hand-written codebase covering classification, extraction, fine-tuning, DPO, and end-to-end RAG.

@@ -1,0 +1,20 @@
+---
+title: "Series"
+description: "Longer arguments built across several posts."
+pagetitle: "Series — Yee Seng Chan"
+page-layout: full
+format:
+  html:
+    body-classes: series-index
+listing:
+  contents:
+    - "posts/series/*/index.qmd"
+  sort: "order asc"
+  template: series-listing.ejs
+  categories: false
+  sort-ui: false
+  filter-ui: false
+  fields: [image, title, description, parts]
+  image-placeholder: series-placeholder.svg
+---
+

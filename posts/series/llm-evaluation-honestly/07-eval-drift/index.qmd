@@ -1,0 +1,78 @@
+---
+title: "Your eval system also drifts"
+description: "Eval systems need maintenance too."
+date: 2026-06-05
+order: 7
+draft: true
+---
+
+{{< include ../_series.qmd >}}
+
+An eval system has to be maintained like the product it measures.
+
+The running example is the docs Q&A agent from [the judge calibration](/posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.qmd) and [RAG evaluation](/posts/series/llm-evaluation-honestly/06-rag-evaluation/index.qmd) articles. It answers retention-policy questions. At launch, the eval stack looks solid: retrieval checks, faithfulness judges, answer relevance judges, and answerability tests.
+
+Six months later, the dashboard is still green. That only means the agent still passes the old eval.
+
+Suppose the retention policy changes. Trial accounts used to retain data for 90 days. Now they retain data for 120 days. The docs are updated, and the agent correctly answers "120 days." The eval set still expects "90 days," so the dashboard reports a regression.
+
+The agent did not regress. The eval system became stale.
+
+The fix is eval maintenance:
+
+- **Update the active case:** the current expected answer is now 120 days.
+- **Version the old case:** the 90-day case applies only to the previous policy.
+- **Update judge examples:** examples that assume 90 days should not teach the judge the old rule.
+- **Add a new regression case:** the 120-day case should gate future releases.
+
+The old case should not disappear. It may still matter for archived records or historical behavior. But it should not decide whether the current product is correct.
+
+## Eval cases need versioning
+
+A regression case carries assumptions about the product. Those assumptions need to be visible.
+
+Each case should record:
+
+- **Policy version:** which rule the case expects.
+- **Document version:** which source document supports the expected answer.
+- **Added date:** when the case entered the eval set.
+- **Reason added:** production incident, known failure mode, launch coverage, or regression.
+- **Release-gating status:** whether the case currently blocks a release.
+
+Without these fields, stale examples look authoritative.
+
+## Production traces keep the eval current
+
+A locked eval set protects known failures. It does not discover new ones.
+
+Production traces show what users are asking now, what the agent is retrieving now, and which answers are failing now. Sample them regularly and feed the important cases back into the eval set.
+
+Use a small sampling plan:
+
+- **Random samples:** catch normal failures that have no obvious signal.
+- **Important slices:** preserve coverage of high-risk areas like retention, billing, security, or permissions.
+- **Failure signals:** review thumbs down, repeated queries, low retrieval scores, or missing citations.
+- **Incidents:** turn serious production failures into regression cases.
+
+User complaints are useful, but they are incomplete. Users often rephrase, fix the answer manually, ask someone else, or abandon the feature. Random and slice-based sampling catch quiet failures that complaints miss.
+
+## Judges need rechecking
+
+A judge is valid only under the conditions where it was tested. Recheck judges when the conditions change:
+
+- **Judge model changes:** compare the new judge against human labels.
+- **Knowledge base changes:** re-run judge validation on current documents.
+- **Correctness standard changes:** update the labeling guide, judge prompt, and examples.
+- **Traffic changes:** test the judge on recent production traces.
+
+The recheck does not need to be huge. Sample recent traces, label them with the current standard, and compare the judge's verdicts against the human labels. If agreement drops, update the judge before trusting its score.
+
+## The eval system is part of the product
+
+A dashboard is useful only if the eval still matches the product.
+
+The eval system has to track current policies, current documents, current traffic, judge validity, and the team's standard for correctness. Production traces become labels. Labels become failure modes. Failure modes become checks, judges, and regression cases. Incidents update the suite.
+
+Teams that treat eval as first-class code version, review, monitor, and maintain it. Teams that do not eventually read numbers they can no longer trust.
+
+The next time someone reports "the eval system says we're at 87%," ask: *when did we last check that the eval system is still telling the truth?*

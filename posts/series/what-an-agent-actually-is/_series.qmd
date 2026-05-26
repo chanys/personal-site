@@ -1,0 +1,20 @@
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+
+::: {.series-nav}
+::: {.series-label}
+Part of a series
+:::
+::: {.series-name}
+What an agent actually is
+:::
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+1. [What the heck is an AI agent?](../01-what-is-an-agent/)
+2. [Behind the scenes of AI agent frameworks](../02-agent-frameworks/)
+:::

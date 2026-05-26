@@ -1,0 +1,6 @@
+# Applies to the series landing page AND every part in this folder.
+# Keep the series name here so all parts share one category. If a part needs
+# extra categories, repeat this one in the part's own front matter (document
+# front matter overrides rather than merges).
+categories: ["How LLMs learn to reason"]
+series: "How LLMs learn to reason"

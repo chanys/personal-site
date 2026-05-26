@@ -1,0 +1,59 @@
+<svg viewBox="0 0 1000 556" xmlns="http://www.w3.org/2000/svg" font-family="Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <style>.title { font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif; }</style>
+  </defs>
+
+  <rect width="1000" height="556" fill="#ffffff"/>
+
+  <text class="title" x="40" y="54" font-size="32" font-weight="700" fill="#161B2B">Accuracy hides what matters</text>
+  <text x="40" y="88" font-size="17" fill="#6B7280">Faithfulness judge vs 100 human-labeled traces (80 pass, 20 fail).</text>
+
+  <!-- ===================== CONFUSION MATRIX ===================== -->
+  <text x="368" y="138" font-size="14" font-weight="600" letter-spacing="1.5" fill="#9AA0AE" text-anchor="middle">HUMAN LABEL</text>
+  <text x="278" y="170" font-size="18" font-weight="700" fill="#1B2030" text-anchor="middle">PASS</text>
+  <text x="458" y="170" font-size="18" font-weight="700" fill="#1B2030" text-anchor="middle">FAIL</text>
+
+  <text transform="rotate(-90 56 328)" x="56" y="328" font-size="14" font-weight="600" letter-spacing="1.5" fill="#9AA0AE" text-anchor="middle">JUDGE SAYS</text>
+  <text x="172" y="264" font-size="18" font-weight="700" fill="#1B2030" text-anchor="end">PASS</text>
+  <text x="172" y="404" font-size="18" font-weight="700" fill="#1B2030" text-anchor="end">FAIL</text>
+
+  <!-- cell: Judge PASS / Human PASS = 77 -->
+  <rect x="188" y="188" width="180" height="140" rx="12" fill="#ECFDF3" stroke="#C7CAD6" stroke-width="1.2"/>
+  <text x="278" y="266" font-size="46" font-weight="700" fill="#15803D" text-anchor="middle">77</text>
+  <text x="278" y="300" font-size="14" fill="#5B6170" text-anchor="middle">correctly passed</text>
+
+  <!-- cell: Judge PASS / Human FAIL = 14  (the killer) -->
+  <rect x="368" y="188" width="180" height="140" rx="12" fill="#FEE2E2" stroke="#DC2626" stroke-width="2.4"/>
+  <text x="458" y="266" font-size="46" font-weight="700" fill="#B91C1C" text-anchor="middle">14</text>
+  <text x="458" y="300" font-size="14" font-weight="700" fill="#B91C1C" text-anchor="middle">MISSED FAILURES</text>
+
+  <!-- cell: Judge FAIL / Human PASS = 3 -->
+  <rect x="188" y="328" width="180" height="140" rx="12" fill="#FEF6E7" stroke="#C7CAD6" stroke-width="1.2"/>
+  <text x="278" y="406" font-size="46" font-weight="700" fill="#B45309" text-anchor="middle">3</text>
+  <text x="278" y="440" font-size="14" fill="#5B6170" text-anchor="middle">false alarm</text>
+
+  <!-- cell: Judge FAIL / Human FAIL = 6 -->
+  <rect x="368" y="328" width="180" height="140" rx="12" fill="#ECFDF3" stroke="#C7CAD6" stroke-width="1.2"/>
+  <text x="458" y="406" font-size="46" font-weight="700" fill="#15803D" text-anchor="middle">6</text>
+  <text x="458" y="440" font-size="14" fill="#5B6170" text-anchor="middle">caught (6 of 20)</text>
+
+  <!-- ===================== METRICS ===================== -->
+  <rect x="588" y="138" width="372" height="330" rx="16" fill="#ffffff" stroke="#C7CAD6" stroke-width="1.4"/>
+  <text x="612" y="172" font-size="13" font-weight="600" letter-spacing="1.5" fill="#9AA0AE">WHAT THE NUMBERS SAY</text>
+
+  <text x="612" y="240" font-size="48" font-weight="700" fill="#15803D">83%</text>
+  <text x="746" y="222" font-size="18" font-weight="700" fill="#1B2030">accuracy</text>
+  <text x="746" y="247" font-size="15" fill="#15803D">looks fine</text>
+
+  <text x="612" y="320" font-size="48" font-weight="700" fill="#B91C1C">30%</text>
+  <text x="746" y="302" font-size="18" font-weight="700" fill="#1B2030">recall on FAIL</text>
+  <text x="746" y="327" font-size="15" fill="#B91C1C">misses 14 of 20</text>
+
+  <line x1="612" y1="366" x2="936" y2="366" stroke="#EBECF2" stroke-width="1"/>
+  <text x="612" y="406" font-size="16" fill="#374151">Precision 67%&#160;&#160;·&#160;&#160;F1 41%</text>
+  <text x="612" y="430" font-size="13" fill="#9AA0AE">on the FAIL class</text>
+
+  <!-- ===================== FOOTER ===================== -->
+  <line x1="80" y1="502" x2="920" y2="502" stroke="#EBECF2" stroke-width="1"/>
+  <text x="500" y="530" font-size="17" font-style="italic" fill="#5B6170" text-anchor="middle">A high headline accuracy can hide a judge that misses most of what it was built to catch.</text>
+</svg>

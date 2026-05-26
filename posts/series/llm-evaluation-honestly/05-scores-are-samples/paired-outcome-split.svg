@@ -1,0 +1,55 @@
+<svg viewBox="0 0 1000 612" xmlns="http://www.w3.org/2000/svg" font-family="Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <style>.title { font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif; }</style>
+    <marker id="g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 L2.5,5 Z" fill="#C7CAD6"/>
+    </marker>
+    <marker id="i" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 L2.5,5 Z" fill="#4F46E5"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="612" fill="#ffffff"/>
+
+  <text class="title" x="40" y="54" font-size="32" font-weight="700" fill="#161B2B">The signal is in the disagreements</text>
+  <text x="40" y="88" font-size="17" fill="#6B7280">Same 300 traces, v7 vs v8. Matching outcomes cancel; only the 45 disagreements count.</text>
+
+  <!-- branch arrows -->
+  <path d="M216,320 C 252,320 252,210 286,210" fill="none" stroke="#C7CAD6" stroke-width="2" marker-end="url(#g)"/>
+  <path d="M216,360 C 252,360 252,470 286,470" fill="none" stroke="#4F46E5" stroke-width="2.4" marker-end="url(#i)"/>
+  <line x1="588" y1="210" x2="658" y2="210" stroke="#C7CAD6" stroke-width="2" marker-end="url(#g)"/>
+  <line x1="588" y1="470" x2="658" y2="470" stroke="#4F46E5" stroke-width="2.4" marker-end="url(#i)"/>
+
+  <!-- source -->
+  <rect x="40" y="270" width="176" height="140" rx="14" fill="#ffffff" stroke="#C7CAD6" stroke-width="1.4"/>
+  <text x="128" y="334" font-size="40" font-weight="700" fill="#1B2030" text-anchor="middle">300</text>
+  <text x="128" y="362" font-size="18" fill="#5B6170" text-anchor="middle">traces</text>
+  <line x1="62" y1="378" x2="194" y2="378" stroke="#EBECF2" stroke-width="1"/>
+  <text x="128" y="398" font-size="13.5" fill="#6B7280" text-anchor="middle">same eval set</text>
+
+  <!-- Agreements (muted) -->
+  <rect x="288" y="150" width="300" height="120" rx="14" fill="#F8F8FB" stroke="#C7CAD6" stroke-width="1.4"/>
+  <text x="308" y="182" font-size="13" font-weight="600" letter-spacing="1.4" fill="#9AA0AE">AGREEMENTS</text>
+  <text x="308" y="230" font-size="38" font-weight="700" fill="#6B7280">255</text>
+  <text x="308" y="258" font-size="15" fill="#6B7280">198 both pass&#160;&#160;·&#160;&#160;57 both fail</text>
+
+  <!-- Disagreements (vivid) -->
+  <rect x="288" y="410" width="300" height="120" rx="14" fill="#ffffff" stroke="#4F46E5" stroke-width="1.8"/>
+  <text x="308" y="442" font-size="13" font-weight="600" letter-spacing="1.4" fill="#4338CA">DISAGREEMENTS</text>
+  <text x="308" y="490" font-size="38" font-weight="700" fill="#1B2030">45</text>
+  <text x="308" y="518" font-size="15" fill="#5B6170"><tspan fill="#15803D" font-weight="600">30 fixed (+1)</tspan>&#160;&#160;·&#160;&#160;<tspan fill="#B91C1C" font-weight="600">15 broke (−1)</tspan></text>
+
+  <!-- Cancel (muted) -->
+  <rect x="660" y="150" width="300" height="120" rx="14" fill="#F8F8FB" stroke="#C7CAD6" stroke-width="1.4" stroke-dasharray="6 4"/>
+  <text x="810" y="202" font-size="22" font-weight="700" fill="#6B7280" text-anchor="middle">cancel out</text>
+  <text x="810" y="234" font-size="16" fill="#9AA0AE" text-anchor="middle">no signal&#160;&#160;·&#160;&#160;d = 0</text>
+
+  <!-- Net (emphasized) -->
+  <rect x="660" y="410" width="300" height="120" rx="14" fill="#EEF1FE" stroke="#4F46E5" stroke-width="1.8"/>
+  <text x="810" y="458" font-size="18" fill="#3730A3" text-anchor="middle">net +15 traces</text>
+  <text x="810" y="502" font-size="34" font-weight="700" fill="#3730A3" text-anchor="middle">= +5 points</text>
+
+  <!-- footer -->
+  <line x1="80" y1="560" x2="920" y2="560" stroke="#EBECF2" stroke-width="1"/>
+  <text x="500" y="588" font-size="17" font-style="italic" fill="#5B6170" text-anchor="middle">Pairing on the same examples is why 255 traces drop out. The whole 5-point gain lives in 45.</text>
+</svg>

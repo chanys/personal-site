@@ -1,0 +1,25 @@
+---
+title: "Projects"
+description: "Most of my work lives inside research programs and companies. The public pieces are collected here."
+pagetitle: "Projects | Yee Seng Chan"
+format:
+  html:
+    body-classes: projects-page
+---
+
+## TNLP
+
+[`Python · 2023–2024 · open source`]{.project-meta}
+
+A single codebase I designed and wrote by hand, covering the model and training stack end to end: sequence and token classification, span-pair relation extraction, seq2seq, contrastive retrieval, instruction and chat fine-tuning, DPO, and end-to-end RAG with a jointly trained retriever and generator. It uses standard backbones (BERT, DeBERTa, T5, LLaMA, Mistral) and the usual libraries where they fit, with custom model and training code where the task needed it: the span-pair model, the triplet contrastive model, and the joint retriever-generator RAG loss are written from scratch, not pulled from a library.
+
+[Code →](https://github.com/chanys/tnlp)
+
+## Paper notes archive
+
+[`2022–2023 · reference`]{.project-meta}
+
+75 explainer posts working through the transformer literature one paper at a time: encoders and decoders, efficiency methods, retrieval and RAG, evaluation. Written over about a year, it predates this site and is encyclopedic where this one is argued, kept as a standing reference rather than a current feed.
+
+[Archive →](https://chanys.github.io/about)
+

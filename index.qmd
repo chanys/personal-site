@@ -1,8 +1,17 @@
 ---
 title: "Yee Seng Chan"
+pagetitle: "Yee Seng Chan | Applied AI"
+description-meta: "Applied AI scientist working on information extraction, evaluation, and the reliability of LLM systems."
+page-layout: full
+format:
+  html:
+    body-classes: home
 about:
   template: trestles
+  image: ys_profile.png
+  image-alt: "Portrait of Yee Seng Chan"
   image-shape: round
+  image-width: 13rem
   links:
     - icon: github
       text: GitHub
@@ -10,11 +19,21 @@ about:
     - icon: linkedin
       text: LinkedIn
       href: https://linkedin.com/in/yeesengchan
+    - icon: rss
+      text: Writing feed
+      href: writing.xml
 ---
 
-I'm an applied AI scientist working on agent systems and LLM reliability. My background spans [insert: brief, e.g. "a PhD in NLP, DARPA-funded research in machine reading, and several years of industry work on conversational AI systems"].
+I work on reliable LLM systems: systems whose behavior can be measured, inspected, and improved.
 
-I currently spend my time on the methodology of building AI agents that actually work — evaluation, failure analysis, and the engineering decisions that sit around the LLM (the "harness"). Most recently, this has meant studying how harness design choices affect reliability in bounded-corpus deep research agents.
+My background is a decade of NLP and information extraction, much of it deep-learning-based, judged by external evaluation, including work as a principal investigator on DARPA and IARPA programs at Raytheon BBN. The years since have been at AI startups, leading NLP and LLM work in production, most recently on LLM workflows for clinical documentation and structured extraction.
 
-This site is where I publish writing on applied AI, agent reliability, and the craft of shipping systems under real-world constraints.
+The subject is now LLMs, but the engineering question is familiar: how do you build a system whose outputs can be trusted?
 
+## Start here
+
+For my current positioning on LLM reliability and evaluation, read [The agent harness](posts/series/the-agent-harness/index.qmd) and [LLM evaluation, honestly](posts/series/llm-evaluation-honestly/index.qmd). These series explain how I think about the system around the model: state, tools, gates, traces, labels, judges, regression cases, and eval drift.
+
+For the throughline from my earlier NLP work to current LLM workflows, read [Information extraction didn't disappear. It moved inside the workflow](posts/series/research-foundations-of-modern-llms/05-information-extraction/index.qmd).
+
+The rest is grouped by argument under [Series](series.qmd). There is also a [list of projects](projects.qmd) and [more about me](about.qmd).

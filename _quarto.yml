@@ -2,22 +2,141 @@ project:
   type: website
   resources:
     - CNAME
+    - profile.svg
+    - series-placeholder.svg
 
 website:
   title: "Yee Seng Chan"
+  description: "Writing on applied AI, agent reliability, and the craft of shipping systems under real-world constraints."
+  site-url: "https://yeesengchan.com"
+  favicon: favicon.svg
+  open-graph: true
+  twitter-card: true
   navbar:
+    pinned: true
     left:
       - href: index.qmd
         text: Home
       - href: writing.qmd
         text: Writing
+      - href: series.qmd
+        text: Series
+      - href: projects.qmd
+        text: Projects
       - href: about.qmd
         text: About
+    right:
+      - icon: rss
+        href: writing.xml
+        aria-label: RSS feed
+      - icon: github
+        href: https://github.com/chanys
+        aria-label: GitHub
+      - icon: linkedin
+        href: https://linkedin.com/in/yeesengchan
+        aria-label: LinkedIn
+      - icon: envelope
+        href: mailto:chanys.nlp@gmail.com
+        aria-label: Email
   page-footer:
-    center: "© 2026 Yee Seng Chan"
+    border: true
+    left: "© 2026 Yee Seng Chan"
+    center: "Built with [Quarto](https://quarto.org)"
+    right:
+      - icon: github
+        href: https://github.com/chanys
+        aria-label: GitHub
+      - icon: linkedin
+        href: https://linkedin.com/in/yeesengchan
+        aria-label: LinkedIn
+      - icon: rss
+        href: writing.xml
+        aria-label: RSS feed
+
+bibliography: references.bib
+
+# GitHub-Markdown-style lists: a `-` or `*` line directly under a paragraph
+# starts a list with no blank line required. Avoids the over-large vertical
+# gap that a preceding blank line would otherwise inject before the list.
+from: markdown+lists_without_preceding_blankline
 
 format:
   html:
-    theme: cosmo
+    theme:
+      light: [theme.scss, fieldnotes-rules.scss]
+      dark: [theme-dark.scss, fieldnotes-rules.scss]
     css: styles.css
-    toc: true
+    toc: false
+    code-copy: true
+    code-overflow: wrap
+    anchor-sections: true
+    link-external-newwindow: true
+    link-external-icon: false
+    grid:
+      body-width: 820px
+      sidebar-width: 220px
+      margin-width: 240px
+    include-in-header:
+      - text: |
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    # On series-part pages, Quarto's vendored scroll-spy
+    # (site_libs/quarto-html/quarto.js -> updateActiveLink) compares
+    # window.pageYOffset against each section's offsetTop. offsetTop is
+    # relative to the element's offsetParent, not the document, so the
+    # active-link choice lags the actual viewport position (most visible
+    # on series-part pages where .series-nav pushes content down). We
+    # can't safely edit the vendored file (regenerated each build), so
+    # the shim below recomputes the active link from
+    # getBoundingClientRect() and re-applies after Quarto's own handler
+    # via requestAnimationFrame. Scoped to .series-nav pages.
+    include-after-body:
+      - text: |
+          <script>
+          (() => {
+            if (!document.querySelector('.series-nav')) return;
+            const toc = document.querySelector('nav#TOC[role="doc-toc"]');
+            if (!toc) return;
+            const links = [...toc.querySelectorAll('a[data-scroll-target]')];
+            if (!links.length) return;
+            const sections = links.map((link) => {
+              const target = link.getAttribute('data-scroll-target') || '';
+              return target.startsWith('#')
+                ? document.getElementById(decodeURI(target.slice(1)))
+                : null;
+            });
+            // Distance below viewport top at which a heading is treated as
+            // "the current section." Small, so the highlight matches what a
+            // reader perceives as the heading at the top of the page.
+            const ACTIVATION_OFFSET = 80;
+            const apply = () => {
+              let idx = 0;
+              const atBottom = window.innerHeight + window.pageYOffset
+                >= document.documentElement.scrollHeight - 2;
+              if (atBottom) {
+                idx = sections.length - 1;
+              } else {
+                for (let i = 0; i < sections.length; i++) {
+                  const s = sections[i];
+                  if (s && s.getBoundingClientRect().top <= ACTIVATION_OFFSET) idx = i;
+                }
+              }
+              for (let i = 0; i < links.length; i++) {
+                links[i].classList.toggle('active', i === idx);
+              }
+            };
+            // rAF ensures we run after Quarto's synchronous scroll handler
+            // so our active-class choice wins.
+            let pending = false;
+            const schedule = () => {
+              if (pending) return;
+              pending = true;
+              requestAnimationFrame(() => { apply(); pending = false; });
+            };
+            schedule();
+            document.addEventListener('scroll', schedule, { passive: true });
+            window.addEventListener('resize', schedule);
+            window.addEventListener('load', schedule);
+          })();
+          </script>

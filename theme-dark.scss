@@ -1,0 +1,66 @@
+/*-- scss:defaults --*/
+
+// ===========================================================================
+//  FIELD NOTES — dark theme
+//  Same architecture as the light theme: literal Bootstrap values here,
+//  design palette as --fn-* custom properties in the rules block.
+//  Shared component rules come from fieldnotes-rules.scss (theme array).
+// ===========================================================================
+
+$font-family-sans-serif: "Newsreader", Iowan Old Style, Georgia, Cambria, "Times New Roman", serif;
+$font-family-monospace:  "IBM Plex Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+$headings-font-family:   "Fraunces", Iowan Old Style, Georgia, serif;
+
+$font-size-root:   18px;
+$font-size-base:   1rem;
+$line-height-base: 1.72;
+
+$headings-font-weight: 600;
+$headings-line-height: 1.12;
+
+$body-bg:    #17140F;
+$body-color: #EBE3D3;
+
+$link-color:        #E2773F;
+$link-hover-color:  #F0915C;
+$link-decoration:   none;
+
+$border-color: #322C22;
+
+$code-color:             #F0915C;
+$code-bg:                #211D16;
+$code-block-bg:          #1C1812;
+$code-block-border-left: #E2773F;
+
+$border-radius:    2px;
+$border-radius-sm: 2px;
+$border-radius-lg: 3px;
+
+$navbar-bg: #17140F;
+$navbar-fg: #EBE3D3;
+$navbar-hl: #E2773F;
+
+$footer-bg: #17140F;
+$footer-fg: #9A9080;
+
+$component-active-bg: #E2773F;
+
+
+/*-- scss:rules --*/
+
+// Design tokens — dark. Same names the shared rules file consumes.
+:root {
+  --fn-paper:       #17140F;
+  --fn-paper-sink:  #211D16;
+  --fn-card:        #1C1812;
+  --fn-ink:         #EBE3D3;
+  --fn-ink-soft:    #9A9080;
+  --fn-hairline:    #322C22;
+  --fn-accent:      #E2773F;
+  --fn-accent-deep: #F0915C;
+  --fn-grain-opacity: 0.6;
+  --fn-navbar-bg:   rgba(23, 20, 15, 0.86);
+}
+// The grain overlay uses mix-blend-mode: multiply, which darkens on light but
+// would vanish on dark — switch it to screen so it reads on the dark ground.
+body::before { mix-blend-mode: screen; }

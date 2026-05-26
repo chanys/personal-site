@@ -1,0 +1,82 @@
+<svg viewBox="0 0 1000 636" xmlns="http://www.w3.org/2000/svg" font-family="Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <style>.title { font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif; }</style>
+  </defs>
+
+  <rect width="1000" height="636" fill="#ffffff"/>
+
+  <text class="title" x="40" y="54" font-size="32" font-weight="700" fill="#161B2B">Overlap is the wrong test</text>
+  <text x="40" y="90" font-size="17" fill="#6B7280">Same data: the individual CIs overlap, yet the paired difference excludes zero.</text>
+
+  <!-- ===================== CARD A: the wrong test ===================== -->
+  <rect x="40" y="116" width="920" height="210" rx="16" fill="#ffffff" stroke="#DC2626" stroke-width="1.6"/>
+  <text x="64" y="150" font-size="16" font-weight="700" letter-spacing="0.6" fill="#B91C1C">✗  THE WRONG TEST<tspan font-weight="400" letter-spacing="0" fill="#6B7280">  ·  do the individual CIs overlap?</tspan></text>
+
+  <!-- overlap band -->
+  <rect x="481" y="176" width="161" height="80" fill="#FEF3C7" opacity="0.75"/>
+  <text x="561" y="170" font-size="14" font-weight="700" fill="#B45309" text-anchor="middle">overlap</text>
+
+  <!-- gridlines + axis -->
+  <line x1="278" y1="176" x2="278" y2="266" stroke="#EBECF2" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="442" y1="176" x2="442" y2="266" stroke="#EBECF2" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="606" y1="176" x2="606" y2="266" stroke="#EBECF2" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="769" y1="176" x2="769" y2="266" stroke="#EBECF2" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="180" y1="266" x2="900" y2="266" stroke="#C7CAD6" stroke-width="1.2"/>
+  <text x="278" y="288" font-size="14" fill="#6B7280" text-anchor="middle">65%</text>
+  <text x="442" y="288" font-size="14" fill="#6B7280" text-anchor="middle">70%</text>
+  <text x="606" y="288" font-size="14" fill="#6B7280" text-anchor="middle">75%</text>
+  <text x="769" y="288" font-size="14" fill="#6B7280" text-anchor="middle">80%</text>
+
+  <!-- v7 interval -->
+  <text x="165" y="201" font-size="16" font-weight="700" fill="#1B2030" text-anchor="end">v7  71%</text>
+  <line x1="308" y1="196" x2="642" y2="196" stroke="#4F46E5" stroke-width="3"/>
+  <line x1="308" y1="188" x2="308" y2="204" stroke="#4F46E5" stroke-width="3"/>
+  <line x1="642" y1="188" x2="642" y2="204" stroke="#4F46E5" stroke-width="3"/>
+  <circle cx="475" cy="196" r="6" fill="#4F46E5"/>
+
+  <!-- v8 interval -->
+  <text x="165" y="241" font-size="16" font-weight="700" fill="#1B2030" text-anchor="end">v8  76%</text>
+  <line x1="481" y1="236" x2="795" y2="236" stroke="#4F46E5" stroke-width="3"/>
+  <line x1="481" y1="228" x2="481" y2="244" stroke="#4F46E5" stroke-width="3"/>
+  <line x1="795" y1="228" x2="795" y2="244" stroke="#4F46E5" stroke-width="3"/>
+  <circle cx="638" cy="236" r="6" fill="#4F46E5"/>
+
+  <text x="900" y="312" font-size="16" font-style="italic" fill="#B91C1C" text-anchor="end">reads as: inconclusive</text>
+
+  <!-- ===================== CARD B: the right test ===================== -->
+  <rect x="40" y="346" width="920" height="210" rx="16" fill="#ffffff" stroke="#16A34A" stroke-width="1.6"/>
+  <text x="64" y="380" font-size="16" font-weight="700" letter-spacing="0.6" fill="#15803D">✓  THE RIGHT TEST<tspan font-weight="400" letter-spacing="0" fill="#6B7280">  ·  CI of the paired difference</tspan></text>
+
+  <!-- gridlines + axis -->
+  <line x1="420" y1="416" x2="420" y2="496" stroke="#EBECF2" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="516" y1="416" x2="516" y2="496" stroke="#EBECF2" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="612" y1="416" x2="612" y2="496" stroke="#EBECF2" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="708" y1="416" x2="708" y2="496" stroke="#EBECF2" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="804" y1="416" x2="804" y2="496" stroke="#EBECF2" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="180" y1="496" x2="900" y2="496" stroke="#C7CAD6" stroke-width="1.2"/>
+
+  <!-- zero line -->
+  <line x1="324" y1="406" x2="324" y2="496" stroke="#B91C1C" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="324" y="518" font-size="14" font-weight="700" fill="#B91C1C" text-anchor="middle">0</text>
+  <text x="420" y="518" font-size="14" fill="#6B7280" text-anchor="middle">+2</text>
+  <text x="516" y="518" font-size="14" fill="#6B7280" text-anchor="middle">+4</text>
+  <text x="612" y="518" font-size="14" fill="#6B7280" text-anchor="middle">+6</text>
+  <text x="708" y="518" font-size="14" fill="#6B7280" text-anchor="middle">+8</text>
+  <text x="804" y="518" font-size="14" fill="#6B7280" text-anchor="middle">+10</text>
+
+  <!-- paired difference interval -->
+  <text x="165" y="446" font-size="16" font-weight="700" fill="#1B2030" text-anchor="end">v8 − v7</text>
+  <text x="564" y="424" font-size="16" font-weight="700" fill="#1B2030" text-anchor="middle">+5 pts</text>
+  <line x1="353" y1="441" x2="775" y2="441" stroke="#4F46E5" stroke-width="3"/>
+  <line x1="353" y1="433" x2="353" y2="449" stroke="#4F46E5" stroke-width="3"/>
+  <line x1="775" y1="433" x2="775" y2="449" stroke="#4F46E5" stroke-width="3"/>
+  <circle cx="564" cy="441" r="6" fill="#4F46E5"/>
+  <text x="353" y="470" font-size="13" fill="#5B6170" text-anchor="middle">+0.7</text>
+  <text x="690" y="424" font-size="15" font-weight="700" fill="#15803D">excludes 0 ✓</text>
+
+  <text x="900" y="542" font-size="16" font-style="italic" fill="#15803D" text-anchor="end">reads as: v8 likely better</text>
+
+  <!-- ===================== FOOTER ===================== -->
+  <line x1="80" y1="584" x2="920" y2="584" stroke="#EBECF2" stroke-width="1"/>
+  <text x="500" y="612" font-size="17" font-style="italic" fill="#5B6170" text-anchor="middle">Same comparison, two methods. Trust the CI of the paired difference, not whether the individual CIs overlap.</text>
+</svg>

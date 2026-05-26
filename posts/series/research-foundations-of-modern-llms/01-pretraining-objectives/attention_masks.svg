@@ -1,0 +1,106 @@
+<svg viewBox="0 0 1008 448" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, -apple-system, sans-serif">
+  <style>
+    .panel-title { font-size: 14px; font-weight: 600; fill: #1f2937; }
+    .panel-subtitle { font-size: 11px; fill: #6b7280; }
+    .panel-caption { font-size: 11px; fill: #6b7280; }
+    .grid-bg { fill: #f3f4f6; }
+    .grid-line { stroke: #d1d5db; stroke-width: 0.5; }
+    .grid-divider { stroke: #1f2937; stroke-width: 1.2; }
+    .filled { fill: #2563eb; }
+    .grid-border { fill: none; stroke: #1f2937; stroke-width: 1; }
+    .label-on-fill { font-size: 13px; fill: white; font-weight: 500; }
+    .label-empty { font-size: 13px; fill: #9ca3af; font-style: italic; }
+  </style>
+
+  <!-- White background -->
+  <rect width="1008" height="448" fill="white"/>
+
+  <g transform="scale(1.4)">
+
+  <!-- Panel 1: Encoder (BERT) -->
+  <g transform="translate(40, 30)">
+    <text x="72" y="14" text-anchor="middle" class="panel-title">Encoder (BERT)</text>
+    <text x="72" y="32" text-anchor="middle" class="panel-subtitle">Full bidirectional</text>
+    <g transform="translate(0, 50)">
+      <rect width="144" height="144" class="filled"/>
+      <line x1="24" y1="0" x2="24" y2="144" class="grid-line"/>
+      <line x1="48" y1="0" x2="48" y2="144" class="grid-line"/>
+      <line x1="72" y1="0" x2="72" y2="144" class="grid-line"/>
+      <line x1="96" y1="0" x2="96" y2="144" class="grid-line"/>
+      <line x1="120" y1="0" x2="120" y2="144" class="grid-line"/>
+      <line x1="0" y1="24" x2="144" y2="24" class="grid-line"/>
+      <line x1="0" y1="48" x2="144" y2="48" class="grid-line"/>
+      <line x1="0" y1="72" x2="144" y2="72" class="grid-line"/>
+      <line x1="0" y1="96" x2="144" y2="96" class="grid-line"/>
+      <line x1="0" y1="120" x2="144" y2="120" class="grid-line"/>
+      <rect width="144" height="144" class="grid-border"/>
+    </g>
+    <text x="72" y="222" text-anchor="middle" class="panel-caption">Every position attends</text>
+    <text x="72" y="236" text-anchor="middle" class="panel-caption">to every position</text>
+  </g>
+
+  <!-- Panel 2: Decoder (GPT) -->
+  <g transform="translate(240, 30)">
+    <text x="72" y="14" text-anchor="middle" class="panel-title">Decoder (GPT)</text>
+    <text x="72" y="32" text-anchor="middle" class="panel-subtitle">Causal self-attention</text>
+    <g transform="translate(0, 50)">
+      <rect width="144" height="144" class="grid-bg"/>
+      <rect x="0" y="0" width="24" height="24" class="filled"/>
+      <rect x="0" y="24" width="48" height="24" class="filled"/>
+      <rect x="0" y="48" width="72" height="24" class="filled"/>
+      <rect x="0" y="72" width="96" height="24" class="filled"/>
+      <rect x="0" y="96" width="120" height="24" class="filled"/>
+      <rect x="0" y="120" width="144" height="24" class="filled"/>
+      <line x1="24" y1="0" x2="24" y2="144" class="grid-line"/>
+      <line x1="48" y1="0" x2="48" y2="144" class="grid-line"/>
+      <line x1="72" y1="0" x2="72" y2="144" class="grid-line"/>
+      <line x1="96" y1="0" x2="96" y2="144" class="grid-line"/>
+      <line x1="120" y1="0" x2="120" y2="144" class="grid-line"/>
+      <line x1="0" y1="24" x2="144" y2="24" class="grid-line"/>
+      <line x1="0" y1="48" x2="144" y2="48" class="grid-line"/>
+      <line x1="0" y1="72" x2="144" y2="72" class="grid-line"/>
+      <line x1="0" y1="96" x2="144" y2="96" class="grid-line"/>
+      <line x1="0" y1="120" x2="144" y2="120" class="grid-line"/>
+      <rect width="144" height="144" class="grid-border"/>
+    </g>
+    <text x="72" y="222" text-anchor="middle" class="panel-caption">Each position attends only</text>
+    <text x="72" y="236" text-anchor="middle" class="panel-caption">to itself and earlier positions</text>
+  </g>
+
+  <!-- Panel 3: Encoder-Decoder (T5) -->
+  <g transform="translate(440, 30)">
+    <text x="120" y="14" text-anchor="middle" class="panel-title">Encoder-Decoder (T5)</text>
+    <text x="120" y="32" text-anchor="middle" class="panel-subtitle">Encoder + decoder + cross-attention</text>
+    <g transform="translate(24, 50)">
+      <rect width="192" height="192" class="grid-bg"/>
+      <rect x="0" y="0" width="96" height="96" class="filled"/>
+      <rect x="0" y="96" width="96" height="96" class="filled"/>
+      <rect x="96" y="96" width="24" height="24" class="filled"/>
+      <rect x="96" y="120" width="48" height="24" class="filled"/>
+      <rect x="96" y="144" width="72" height="24" class="filled"/>
+      <rect x="96" y="168" width="96" height="24" class="filled"/>
+      <line x1="24" y1="0" x2="24" y2="192" class="grid-line"/>
+      <line x1="48" y1="0" x2="48" y2="192" class="grid-line"/>
+      <line x1="72" y1="0" x2="72" y2="192" class="grid-line"/>
+      <line x1="120" y1="0" x2="120" y2="192" class="grid-line"/>
+      <line x1="144" y1="0" x2="144" y2="192" class="grid-line"/>
+      <line x1="168" y1="0" x2="168" y2="192" class="grid-line"/>
+      <line x1="0" y1="24" x2="192" y2="24" class="grid-line"/>
+      <line x1="0" y1="48" x2="192" y2="48" class="grid-line"/>
+      <line x1="0" y1="72" x2="192" y2="72" class="grid-line"/>
+      <line x1="0" y1="120" x2="192" y2="120" class="grid-line"/>
+      <line x1="0" y1="144" x2="192" y2="144" class="grid-line"/>
+      <line x1="0" y1="168" x2="192" y2="168" class="grid-line"/>
+      <line x1="96" y1="0" x2="96" y2="192" class="grid-divider"/>
+      <line x1="0" y1="96" x2="192" y2="96" class="grid-divider"/>
+      <rect width="192" height="192" class="grid-border"/>
+      <text x="48" y="52" text-anchor="middle" class="label-on-fill">enc → enc</text>
+      <text x="144" y="52" text-anchor="middle" class="label-empty">(no attention)</text>
+      <text x="48" y="148" text-anchor="middle" class="label-on-fill">dec → enc</text>
+      <text x="144" y="186" text-anchor="middle" class="label-on-fill">dec → dec</text>
+    </g>
+    <text x="120" y="262" text-anchor="middle" class="panel-caption">Encoder self-attends; decoder self-attends causally</text>
+    <text x="120" y="276" text-anchor="middle" class="panel-caption">and cross-attends to encoder output</text>
+  </g>
+  </g>
+</svg>

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1750 820" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1750" height="820" fill="#ffffff"/>
+
+  <text x="225" y="60" text-anchor="middle" font-size="38" font-weight="bold" fill="#222222">Visible failure</text>
+  <line x1="40" y1="88" x2="410" y2="88" stroke="#888888" stroke-width="1.2"/>
+
+  <text x="1340" y="60" text-anchor="middle" font-size="38" font-weight="bold" fill="#222222">Where control should have lived</text>
+  <line x1="1040" y1="88" x2="1640" y2="88" stroke="#888888" stroke-width="1.2"/>
+
+  <text x="400" y="180" text-anchor="end" font-size="30" fill="#333333">bluffs from uncertainty</text>
+  <line x1="430" y1="172" x2="1030" y2="172" stroke="#3a3a8a" stroke-width="1.6"/>
+  <text x="1060" y="180" text-anchor="start" font-size="30" fill="#333333">state confidence + clarification logic</text>
+
+  <text x="400" y="270" text-anchor="end" font-size="30" fill="#333333">forgets prior facts</text>
+  <line x1="430" y1="262" x2="1030" y2="262" stroke="#3a3a8a" stroke-width="1.6"/>
+  <text x="1060" y="270" text-anchor="start" font-size="30" fill="#333333">structured state</text>
+
+  <text x="400" y="360" text-anchor="end" font-size="30" fill="#333333">calls the wrong tool</text>
+  <line x1="430" y1="352" x2="1030" y2="352" stroke="#3a3a8a" stroke-width="1.6"/>
+  <text x="1060" y="360" text-anchor="start" font-size="30" fill="#333333">tool design + phase logic + validator</text>
+
+  <text x="400" y="450" text-anchor="end" font-size="30" fill="#333333">sounds grounded but is not</text>
+  <line x1="430" y1="442" x2="1030" y2="442" stroke="#3a3a8a" stroke-width="1.6"/>
+  <text x="1060" y="450" text-anchor="start" font-size="30" fill="#333333">evidence tracking + groundedness check</text>
+
+  <text x="400" y="540" text-anchor="end" font-size="30" fill="#333333">repeats side effects</text>
+  <line x1="430" y1="532" x2="1030" y2="532" stroke="#3a3a8a" stroke-width="1.6"/>
+  <text x="1060" y="540" text-anchor="start" font-size="30" fill="#333333">idempotency + verify-first recovery</text>
+
+  <text x="400" y="630" text-anchor="end" font-size="30" fill="#333333">impossible to debug</text>
+  <line x1="430" y1="622" x2="1030" y2="622" stroke="#3a3a8a" stroke-width="1.6"/>
+  <text x="1060" y="630" text-anchor="start" font-size="30" fill="#333333">structured trace + version info</text>
+
+  <text x="875" y="760" text-anchor="middle" font-size="26" font-style="italic" fill="#555555">Each visible failure points to a place in the system where it could have been caught.</text>
+</svg>
