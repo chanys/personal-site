@@ -3,7 +3,7 @@ title: "State, not transcript, is agent memory"
 description: "Structured state is the real memory layer."
 date: 2026-04-28
 order: 3
-draft: true
+draft: false
 ---
 
 {{< include ../_series.qmd >}}

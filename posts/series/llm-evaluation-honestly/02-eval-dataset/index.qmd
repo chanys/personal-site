@@ -3,7 +3,7 @@ title: "Read traces before you write the labeling guide"
 description: "Let real traces decide what 'good' means."
 date: 2026-05-19
 order: 2
-draft: true
+draft: false
 ---
 
 {{< include ../_series.qmd >}}

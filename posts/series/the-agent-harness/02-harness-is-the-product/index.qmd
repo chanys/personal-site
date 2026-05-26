@@ -3,7 +3,7 @@ title: "The harness is the product"
 description: "The case that the harness, not the model, is what you actually ship."
 date: 2026-04-23
 order: 2
-draft: true
+draft: false
 ---
 
 {{< include ../_series.qmd >}}

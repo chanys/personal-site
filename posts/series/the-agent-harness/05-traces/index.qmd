@@ -3,7 +3,7 @@ title: "Traces are how agents get better"
 description: "Traces turn failures into evidence you can debug, attribute, and fix."
 date: 2026-05-10
 order: 5
-draft: true
+draft: false
 ---
 
 {{< include ../_series.qmd >}}

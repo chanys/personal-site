@@ -3,7 +3,7 @@ title: "What the heck is an AI agent?"
 description: "Stop asking if it's an agent. Ask how much autonomy, and whether that fits the task."
 date: 2026-04-11
 order: 1
-draft: true
+draft: false
 ---
 
 {{< include ../_series.qmd >}}

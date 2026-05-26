@@ -3,7 +3,7 @@ title: "Why AI agent demos break in production"
 description: "Failures live in everything wrapped around the model."
 date: 2026-04-18
 order: 1
-draft: true
+draft: false
 ---
 
 {{< include ../_series.qmd >}}

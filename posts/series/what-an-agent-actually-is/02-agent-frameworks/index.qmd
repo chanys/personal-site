@@ -3,7 +3,7 @@ title: "Behind the scenes of AI agent frameworks"
 description: "The model emits, the API parses, your code dispatches and loops."
 date: 2026-04-14
 order: 2
-draft: true
+draft: false
 ---
 
 {{< include ../_series.qmd >}}

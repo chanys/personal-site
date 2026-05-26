@@ -3,7 +3,7 @@ title: "Stop vibe-checking your agent"
 description: "Eyeballing a handful of runs feels like evaluation and isn't."
 date: 2026-05-15
 order: 1
-draft: true
+draft: false
 ---
 
 {{< include ../_series.qmd >}}

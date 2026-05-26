@@ -3,7 +3,7 @@ title: "Prompts guide. Gates enforce"
 description: "A prompt is a suggestion the model can ignore; a gate is code it cannot."
 date: 2026-05-01
 order: 4
-draft: true
+draft: false
 ---
 
 {{< include ../_series.qmd >}}

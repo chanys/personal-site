@@ -3,7 +3,7 @@ title: "Your LLM judge is a classifier"
 description: "Validate LLM judges with held-out labels, confusion matrices, and periodic rechecks."
 date: 2026-05-26
 order: 4
-draft: true
+draft: false
 ---
 
 {{< include ../_series.qmd >}}

@@ -3,7 +3,7 @@ title: "Don't ask an LLM judge what code can check"
 description: "If a check can be written as code, an LLM judge is a slower, noisier, costlier way to an answer."
 date: 2026-05-22
 order: 3
-draft: true
+draft: false
 ---
 
 {{< include ../_series.qmd >}}
