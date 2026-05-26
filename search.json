@@ -1299,14 +1299,28 @@
     "href": "projects.html",
     "title": "Projects",
     "section": "",
-    "text": "Python · 2023–2024 · open source\nA single codebase I designed and wrote by hand, covering the model and training stack end to end: sequence and token classification, span-pair relation extraction, seq2seq, contrastive retrieval, instruction and chat fine-tuning, DPO, and end-to-end RAG with a jointly trained retriever and generator. It uses standard backbones (BERT, DeBERTa, T5, LLaMA, Mistral) and the usual libraries where they fit, with custom model and training code where the task needed it: the span-pair model, the triplet contrastive model, and the joint retriever-generator RAG loss are written from scratch, not pulled from a library.\nCode →"
+    "text": "Python · 2023–2026 · proprietary\nA multi-step LLM workflow that turns a clinician-patient encounter transcript into a structured clinical note. Parallel extraction calls produce typed, metadata-tagged frames that a downstream routing layer places into the correct note sections. Clinician evaluation showed 2× recall of medical facts at maintained accuracy, improved clinical utility over the prior production system, and ~50% better run-to-run consistency on extracted medical problems and clinical facts.\nPattern writeup →"
+  },
+  {
+    "objectID": "projects.html#clinical-documentation-pipeline",
+    "href": "projects.html#clinical-documentation-pipeline",
+    "title": "Projects",
+    "section": "",
+    "text": "Python · 2023–2026 · proprietary\nA multi-step LLM workflow that turns a clinician-patient encounter transcript into a structured clinical note. Parallel extraction calls produce typed, metadata-tagged frames that a downstream routing layer places into the correct note sections. Clinician evaluation showed 2× recall of medical facts at maintained accuracy, improved clinical utility over the prior production system, and ~50% better run-to-run consistency on extracted medical problems and clinical facts.\nPattern writeup →"
+  },
+  {
+    "objectID": "projects.html#nlplingo",
+    "href": "projects.html#nlplingo",
+    "title": "Projects",
+    "section": "NLPLingo",
+    "text": "NLPLingo\nPython · 2017–2023 · open source · Raytheon BBN\nRaytheon BBN’s deep-learning toolkit for event extraction and causal relation extraction. I created, led, and was the principal developer and maintainer of NLPLingo over its lifecycle, mentoring the scientists and engineers across Raytheon BBN who built on top of it.\nThe toolkit supported ~$25M in DARPA and IARPA contract value, most notably DARPA World Modelers, where I served as Principal Investigator on the Raytheon BBN team (DTIC final report).\nCode →"
   },
   {
     "objectID": "projects.html#tnlp",
     "href": "projects.html#tnlp",
     "title": "Projects",
-    "section": "",
-    "text": "Python · 2023–2024 · open source\nA single codebase I designed and wrote by hand, covering the model and training stack end to end: sequence and token classification, span-pair relation extraction, seq2seq, contrastive retrieval, instruction and chat fine-tuning, DPO, and end-to-end RAG with a jointly trained retriever and generator. It uses standard backbones (BERT, DeBERTa, T5, LLaMA, Mistral) and the usual libraries where they fit, with custom model and training code where the task needed it: the span-pair model, the triplet contrastive model, and the joint retriever-generator RAG loss are written from scratch, not pulled from a library.\nCode →"
+    "section": "TNLP",
+    "text": "TNLP\nPython · 2023–2024 · open source\nA single codebase I designed and wrote by hand, covering the model and training stack end to end: sequence and token classification, span-pair relation extraction, seq2seq, contrastive retrieval, instruction and chat fine-tuning, DPO, and end-to-end RAG with a jointly trained retriever and generator. It uses standard backbones (BERT, DeBERTa, T5, LLaMA, Mistral) and the usual libraries where they fit, with custom model and training code where the task needed it: the span-pair model, the triplet contrastive model, and the joint retriever-generator RAG loss are written from scratch, not pulled from a library.\nCode →"
   },
   {
     "objectID": "projects.html#paper-notes-archive",
