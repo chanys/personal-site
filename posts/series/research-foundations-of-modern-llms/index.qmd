@@ -21,6 +21,6 @@ listing:
     description: "What modern LLMs inherited from earlier NLP research, and why those ideas reorganized into today's stack instead of disappearing."
 ---
 
-A lot of what looks new in modern LLMs is older NLP research that did not disappear, it changed position. Encoders, retrieval, fine-tuning, and information extraction were each treated as the main event at some point, and each is now a component inside a larger system rather than the system itself. This series traces where those ideas went and why the rearrangement is the part worth understanding.
+Encoders, retrieval, fine-tuning, and information extraction were each treated as the main event at some point. Each is now a component inside a larger system. The series traces where those ideas went and why the rearrangement matters.
 
 Read in order:

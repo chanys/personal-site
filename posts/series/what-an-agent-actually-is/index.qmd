@@ -21,6 +21,6 @@ listing:
     description: "A first-principles definition of an AI agent: control loops, tools, state, and decisions, and what agent frameworks are really doing underneath their abstractions."
 ---
 
-"Agent" now covers almost anything that calls a model in a loop, which is less a definition than a vibe. This short series defines an agent from first principles, the control loop, the tools, the state it carries, the decisions it actually makes, and then looks at what the popular frameworks are doing once you strip the abstractions away. The aim is to look at a system and see where it sits on the "agentic" spectrum, and therefore where its reliability is going to come under pressure.
+The series replaces the "Agent" definition question with an autonomy spectrum, then opens up what frameworks actually do underneath: the model emits, the API parses, your code dispatches and loops. The point is to know what kind of agent you have, and how it actually works.
 
 Read in order:

@@ -21,6 +21,6 @@ listing:
     description: "The RL lineage behind reasoning models, traced one algorithm at a time, from REINFORCE and PPO through GRPO and DPO to what R1 actually shipped."
 ---
 
-Reasoning models did not arrive in one breakthrough. They came out of a reinforcement-learning lineage that is worth following in order: REINFORCE and PPO set the mechanics, GRPO and DPO changed what the reward and the update look like, tool-use RL extended it past single answers, and R1 is where it became something you could actually ship. This series builds that chain one step at a time, so that by the end R1 reads as a consequence rather than a surprise.
+Reasoning models came out of a reinforcement-learning lineage: REINFORCE and PPO set the mechanics, GRPO and DPO reshaped the reward and update, tool-use RL extended it past single answers, and R1 made it shippable. The series follows the chain in order, so R1 reads as a consequence rather than a surprise.
 
 Read in order:

@@ -21,6 +21,6 @@ listing:
     description: "Why your eval scores look good while the system stays unreliable, and what to measure instead."
 ---
 
-Evaluation can produce a number that goes up while the system stays unreliable. This series is about why that happens: how the dataset, the judge model, and the headline score each mislead you, and what it takes to measure something you can actually trust. It covers LLMs and agents, and treats a passing score as the start of the investigation, not the end of it.
+The series treats LLM evaluation as engineering: labels built from real traces, code checks before LLM judges, judges treated as calibrated classifiers, scores read as samples not truth, and an eval system you maintain like any other. The point is to know whether the system is actually getting better.
 
 Read in order:
