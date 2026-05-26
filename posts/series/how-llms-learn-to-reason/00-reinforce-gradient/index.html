@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Yee Seng Chan">
+<meta name="description" content="The policy gradient, derived.">
+
+<title>REINFORCE: the gradient that drives training – Yee Seng Chan</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<link href="../../../../favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap-7b53549d121f5930ef88eb09dda4672c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-3874333d9529686a5a4437217f193688.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-7b53549d121f5930ef88eb09dda4672c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../../../styles.css">
+<meta property="og:title" content="REINFORCE: the gradient that drives training – Yee Seng Chan">
+<meta property="og:description" content="The policy gradient, derived.">
+<meta property="og:image" content="https://yeesengchan.com/posts/series/how-llms-learn-to-reason/00-reinforce-gradient/case1.png">
+<meta property="og:site_name" content="Yee Seng Chan">
+<meta property="og:image:alt" content="Good action case.">
+<meta property="og:image:height" content="432">
+<meta property="og:image:width" content="612">
+<meta name="twitter:title" content="REINFORCE: the gradient that drives training – Yee Seng Chan">
+<meta name="twitter:description" content="The policy gradient, derived.">
+<meta name="twitter:image" content="https://yeesengchan.com/posts/series/how-llms-learn-to-reason/00-reinforce-gradient/case1.png">
+<meta name="twitter:image:alt" content="Good action case.">
+<meta name="twitter:image-height" content="432">
+<meta name="twitter:image-width" content="612">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">Yee Seng Chan</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../writing.html"> 
+<span class="menu-text">Writing</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../series.html"> 
+<span class="menu-text">Series</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../projects.html"> 
+<span class="menu-text">Projects</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../../writing.xml"> <i class="bi bi-rss" role="img" aria-label="RSS feed">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/chanys"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://linkedin.com/in/yeesengchan"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:chanys.nlp@gmail.com"> <i class="bi bi-envelope" role="img" aria-label="Email">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Contents</h2>
+   
+  <ul class="collapse">
+  <li><a href="#the-objective-and-its-loss-form" id="toc-the-objective-and-its-loss-form" class="nav-link active" data-scroll-target="#the-objective-and-its-loss-form">1. The objective and its loss form</a></li>
+  <li><a href="#why-the-loss-form-does-the-right-thing" id="toc-why-the-loss-form-does-the-right-thing" class="nav-link" data-scroll-target="#why-the-loss-form-does-the-right-thing">2. Why the loss form does the right thing</a></li>
+  <li><a href="#a-useful-reframe-reinforce-is-supervised-learning-with-two-tweaks" id="toc-a-useful-reframe-reinforce-is-supervised-learning-with-two-tweaks" class="nav-link" data-scroll-target="#a-useful-reframe-reinforce-is-supervised-learning-with-two-tweaks">3. A useful reframe: REINFORCE is supervised learning with two tweaks</a></li>
+  <li><a href="#the-network-outputs-logits-not-probabilities" id="toc-the-network-outputs-logits-not-probabilities" class="nav-link" data-scroll-target="#the-network-outputs-logits-not-probabilities">4. The network outputs logits, not probabilities</a></li>
+  <li><a href="#the-chain-rule" id="toc-the-chain-rule" class="nav-link" data-scroll-target="#the-chain-rule">5. The chain rule</a></li>
+  <li><a href="#deriving-the-key-softmax-gradient" id="toc-deriving-the-key-softmax-gradient" class="nav-link" data-scroll-target="#deriving-the-key-softmax-gradient">6. Deriving the key softmax gradient</a></li>
+  <li><a href="#the-gradient-on-the-loss" id="toc-the-gradient-on-the-loss" class="nav-link" data-scroll-target="#the-gradient-on-the-loss">7. The gradient on the loss</a></li>
+  <li><a href="#closing-the-loop" id="toc-closing-the-loop" class="nav-link" data-scroll-target="#closing-the-loop">8. Closing the loop</a></li>
+  <li><a href="#the-general-update-rule" id="toc-the-general-update-rule" class="nav-link" data-scroll-target="#the-general-update-rule">9. The general update rule</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">REINFORCE: the gradient that drives training</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">How LLMs learn to reason</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    The policy gradient, derived.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Yee Seng Chan </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">2026 · February 20</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+How LLMs learn to reason
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../00-reinforce-foundations/">REINFORCE: the world before the gradient</a></li>
+<li><a href="../00-reinforce-gradient/">REINFORCE: the gradient that drives training</a></li>
+<li><a href="../01-ppo/">PPO is REINFORCE plus five fixes</a></li>
+<li><a href="../02-grpo/">GRPO: The algorithm behind reasoning models</a></li>
+<li><a href="../03-dpo/">DPO: RLHF collapsed into one loss</a></li>
+<li><a href="../04-r1/">R1-Zero was the result. R1 was the product</a></li>
+<li><a href="../05-tool-use/">How reasoning models learn to use tools</a></li>
+</ol>
+</div>
+<p><a href="../../../../posts/series/how-llms-learn-to-reason/00-reinforce-foundations/index.html">Part 1</a> built the world REINFORCE lives in and arrived at the objective: <span class="math inline">\(J(\theta) = \sum_t G_t \log \pi_\theta(a_t \mid s_t)\)</span>, the thing we want to maximize. What it did not explain is <em>why</em> gradient descent on that objective actually makes good actions more likely. That question lives one layer down, in how the gradient flows through the softmax to the logits and back to the parameters. This part derives that mechanism.</p>
+<section id="the-objective-and-its-loss-form" class="level2">
+<h2 class="anchored" data-anchor-id="the-objective-and-its-loss-form">1. The objective and its loss form</h2>
+<p>Restating, with the notation now grounded:</p>
+<p><span class="math display">\[J(\theta) = \sum_t G_t \log \pi_\theta(a_t \mid s_t).\]</span></p>
+<ul>
+<li><span class="math inline">\(J(\theta)\)</span> is the objective we want to maximize.</li>
+<li><span class="math inline">\(\theta\)</span> is the network’s parameters.</li>
+<li><span class="math inline">\(\pi_\theta(a_t \mid s_t)\)</span> is the probability the policy assigns to action <span class="math inline">\(a_t\)</span> in state <span class="math inline">\(s_t\)</span>.</li>
+<li><span class="math inline">\(G_t\)</span> is the return from time <span class="math inline">\(t\)</span>: positive when the trajectory was good, negative when bad.</li>
+</ul>
+<p>Neural networks are typically trained by <em>minimizing</em> a loss, so define</p>
+<p><span class="math display">\[L(\theta) = -J(\theta) = -\sum_t G_t \log \pi_\theta(a_t \mid s_t).\]</span></p>
+<p>Minimizing <span class="math inline">\(L\)</span> is equivalent to maximizing <span class="math inline">\(J\)</span>. The sign flip is purely a notational convenience for using minimize-by-default optimizers.</p>
+</section>
+<section id="why-the-loss-form-does-the-right-thing" class="level2">
+<h2 class="anchored" data-anchor-id="why-the-loss-form-does-the-right-thing">2. Why the loss form does the right thing</h2>
+<p>Look at one term in isolation: <span class="math inline">\(L = -G \log p\)</span>, where <span class="math inline">\(p = \pi_\theta(a_t \mid s_t)\)</span>.</p>
+<p><strong>Good action (<span class="math inline">\(G &gt; 0\)</span>).</strong> If <span class="math inline">\(p\)</span> increases, <span class="math inline">\(\log p\)</span> increases (becomes less negative), so <span class="math inline">\(-G \log p\)</span> decreases. Minimizing <span class="math inline">\(L\)</span> encourages <span class="math inline">\(p\)</span> to grow.</p>
+<div id="fig-case1" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Good action case.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-case1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="case1.png" id="fig-case1" class="img-fluid figure-img" alt="Good action case.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-case1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1
+</figcaption>
+</figure>
+</div>
+<p><strong>Bad action (<span class="math inline">\(G &lt; 0\)</span>).</strong> Then <span class="math inline">\(-G\)</span> is positive, so <span class="math inline">\(L = -G \log p = (\text{positive}) \cdot \log p\)</span>. If <span class="math inline">\(p\)</span> decreases, <span class="math inline">\(\log p\)</span> becomes more negative, so <span class="math inline">\(L\)</span> decreases. Minimizing <span class="math inline">\(L\)</span> encourages <span class="math inline">\(p\)</span> to shrink.</p>
+<div id="fig-case2" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Bad action case.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-case2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="case2.png" id="fig-case2" class="img-fluid figure-img" alt="Bad action case.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-case2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2
+</figcaption>
+</figure>
+</div>
+<p>So the form of <span class="math inline">\(L\)</span> encodes the right thing: minimizing it pushes good-action probabilities up and bad-action probabilities down. This is the easy part of the argument. It tells us that <em>if</em> probabilities move appropriately, the loss decreases. The harder question is whether gradient descent on <span class="math inline">\(L\)</span> actually causes them to move that way. For that, we need to look one layer deeper.</p>
+</section>
+<section id="a-useful-reframe-reinforce-is-supervised-learning-with-two-tweaks" class="level2">
+<h2 class="anchored" data-anchor-id="a-useful-reframe-reinforce-is-supervised-learning-with-two-tweaks">3. A useful reframe: REINFORCE is supervised learning with two tweaks</h2>
+<p>Before diving into the gradient mechanics, here’s a mental model that makes the REINFORCE loss feel less arbitrary and connects it to something you already know.</p>
+<p>In standard supervised classification, the cross-entropy loss is</p>
+<p><span class="math display">\[L_{\text{sup}} = -\sum_i \log p(y_i \mid x_i),\]</span></p>
+<p>where <span class="math inline">\(y_i\)</span> is the true label for input <span class="math inline">\(x_i\)</span>. Minimizing this pushes the network’s predicted probability of the correct class upward.</p>
+<p>Now compare to REINFORCE:</p>
+<p><span class="math display">\[L_{\text{REINFORCE}} = -\sum_t G_t \log \pi_\theta(a_t \mid s_t).\]</span></p>
+<p>These are the <em>same form</em>, with two changes:</p>
+<ol type="1">
+<li><strong>Replace the label with the sampled action.</strong> We don’t know what action <em>should</em> have been taken. There’s no oracle telling us “the correct move from <span class="math inline">\((2, 3)\)</span> was <span class="math inline">\(\rightarrow\)</span>.” So we use the action the policy actually sampled as a kind of pseudo-label.</li>
+<li><strong>Multiply each term by <span class="math inline">\(G_t\)</span>.</strong> Supervised learning treats every example as equally important. Every label is “correct” by definition. REINFORCE doesn’t have that luxury, so it weights each pseudo-labeled example by how good the outcome turned out to be. Positive <span class="math inline">\(G_t\)</span> scales the term up (do <em>more</em> of this); negative <span class="math inline">\(G_t\)</span> flips its sign (do <em>less</em> of this).</li>
+</ol>
+<p>Read this way, REINFORCE is just supervised learning where (a) the agent generates its own pseudo-labels by sampling, and (b) each example is weighted by how good the outcome turned out to be.</p>
+<p>This means the gradient mechanics we’re about to derive are <em>exactly</em> the gradient mechanics of supervised cross-entropy, scaled by <span class="math inline">\(G_t\)</span>. If you’ve ever computed the gradient of cross-entropy through a softmax, you’ve already done most of the work. The next few sections are just making that work explicit and showing how the <span class="math inline">\(G_t\)</span> scaling rides along.</p>
+</section>
+<section id="the-network-outputs-logits-not-probabilities" class="level2">
+<h2 class="anchored" data-anchor-id="the-network-outputs-logits-not-probabilities">4. The network outputs logits, not probabilities</h2>
+<p>The neural network does not directly output probabilities. It outputs <strong>logits</strong>, which are then converted to probabilities via softmax. With two actions:</p>
+<p><span class="math display">\[p(\rightarrow) = \frac{e^{z_\rightarrow}}{e^{z_\rightarrow} + e^{z_\leftarrow}}.\]</span></p>
+<p>For example, with <span class="math inline">\(z_\rightarrow = 1.0\)</span> and <span class="math inline">\(z_\leftarrow = 0.0\)</span>:</p>
+<p><span class="math display">\[p(\rightarrow) = \frac{e^1}{e^1 + e^0} \approx 0.73, \qquad p(\leftarrow) \approx 0.27.\]</span></p>
+<p>Logits determine probabilities, and changing logits changes probabilities. Gradient descent updates the logits (and ultimately the weights that produce them):</p>
+<p><span class="math display">\[z_\rightarrow \leftarrow z_\rightarrow - \eta \frac{\partial L}{\partial z_\rightarrow}.\]</span></p>
+<p>So the question becomes: what is <span class="math inline">\(\partial L / \partial z_\rightarrow\)</span>, and does its sign push the logit in a direction that makes the action’s probability move correctly?</p>
+</section>
+<section id="the-chain-rule" class="level2">
+<h2 class="anchored" data-anchor-id="the-chain-rule">5. The chain rule</h2>
+<p>Focus on one step: <span class="math inline">\(L = -G \log p(\rightarrow)\)</span>. By the chain rule,</p>
+<p><span class="math display">\[\frac{\partial L}{\partial z_\rightarrow} = -G \cdot \frac{\partial \log p(\rightarrow)}{\partial z_\rightarrow}.\]</span></p>
+<p>We need <span class="math inline">\(\partial \log p(\rightarrow) / \partial z_\rightarrow\)</span>.</p>
+</section>
+<section id="deriving-the-key-softmax-gradient" class="level2">
+<h2 class="anchored" data-anchor-id="deriving-the-key-softmax-gradient">6. Deriving the key softmax gradient</h2>
+<p>Starting from the softmax and using <span class="math inline">\(\log(A/B) = \log A - \log B\)</span>:</p>
+<p><span class="math display">\[\log p(\rightarrow) = \log\!\left(\frac{e^{z_\rightarrow}}{e^{z_\rightarrow} + e^{z_\leftarrow}}\right) = z_\rightarrow - \log\!\left(e^{z_\rightarrow} + e^{z_\leftarrow}\right).\]</span></p>
+<p>Differentiate term by term. The first term gives <span class="math inline">\(1\)</span>. For the second, let <span class="math inline">\(u = e^{z_\rightarrow} + e^{z_\leftarrow}\)</span>. Then <span class="math inline">\(\partial u / \partial z_\rightarrow = e^{z_\rightarrow}\)</span> (the <span class="math inline">\(e^{z_\leftarrow}\)</span> piece doesn’t depend on <span class="math inline">\(z_\rightarrow\)</span>), so</p>
+<p><span class="math display">\[\frac{\partial \log u}{\partial z_\rightarrow} = \frac{1}{u} \cdot e^{z_\rightarrow} = \frac{e^{z_\rightarrow}}{e^{z_\rightarrow} + e^{z_\leftarrow}} = p(\rightarrow).\]</span></p>
+<p>Putting it together:</p>
+<p><span class="math display">\[\frac{\partial \log p(\rightarrow)}{\partial z_\rightarrow} = 1 - p(\rightarrow).\]</span></p>
+<p>This is a clean, elegant result: as the action becomes more confident (<span class="math inline">\(p \to 1\)</span>), the gradient shrinks toward zero. There’s nothing left to push.</p>
+</section>
+<section id="the-gradient-on-the-loss" class="level2">
+<h2 class="anchored" data-anchor-id="the-gradient-on-the-loss">7. The gradient on the loss</h2>
+<p>Substituting back:</p>
+<p><span class="math display">\[\frac{\partial L}{\partial z_\rightarrow} = -G\,(1 - p(\rightarrow)).\]</span></p>
+<p>This is the core equation. With it, we can check that gradient descent does the right thing.</p>
+<p>Use <span class="math inline">\(p(\rightarrow) = 0.73\)</span> and <span class="math inline">\(1 - p = 0.27\)</span>.</p>
+<p><strong>Good action (<span class="math inline">\(G = +4\)</span>):</strong> <span class="math display">\[\frac{\partial L}{\partial z_\rightarrow} = -4 \times 0.27 = -1.08 \quad\Rightarrow\quad z_\rightarrow \leftarrow z_\rightarrow + 1.08\,\eta.\]</span> <span class="math inline">\(z_\rightarrow\)</span> increases, which pushes <span class="math inline">\(p(\rightarrow)\)</span> up.</p>
+<p><strong>Bad action (<span class="math inline">\(G = -4\)</span>):</strong> <span class="math display">\[\frac{\partial L}{\partial z_\rightarrow} = -(-4) \times 0.27 = +1.08 \quad\Rightarrow\quad z_\rightarrow \leftarrow z_\rightarrow - 1.08\,\eta.\]</span> <span class="math inline">\(z_\rightarrow\)</span> decreases, which pushes <span class="math inline">\(p(\rightarrow)\)</span> down.</p>
+</section>
+<section id="closing-the-loop" class="level2">
+<h2 class="anchored" data-anchor-id="closing-the-loop">8. Closing the loop</h2>
+<p>Increasing <span class="math inline">\(z_\rightarrow\)</span> enlarges the numerator of the softmax and pushes <span class="math inline">\(p(\rightarrow)\)</span> up; decreasing it pushes <span class="math inline">\(p(\rightarrow)\)</span> down. Combined with the gradient signs from the previous section:</p>
+<ul>
+<li><span class="math inline">\(G &gt; 0 \;\Rightarrow\; \partial L / \partial z_\rightarrow &lt; 0 \;\Rightarrow\; z_\rightarrow \uparrow \;\Rightarrow\; p(\rightarrow) \uparrow\)</span></li>
+<li><span class="math inline">\(G &lt; 0 \;\Rightarrow\; \partial L / \partial z_\rightarrow &gt; 0 \;\Rightarrow\; z_\rightarrow \downarrow \;\Rightarrow\; p(\rightarrow) \downarrow\)</span></li>
+</ul>
+</section>
+<section id="the-general-update-rule" class="level2">
+<h2 class="anchored" data-anchor-id="the-general-update-rule">9. The general update rule</h2>
+<p>Everything above was for a single timestep and a single logit. For the full sum across the trajectory, the same logic gives</p>
+<p><span class="math display">\[\nabla_\theta L = -\sum_t G_t \nabla_\theta \log \pi_\theta(a_t \mid s_t),\]</span></p>
+<p>and the gradient-descent step on <span class="math inline">\(L\)</span> becomes</p>
+<p><span class="math display">\[\theta \leftarrow \theta - \eta \nabla_\theta L = \theta + \eta \sum_t G_t \nabla_\theta \log \pi_\theta(a_t \mid s_t).\]</span></p>
+<p>This is the <strong>REINFORCE update</strong>:</p>
+<p><span class="math display">\[\Delta \theta \propto G_t \, \nabla_\theta \log \pi_\theta(a_t \mid s_t).\]</span></p>
+<p>Each parameter gets nudged in the direction <span class="math inline">\(\nabla_\theta \log \pi_\theta(a_t \mid s_t)\)</span>, the direction that would increase the probability of the action that was actually taken, scaled by <span class="math inline">\(G_t\)</span>, the return that followed. Good actions (<span class="math inline">\(G_t &gt; 0\)</span>) get reinforced; bad actions (<span class="math inline">\(G_t &lt; 0\)</span>) get suppressed.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/yeesengchan\.com");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+© 2026 Yee Seng Chan
+</div>   
+    <div class="nav-footer-center">
+Built with <a href="https://quarto.org">Quarto</a>
+</div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/chanys">
+      <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://linkedin.com/in/yeesengchan">
+      <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="../../../../writing.xml">
+      <i class="bi bi-rss" role="img" aria-label="RSS feed">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+<script>
+(() => {
+  if (!document.querySelector('.series-nav')) return;
+  const toc = document.querySelector('nav#TOC[role="doc-toc"]');
+  if (!toc) return;
+  const links = [...toc.querySelectorAll('a[data-scroll-target]')];
+  if (!links.length) return;
+  const sections = links.map((link) => {
+    const target = link.getAttribute('data-scroll-target') || '';
+    return target.startsWith('#')
+      ? document.getElementById(decodeURI(target.slice(1)))
+      : null;
+  });
+  // Distance below viewport top at which a heading is treated as
+  // "the current section." Small, so the highlight matches what a
+  // reader perceives as the heading at the top of the page.
+  const ACTIVATION_OFFSET = 80;
+  const apply = () => {
+    let idx = 0;
+    const atBottom = window.innerHeight + window.pageYOffset
+      >= document.documentElement.scrollHeight - 2;
+    if (atBottom) {
+      idx = sections.length - 1;
+    } else {
+      for (let i = 0; i < sections.length; i++) {
+        const s = sections[i];
+        if (s && s.getBoundingClientRect().top <= ACTIVATION_OFFSET) idx = i;
+      }
+    }
+    for (let i = 0; i < links.length; i++) {
+      links[i].classList.toggle('active', i === idx);
+    }
+  };
+  // rAF ensures we run after Quarto's synchronous scroll handler
+  // so our active-class choice wins.
+  let pending = false;
+  const schedule = () => {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => { apply(); pending = false; });
+  };
+  schedule();
+  document.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule);
+  window.addEventListener('load', schedule);
+})();
+</script>
+
+
+
+
+</body></html>

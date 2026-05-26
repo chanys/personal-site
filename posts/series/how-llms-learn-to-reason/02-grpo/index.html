@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Yee Seng Chan">
+<meta name="description" content="Drop the value model. Score a group of samples against each other.">
+
+<title>GRPO: the algorithm behind reasoning models – Yee Seng Chan</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<link href="../../../../favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap-7b53549d121f5930ef88eb09dda4672c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-3874333d9529686a5a4437217f193688.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-7b53549d121f5930ef88eb09dda4672c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../../../styles.css">
+<meta property="og:title" content="GRPO: the algorithm behind reasoning models – Yee Seng Chan">
+<meta property="og:description" content="Drop the value model. Score a group of samples against each other.">
+<meta property="og:image" content="https://yeesengchan.com/posts/series/how-llms-learn-to-reason/02-grpo/grpo_from_ppo.png">
+<meta property="og:site_name" content="Yee Seng Chan">
+<meta property="og:image:alt" content="A side-by-side comparison. The left panel, PPO, has four model roles: policy, critic, reference, reward; its advantage is critic then GAE, one value per token. An arrow labelled two changes points to the right panel, GRPO, which has the same roles except the critic is struck out and marked removed, leaving three roles; its advantage is computed from a group of rollouts via mean and standard deviation, one value per trajectory. A band underneath lists what is unchanged from PPO: clipping, importance ratio, KL anchor, multi-epoch loop.">
+<meta property="og:image:height" content="1120">
+<meta property="og:image:width" content="2000">
+<meta name="twitter:title" content="GRPO: the algorithm behind reasoning models – Yee Seng Chan">
+<meta name="twitter:description" content="Drop the value model. Score a group of samples against each other.">
+<meta name="twitter:image" content="https://yeesengchan.com/posts/series/how-llms-learn-to-reason/02-grpo/grpo_from_ppo.png">
+<meta name="twitter:image:alt" content="A side-by-side comparison. The left panel, PPO, has four model roles: policy, critic, reference, reward; its advantage is critic then GAE, one value per token. An arrow labelled two changes points to the right panel, GRPO, which has the same roles except the critic is struck out and marked removed, leaving three roles; its advantage is computed from a group of rollouts via mean and standard deviation, one value per trajectory. A band underneath lists what is unchanged from PPO: clipping, importance ratio, KL anchor, multi-epoch loop.">
+<meta name="twitter:image-height" content="1120">
+<meta name="twitter:image-width" content="2000">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">Yee Seng Chan</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../writing.html"> 
+<span class="menu-text">Writing</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../series.html"> 
+<span class="menu-text">Series</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../projects.html"> 
+<span class="menu-text">Projects</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../../writing.xml"> <i class="bi bi-rss" role="img" aria-label="RSS feed">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/chanys"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://linkedin.com/in/yeesengchan"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:chanys.nlp@gmail.com"> <i class="bi bi-envelope" role="img" aria-label="Email">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Contents</h2>
+   
+  <ul class="collapse">
+  <li><a href="#why-drop-the-critic" id="toc-why-drop-the-critic" class="nav-link active" data-scroll-target="#why-drop-the-critic">Why drop the critic?</a></li>
+  <li><a href="#group-relative-advantages" id="toc-group-relative-advantages" class="nav-link" data-scroll-target="#group-relative-advantages">Group-relative advantages</a></li>
+  <li><a href="#everything-else-looks-ppo-shaped" id="toc-everything-else-looks-ppo-shaped" class="nav-link" data-scroll-target="#everything-else-looks-ppo-shaped">Everything else looks PPO-shaped</a></li>
+  <li><a href="#why-this-works-for-reasoning-specifically" id="toc-why-this-works-for-reasoning-specifically" class="nav-link" data-scroll-target="#why-this-works-for-reasoning-specifically">Why this works for reasoning specifically</a></li>
+  <li><a href="#what-r1-zero-showed" id="toc-what-r1-zero-showed" class="nav-link" data-scroll-target="#what-r1-zero-showed">What R1-Zero showed</a></li>
+  <li><a href="#where-grpo-fits-in-the-broader-landscape" id="toc-where-grpo-fits-in-the-broader-landscape" class="nav-link" data-scroll-target="#where-grpo-fits-in-the-broader-landscape">Where GRPO fits in the broader landscape</a></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">GRPO: the algorithm behind reasoning models</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">How LLMs learn to reason</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    Drop the value model. Score a group of samples against each other.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Yee Seng Chan </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">2026 · March 2</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+How LLMs learn to reason
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../00-reinforce-foundations/">REINFORCE: the world before the gradient</a></li>
+<li><a href="../00-reinforce-gradient/">REINFORCE: the gradient that drives training</a></li>
+<li><a href="../01-ppo/">PPO is REINFORCE plus five fixes</a></li>
+<li><a href="../02-grpo/">GRPO: The algorithm behind reasoning models</a></li>
+<li><a href="../03-dpo/">DPO: RLHF collapsed into one loss</a></li>
+<li><a href="../04-r1/">R1-Zero was the result. R1 was the product</a></li>
+<li><a href="../05-tool-use/">How reasoning models learn to use tools</a></li>
+</ol>
+</div>
+<p>In January 2025, DeepSeek released R1 <span class="citation" data-cites="guo_etal_2025">(<a href="#ref-guo_etal_2025" role="doc-biblioref"><span class="nocase">Guo et al.</span> 2025</a>)</span>: a reasoning model that closed most of the gap to OpenAI’s o1 at a fraction of the training cost, and (more importantly) shipped with the training recipe described in the open. The recipe centered on an algorithm called GRPO. Within a few months, essentially every open-source reasoning model (Qwen’s reasoning variants, Llama derivatives, the wave that followed) was using GRPO or close cousins of it.</p>
+<p>GRPO itself wasn’t new in 2025. The DeepSeek team had introduced it a year earlier, in their DeepSeekMath paper <span class="citation" data-cites="shao_etal_2024">(<a href="#ref-shao_etal_2024" role="doc-biblioref">Shao et al. 2024</a>)</span>, where they used it to train a 7B math-specialist model. What changed in 2025 wasn’t the algorithm. It was the demonstration that the same algorithm could produce general reasoning capability at frontier scale.</p>
+<p>If you’ve been trying to understand how reasoning models like o1, R1, or their successors actually get trained, GRPO is most of the answer. This post is about what GRPO is, why it works, and where it sits relative to the PPO + RLHF recipe it (sometimes) replaces.</p>
+<p>I’m assuming you already understand PPO at the level of the <a href="../../../../posts/series/how-llms-learn-to-reason/01-ppo/index.html">previous post in this series</a>. That assumption matters because GRPO is best understood as a small, deliberate set of changes from PPO, not as a new algorithm built from scratch. Most of what makes PPO work (clipping, importance sampling, the multi-epoch inner loop) carries over unchanged. The changes are concentrated in two places.</p>
+<p>Here’s the short version of GRPO: <strong>GRPO is PPO with the critic removed. Instead of using a value network to estimate per-token advantages, GRPO samples multiple rollouts per prompt and computes each rollout’s advantage relative to its siblings.</strong></p>
+<p>That’s the whole conceptual move. One model gone from memory. Per-token advantage replaced with per-trajectory advantage. Everything else stays. Which raises the question of why this works at all, and why it works <em>especially</em> well for reasoning.</p>
+<div id="fig-grpo-from-ppo" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A side-by-side comparison. The left panel, PPO, has four model roles: policy, critic, reference, reward; its advantage is critic then GAE, one value per token. An arrow labelled two changes points to the right panel, GRPO, which has the same roles except the critic is struck out and marked removed, leaving three roles; its advantage is computed from a group of rollouts via mean and standard deviation, one value per trajectory. A band underneath lists what is unchanged from PPO: clipping, importance ratio, KL anchor, multi-epoch loop.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-grpo-from-ppo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="grpo_from_ppo.png" class="img-fluid figure-img" alt="A side-by-side comparison. The left panel, PPO, has four model roles: policy, critic, reference, reward; its advantage is critic then GAE, one value per token. An arrow labelled two changes points to the right panel, GRPO, which has the same roles except the critic is struck out and marked removed, leaving three roles; its advantage is computed from a group of rollouts via mean and standard deviation, one value per trajectory. A band underneath lists what is unchanged from PPO: clipping, importance ratio, KL anchor, multi-epoch loop.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-grpo-from-ppo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: GRPO is PPO with the critic removed. Two changes: the value network is dropped (four model roles become three), and the advantage is computed per trajectory from a group of sibling rollouts instead of per token from GAE. Clipping, the importance ratio, KL anchoring, and the multi-epoch loop are unchanged.
+</figcaption>
+</figure>
+</div>
+<section id="why-drop-the-critic" class="level2">
+<h2 class="anchored" data-anchor-id="why-drop-the-critic">Why drop the critic?</h2>
+<p>In PPO, four model roles are active during training:</p>
+<ul>
+<li><strong>Policy</strong>: the LLM being trained</li>
+<li><strong>Value network</strong>: the critic, also trained, typically same architecture as the policy</li>
+<li><strong>Reference model</strong>: frozen copy of the SFT model, for KL anchoring</li>
+<li><strong>Reward model</strong>: frozen, scores complete responses</li>
+</ul>
+<p>That’s four LLM-sized things in the picture. The actual memory cost depends on a lot of implementation details (whether the policy and value share a body, how parameters are sharded across GPUs, optimizer state for the trained models) but the structural fact stands: PPO involves four model roles, and reducing that count is a real win.</p>
+<p>Two of those roles you can’t avoid. The reference model is structurally necessary; without it you have no KL anchor and the policy drifts into reward-hacking gibberish. The reward model (or verifier) provides the training signal in the first place.</p>
+<p>But the value network? It’s only there to compute advantages. If you can compute advantages another way, you can drop it.</p>
+<p>A natural question is whether the reward model could just take over. It can’t, and the reason matters.</p>
+<p>The reward model and the value network do fundamentally different jobs. The reward model answers: “How good is this <em>complete</em> response?” It takes a (prompt, response) pair and outputs a scalar. It was trained on human preferences over finished outputs, so it has no signal for half-finished responses. The value network answers a different question: “Given this <em>partial</em> state, what total reward do I expect by the end?” It takes a state (prompt plus tokens-so-far) and predicts where things are heading.</p>
+<p>These are different questions. One scores finished things. The other predicts where things are heading. The reward model can’t do the second job because no human ever rated half-responses during preference data collection.</p>
+<p>So the value network isn’t redundant. PPO needs it because GAE (the per-token advantage estimator) needs to know the expected outcome at every state along the trajectory, and only the value network can provide that.</p>
+<p>GRPO’s move isn’t to substitute the reward model for the value network. It’s to give up on per-token advantage estimation entirely.</p>
+</section>
+<section id="group-relative-advantages" class="level2">
+<h2 class="anchored" data-anchor-id="group-relative-advantages">Group-relative advantages</h2>
+<p>Here’s the new advantage computation. For each prompt, generate <span class="math inline">\(G\)</span> rollouts (typically 4 to 16). Score each one with the verifier. The advantage of the <span class="math inline">\(i\)</span>-th rollout is:</p>
+<p><span class="math display">\[\hat{A}_i = \frac{r_i - \text{mean}(r_1, \ldots, r_G)}{\text{std}(r_1, \ldots, r_G) + \epsilon}\]</span></p>
+<p>That’s it. Each rollout gets one scalar advantage (“how much better than my sibling rollouts did this one do?”) applied identically to every token in that rollout.</p>
+<p>This is a different kind of advantage than what PPO uses. PPO had a different advantage per token, derived from GAE; GRPO has the same advantage for every token in a rollout, derived from how the rollout’s reward compared to its siblings’. The credit is assigned at the trajectory level, not the token level. That’s the cost of dropping the value network: less granular credit assignment. But it’s also why GRPO works without per-token value estimates.</p>
+<p>Let me make this concrete with the example I’ll use throughout: training a model to solve grade-school math word problems.</p>
+<p><em>“Maya is buying tickets for a concert. Adult tickets cost $12 each and child tickets cost $8 each. She buys 9 tickets total and spends $92. How many adult tickets did she buy?”</em></p>
+<p>The answer is 5. The verifier extracts the model’s final boxed answer and checks: 1 if correct, 0 if not.</p>
+<p>Sample 4 rollouts (<span class="math inline">\(G = 4\)</span>):</p>
+<ul>
+<li><strong>Rollout A</strong>: sets up the equation <span class="math inline">\(12a + 8(9-a) = 92\)</span>, solves cleanly, ends with <code>\boxed{5}</code>. Reward: 1.</li>
+<li><strong>Rollout B</strong>: tries <span class="math inline">\(a + c = 9\)</span> and <span class="math inline">\(12a + 8c = 92\)</span> but makes an arithmetic slip, ends with <code>\boxed{6}</code>. Reward: 0.</li>
+<li><strong>Rollout C</strong>: solves it correctly via testing values, ends with <code>\boxed{5}</code>. Reward: 1.</li>
+<li><strong>Rollout D</strong>: confuses adult and child prices, ends with <code>\boxed{4}</code>. Reward: 0.</li>
+</ul>
+<p>Compute the group statistics. The mean is straightforward:</p>
+<p><span class="math display">\[\text{mean} = \frac{1 + 0 + 1 + 0}{4} = 0.5\]</span></p>
+<p>For the standard deviation, take squared deviations from the mean and sum them:</p>
+<p><span class="math display">\[(1 - 0.5)^2 + (0 - 0.5)^2 + (1 - 0.5)^2 + (0 - 0.5)^2 = 4 \times 0.25 = 1.0\]</span></p>
+<p>Then divide by <span class="math inline">\(G - 1 = 3\)</span> (only 3 of the 4 deviations are independent once the mean is fixed) and take the square root:</p>
+<p><span class="math display">\[\sigma = \sqrt{1.0 / 3} \approx 0.577\]</span></p>
+<p>(Some implementations divide by <span class="math inline">\(G\)</span> instead, giving <span class="math inline">\(\sigma = 0.5\)</span>. The choice rescales all advantages by the same factor and doesn’t change their signs, but it can matter when comparing hyperparameters across codebases.)</p>
+<p>Advantages are then <span class="math inline">\((r_i - \text{mean}) / \sigma\)</span>:</p>
+<ul>
+<li><span class="math inline">\(\hat{A}_1 = (1 - 0.5) / 0.577 \approx +0.866\)</span> (rollout A)</li>
+<li><span class="math inline">\(\hat{A}_2 = (0 - 0.5) / 0.577 \approx -0.866\)</span> (rollout B)</li>
+<li><span class="math inline">\(\hat{A}_3 = (1 - 0.5) / 0.577 \approx +0.866\)</span> (rollout C)</li>
+<li><span class="math inline">\(\hat{A}_4 = (0 - 0.5) / 0.577 \approx -0.866\)</span> (rollout D)</li>
+</ul>
+<p>In the gradient update, every token in rollouts A and C gets multiplied by <span class="math inline">\(+0.866\)</span>, and every token in rollouts B and D gets multiplied by <span class="math inline">\(-0.866\)</span>. The policy gets pushed toward the trajectories that solved the problem, away from the ones that didn’t.</p>
+<p>The intuition is clean: of these attempts, which ones got it right? Reinforce those.</p>
+<section id="what-happens-when-all-rollouts-score-the-same" class="level3">
+<h3 class="anchored" data-anchor-id="what-happens-when-all-rollouts-score-the-same">What happens when all rollouts score the same</h3>
+<p>A subtle but important case. If all 4 rollouts get reward 0 (model failed every attempt), or all 4 get reward 1 (model succeeded every time), then the standard deviation is 0, the mean equals every <span class="math inline">\(r_i\)</span>, and every advantage is 0.</p>
+<p>This isn’t a bug. It’s the algorithm correctly saying <em>“there’s no learning signal here.”</em> If all attempts failed, we don’t know which failures were closer to success. If all succeeded, we don’t know which successes were genuinely well-reasoned versus lucky. Either way, no rollout in this group is “better than its siblings,” so no gradient signal gets generated.</p>
+<p>The practical implication: GRPO is most effective when the model is at a difficulty level where it sometimes succeeds and sometimes fails. Too easy and all rewards are 1. Too hard and all rewards are 0. Either way, no signal. Training data needs to sit in the model’s “frontier” of difficulty, which is why curriculum learning matters more for GRPO than it does for PPO.</p>
+</section>
+</section>
+<section id="everything-else-looks-ppo-shaped" class="level2">
+<h2 class="anchored" data-anchor-id="everything-else-looks-ppo-shaped">Everything else looks PPO-shaped</h2>
+<p>With the advantage computed, the rest of the algorithm is structurally identical to PPO.</p>
+<p>The clipped policy loss has the same form as PPO. Same importance ratio:</p>
+<p><span class="math display">\[r_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_\text{old}}(a_t \mid s_t)}\]</span></p>
+<p>Same min-of-clipped-and-unclipped construction for the per-token policy loss:</p>
+<p><span class="math display">\[\ell^\pi_t = -\min\!\Big(r_t(\theta) \cdot \hat{A}_t,\; \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon) \cdot \hat{A}_t\Big)\]</span></p>
+<p>The only difference from PPO: <span class="math inline">\(\hat{A}_t\)</span> is now the trajectory-level group-relative advantage rather than the token-level GAE advantage. <strong>Every token in a given rollout shares the same <span class="math inline">\(\hat{A}_t\)</span>.</strong> Clipping mechanism, importance ratio, asymmetric min; all unchanged.</p>
+<p>The multi-epoch inner loop is the same: collect rollouts, do <span class="math inline">\(K\)</span> epochs of mini-batched gradient steps, discard, repeat.</p>
+<p>KL anchoring is also the same idea, though implemented differently. PPO often folds the KL term into the per-token rewards before computing advantages. GRPO can’t easily do this, as rewards in GRPO arrive only at the end of each rollout, with no per-token reward to fold into. So GRPO adds the KL as a separate per-token loss term:</p>
+<p><span class="math display">\[\ell^{\text{KL}}_t = \log \pi_\theta(a_t \mid s_t) - \log \pi_\text{ref}(a_t \mid s_t)\]</span></p>
+<p>This is the simple log-ratio estimator of KL; same as PPO uses. The two per-token losses then combine into a single scalar that gets backpropped:</p>
+<p><span class="math display">\[L_\mathcal{B} = \frac{1}{|\mathcal{B}|} \sum_t \Big[\ell^\pi_t + \beta \cdot \ell^{\text{KL}}_t\Big]\]</span></p>
+<p>Two separate per-token loss components, summed with a weight <span class="math inline">\(\beta\)</span>, averaged across all tokens in the mini-batch. Both contribute their own gradients to the policy parameters.</p>
+<p>If you understand PPO, you understand most of GRPO. Two things change: how the advantage gets computed, and what models are in memory. Everything else carries over.</p>
+</section>
+<section id="why-this-works-for-reasoning-specifically" class="level2">
+<h2 class="anchored" data-anchor-id="why-this-works-for-reasoning-specifically">Why this works for reasoning specifically</h2>
+<p>GRPO didn’t have to be a reasoning algorithm. The math is generic. You could use it for any task with a scalar reward at the end. But there’s a structural reason it works <em>especially</em> well for reasoning.</p>
+<p>Reasoning tasks have two properties that are awkward for PPO:</p>
+<p><strong>Rewards are usually verifiable.</strong> Math problems have right answers. Code can be tested. The reward is a deterministic check (“did the code pass the tests?”), not a learned approximation of human preferences. This is the world of <em>Reinforcement Learning with Verifiable Rewards</em> (RLVR) and it’s the world GRPO was made for.</p>
+<p><strong>Reward is genuinely sparse.</strong> You don’t know if a chain of thought is good until you see whether it produced the right final answer. Intermediate tokens can look identical between a trajectory that ends correctly and one that ends wrong, until the very end.</p>
+<p>PPO handles sparse rewards via the value network, which has to learn “how good does this partial reasoning trajectory look?” That’s a hard regression problem. Reasoning trajectories can look identical for many tokens, then diverge wildly at the answer. The value network struggles to fit this signal cleanly, and the resulting advantages are noisy.</p>
+<p>GRPO sidesteps the problem entirely. It doesn’t try to predict per-token value. It just compares whole rollouts to each other.</p>
+<p>There’s also a practical reason GRPO and verifiable rewards pair well. GRPO needs <span class="math inline">\(G\)</span> rollouts per prompt to compute group statistics: meaning the reward function gets called <span class="math inline">\(G\)</span> times per prompt. If the reward function is a few lines of Python that runs in microseconds (a math correctness checker, a code test runner), scaling to <span class="math inline">\(G = 16\)</span> is free. If the reward function is a 7B-parameter reward model requiring a full forward pass, <span class="math inline">\(G\times\)</span> inference cost gets expensive fast. GRPO’s economics work in the verifier setting.</p>
+<p>This is also where the practical scope of “verifiable” matters. Verifiable rewards work cleanly for math (correctness check on the final answer), code (test cases), formal proofs (proof assistants), and constrained generation (regex compliance). They don’t work for tasks like “is this response helpful?” or “is this writing tasteful?”. Those are inherently subjective and need RLHF-style learned rewards. So GRPO + RLVR doesn’t replace RLHF for general assistant training. It’s a complementary tool for a specific (and increasingly important) class of tasks.</p>
+</section>
+<section id="what-r1-zero-showed" class="level2">
+<h2 class="anchored" data-anchor-id="what-r1-zero-showed">What R1-Zero showed</h2>
+<p>When DeepSeek published the R1 paper in early 2025, they actually published two models, and the distinction is informative.</p>
+<p><strong>DeepSeek-R1</strong> is the deployable model. Trained with a multi-stage pipeline: cold-start SFT, then GRPO + RLVR, then more SFT, then more RL. This is the one people actually use.</p>
+<p><strong>DeepSeek-R1-Zero</strong> is the surprising one. Trained with pure RL (GRPO + verifiable rewards) directly on the DeepSeek-V3 base model, with no SFT stage at all. R1-Zero showed that reasoning behavior could emerge from RL alone, without any supervised demonstrations of how to reason. The DeepSeek paper documents the specific behaviors that emerged during training:</p>
+<ul>
+<li>Generating progressively longer chains of thought as training continued: the model learning, as training progresses, that more inference-time compute helped it solve harder problems.</li>
+<li>Reflecting on its own solutions, revisiting and evaluating earlier reasoning steps.</li>
+<li>Exploring alternative approaches when a first attempt didn’t pan out.</li>
+<li>Critiquing intermediate steps and catching its own errors.</li>
+</ul>
+<p>None of this was programmed in. The RL process simply rewarded the model for producing correct answers in the right format, and the rest emerged. The DeepSeek paper calls this a “self-evolution”: the model learning, through exploration and reward, how to reason without ever being shown an example.</p>
+<p>R1-Zero’s outputs were rough at the surface. The model would mix languages mid-response (sometimes Chinese in the middle of an English answer), use inconsistent formatting, occasionally produce incoherent passages. Strong reasoning, weak presentation. That’s what made the deployable R1 require additional SFT stages on top, to clean up the surface presentation while keeping the reasoning capability.</p>
+<p>The R1-Zero result changed how people thought about what RL could do. The conventional wisdom had been that you needed SFT to give the model a starting distribution before any RL could help. R1-Zero showed that’s not strictly true for capabilities that have verifiable signals. Pure RL on a base model can produce reasoning. You don’t need to demonstrate how to reason; you just need to be able to verify when it worked.</p>
+<p>The current consensus pipeline for production reasoning models combines: SFT for assistant behavior, preference tuning for helpfulness/harmlessness/honesty, RLVR for reasoning capability. Each stage does a job the others can’t do well. R1-Zero showed the RL stage could work without the prior stages; R1 showed why production models include them anyway.</p>
+</section>
+<section id="where-grpo-fits-in-the-broader-landscape" class="level2">
+<h2 class="anchored" data-anchor-id="where-grpo-fits-in-the-broader-landscape">Where GRPO fits in the broader landscape</h2>
+<p>The post-training landscape as of 2026 has split into a few distinct lanes.</p>
+<p><strong>Frontier general RLHF</strong> (proprietary, OpenAI / Anthropic / Google) still uses PPO-based or proprietary variants of PPO. Frontier labs have the engineering resources to handle PPO’s complexity and care about every fraction of a percent of quality. PPO is online, it generates new rollouts and learns from them, whereas DPO is offline, learning from a fixed preference dataset. That exploratory advantage seems to matter at the frontier. The frontier labs don’t share their pipelines publicly, so it’s hard to know exactly what they do, but PPO and its descendants remain in use.</p>
+<p><strong>Open-source preference tuning</strong> has largely migrated to DPO and its variants. DPO is much simpler than PPO: no rollouts, no value network, no reward model, just a clever loss on preference pairs. For most open-source teams, the simplicity is worth more than whatever quality edge PPO might provide.</p>
+<p><strong>Reasoning models</strong> use GRPO + RLVR. This is the lane DeepSeek pioneered with R1, and most open-source reasoning models follow the same recipe.</p>
+<div id="fig-post-training-lanes" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three lane cards under two brackets. The first bracket, general RLHF with preference data, spans two lanes. PPO: online RL against a learned reward model, used by frontier labs (OpenAI, Anthropic, Google); choose when you have preference data and frontier-quality goals. DPO and its variants IPO, KTO, ORPO, SimPO: one supervised loss on preference pairs, used by open-source preference tuning; choose when you have preference data and a tight budget. The second bracket, RLVR with verifiable rewards, covers one lane. GRPO: PPO minus the critic with group-relative advantage, used by reasoning models such as DeepSeek-R1 and those after it; choose when you have verifiable rewards such as math, code, or proofs. Summary: preference data leads to DPO or PPO depending on budget versus ambition; verifiable rewards lead to GRPO plus RLVR.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-post-training-lanes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="post_training_lanes.png" class="img-fluid figure-img" alt="Three lane cards under two brackets. The first bracket, general RLHF with preference data, spans two lanes. PPO: online RL against a learned reward model, used by frontier labs (OpenAI, Anthropic, Google); choose when you have preference data and frontier-quality goals. DPO and its variants IPO, KTO, ORPO, SimPO: one supervised loss on preference pairs, used by open-source preference tuning; choose when you have preference data and a tight budget. The second bracket, RLVR with verifiable rewards, covers one lane. GRPO: PPO minus the critic with group-relative advantage, used by reasoning models such as DeepSeek-R1 and those after it; choose when you have verifiable rewards such as math, code, or proofs. Summary: preference data leads to DPO or PPO depending on budget versus ambition; verifiable rewards lead to GRPO plus RLVR.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-post-training-lanes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: The post-training landscape in 2026, split into three lanes. PPO and DPO share the general-RLHF, preference-data space (frontier labs use PPO for quality; open source uses DPO for simplicity); GRPO plus RLVR owns reasoning, where rewards are verifiable. What you have decides the lane.
+</figcaption>
+</figure>
+</div>
+<p>The practical takeaway: PPO and DPO/variants share the general-RLHF space (frontier vs open-source split); GRPO + RLVR owns reasoning. For practitioners, the choice depends on what you have. Preference data and a tight budget? DPO. Preference data and frontier-quality ambitions? PPO + RLHF. Verifiable rewards (math, code, theorem proving)? GRPO + RLVR.</p>
+</section>
+<section id="summary" class="level2">
+<h2 class="anchored" data-anchor-id="summary">Summary</h2>
+<p>In the broader arc that this post sits in, the next piece is <a href="../../../../posts/series/how-llms-learn-to-reason/03-dpo/index.html"><strong>DPO</strong></a>, the offline alternative that displaced PPO in much of the open-source ecosystem. Conceptually different from GRPO, DPO collapses the whole RL pipeline into a single supervised loss, but solves a related problem.</p>
+<p>There’s a broader point worth naming here. PPO is hard. The four-models setup, the value network’s instability, and the sensitivity to hyperparameters are real engineering challenges. For years, these kept serious RL research mostly confined to a handful of well-resourced labs. GRPO didn’t just simplify an algorithm. It made RL training accessible to teams that couldn’t have run a stable PPO pipeline if they tried. It was a story about an algorithm simple enough that more people could actually use it.</p>
+
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-guo_etal_2025" class="csl-entry" role="listitem">
+<span class="nocase">Guo, Daya, Dejian Yang, Haowei Zhang, et al.</span> 2025. <span>“DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/2501.12948">https://arxiv.org/abs/2501.12948</a>.
+</div>
+<div id="ref-shao_etal_2024" class="csl-entry" role="listitem">
+Shao, Zhihong, Peiyi Wang, Qihao Zhu, et al. 2024. <span>“DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/2402.03300">https://arxiv.org/abs/2402.03300</a>.
+</div>
+</div></section></div></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/yeesengchan\.com");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+© 2026 Yee Seng Chan
+</div>   
+    <div class="nav-footer-center">
+Built with <a href="https://quarto.org">Quarto</a>
+</div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/chanys">
+      <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://linkedin.com/in/yeesengchan">
+      <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="../../../../writing.xml">
+      <i class="bi bi-rss" role="img" aria-label="RSS feed">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+<script>
+(() => {
+  if (!document.querySelector('.series-nav')) return;
+  const toc = document.querySelector('nav#TOC[role="doc-toc"]');
+  if (!toc) return;
+  const links = [...toc.querySelectorAll('a[data-scroll-target]')];
+  if (!links.length) return;
+  const sections = links.map((link) => {
+    const target = link.getAttribute('data-scroll-target') || '';
+    return target.startsWith('#')
+      ? document.getElementById(decodeURI(target.slice(1)))
+      : null;
+  });
+  // Distance below viewport top at which a heading is treated as
+  // "the current section." Small, so the highlight matches what a
+  // reader perceives as the heading at the top of the page.
+  const ACTIVATION_OFFSET = 80;
+  const apply = () => {
+    let idx = 0;
+    const atBottom = window.innerHeight + window.pageYOffset
+      >= document.documentElement.scrollHeight - 2;
+    if (atBottom) {
+      idx = sections.length - 1;
+    } else {
+      for (let i = 0; i < sections.length; i++) {
+        const s = sections[i];
+        if (s && s.getBoundingClientRect().top <= ACTIVATION_OFFSET) idx = i;
+      }
+    }
+    for (let i = 0; i < links.length; i++) {
+      links[i].classList.toggle('active', i === idx);
+    }
+  };
+  // rAF ensures we run after Quarto's synchronous scroll handler
+  // so our active-class choice wins.
+  let pending = false;
+  const schedule = () => {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => { apply(); pending = false; });
+  };
+  schedule();
+  document.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule);
+  window.addEventListener('load', schedule);
+})();
+</script>
+
+
+
+
+</body></html>

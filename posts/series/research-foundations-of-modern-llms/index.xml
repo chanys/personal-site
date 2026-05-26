@@ -1,0 +1,1017 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss  xmlns:atom="http://www.w3.org/2005/Atom" 
+      xmlns:media="http://search.yahoo.com/mrss/" 
+      xmlns:content="http://purl.org/rss/1.0/modules/content/" 
+      xmlns:dc="http://purl.org/dc/elements/1.1/" 
+      version="2.0">
+<channel>
+<title>Research foundations of modern LLMs — series</title>
+<link>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/</link>
+<atom:link href="https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/index.xml" rel="self" type="application/rss+xml"/>
+<description>What modern LLMs inherited from earlier NLP research, and why those ideas reorganized into today&#39;s stack instead of disappearing.</description>
+<image>
+<url>https://yeesengchan.com/02-foundations.png</url>
+<title>Research foundations of modern LLMs — series</title>
+<link>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/</link>
+</image>
+<generator>quarto-1.9.38</generator>
+<lastBuildDate>Sun, 05 Apr 2026 00:00:00 GMT</lastBuildDate>
+<item>
+  <title>Information extraction didn’t disappear. It moved inside the workflow.</title>
+  <dc:creator>Yee Seng Chan</dc:creator>
+  <link>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/05-information-extraction/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+Research foundations of modern LLMs
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-pretraining-objectives/">Pretraining objectives: Why decoder-only won</a></li>
+<li><a href="../02-encoder-embeddings/">The encoder didn’t die. It became the embedding model</a></li>
+<li><a href="../03-retrieval/">Retrieval is older than RAG: From DPR to end-to-end</a></li>
+<li><a href="../04-fine-tuning-stack/">The fine-tuning stack: One loss, different data</a></li>
+<li><a href="../05-information-extraction/">Information extraction didn’t disappear. It moved inside the workflow</a></li>
+</ol>
+</div>
+<p>For thirty years, information extraction was a real subfield of NLP. Named entity recognition, relation extraction, event extraction, coreference resolution, slot filling, knowledge-base population. Annotated corpora: ACE, OntoNotes, KBP, TAC. A shared-task culture at every major conference. An entire industry of vendors and government-funded R&amp;D organizations whose product was, essentially, structured records pulled out of unstructured text.</p>
+<p>By 2024, the center of gravity had shifted.</p>
+<p>The standard story is that LLMs replaced IE. The truer claim is that IE didn’t disappear. It moved inside the workflow. Where the pre-LLM IE pipeline was the <em>product</em> (extract entities, link them, populate a knowledge base, ship the KB), modern IE is the <em>structured layer</em> between raw text and downstream generation or action.</p>
+<p>What changed wasn’t the existence of the work. It was the labor model. Pre-LLM IE meant labeling thousands of examples per task, engineering features, training task-specific classifiers, and tuning a pipeline. LLM-era IE means designing a JSON schema, writing a prompt, and evaluating the result. Both are real engineering. They are not the same engineering.</p>
+<p>I worked across all three eras the article traces: pre-BERT IE during a postdoc, BERT-era production IE through the late 2010s, and LLM-era workflow IE now.</p>
+<div id="fig-three-eras" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three stacked panels for three eras of information extraction. The pre-BERT and BERT panels show the same left-to-right pipeline of identical boxes, with only the contents of each box changing between them, hand-built features in the first and learned BERT representations in the second. The LLM panel replaces the linear pipeline with a workflow: several extraction calls run in parallel and emit structured frames that flow into a downstream system. A side label contrasts the labor profile, shifting from data annotation and feature engineering in the earlier eras to schema design, prompt engineering, and evaluation in the LLM era.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-three-eras-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/05-information-extraction/three_eras.png" class="img-fluid figure-img" alt="Three stacked panels for three eras of information extraction. The pre-BERT and BERT panels show the same left-to-right pipeline of identical boxes, with only the contents of each box changing between them, hand-built features in the first and learned BERT representations in the second. The LLM panel replaces the linear pipeline with a workflow: several extraction calls run in parallel and emit structured frames that flow into a downstream system. A side label contrasts the labor profile, shifting from data annotation and feature engineering in the earlier eras to schema design, prompt engineering, and evaluation in the LLM era.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-three-eras-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: The three eras of information extraction. The pipeline shape is unchanged from pre-BERT to BERT era; only the components inside each box change. The LLM era replaces the linear pipeline with a workflow: parallel extraction calls feed structured frames into a downstream system, and the labor profile shifts from annotation and feature engineering to schema design, prompt engineering, and evaluation.
+</figcaption>
+</figure>
+</div>
+<section id="what-ie-used-to-look-like" class="level2">
+<h2 class="anchored" data-anchor-id="what-ie-used-to-look-like">What IE used to look like</h2>
+<p>The canonical IE pipeline went something like this:</p>
+<ol type="1">
+<li><strong>NER</strong>: tag spans of text with entity types (PER, ORG, GPE, LOC).</li>
+<li><strong>Coreference</strong>: cluster mentions that refer to the same entity.</li>
+<li><strong>Relation extraction</strong>: for each pair of entities, classify the relation between them, if any.</li>
+<li><strong>Event extraction</strong>: identify event triggers, classify the event type, then identify the arguments playing each role.</li>
+<li><strong>Knowledge-base population</strong>: combine the above into a structured record per entity, linked across documents.</li>
+</ol>
+<p>Each of these was its own subfield. Each had its own datasets: CoNLL-2003 <span class="citation" data-cites="sang_demeulder_2003">(Tjong Kim Sang and Meulder 2003)</span> for NER, ACE-2005 <span class="citation" data-cites="walker_etal_2006">(Walker et al. 2006)</span> for events and relations, OntoNotes <span class="citation" data-cites="hovy_etal_2006">(Hovy et al. 2006)</span> for coreference, the TAC KBP datasets <span class="citation" data-cites="ji_grishman_2011">(Ji and Grishman 2011)</span> for end-to-end knowledge-base construction. Each had its own modeling tradition: HMMs and CRFs for sequence labeling, structured-prediction for relation classification, ILP-based joint inference for combining extractions.</p>
+<p>The labor was substantial and concentrated on the input side. To build an NER system for a new entity type, you collected text, annotated mentions (typically thousands per type), engineered features (word identity, POS, gazetteer match, dependency context), and trained a classifier. Relation extraction added another annotation pass per relation type. Event extraction added another for triggers and another for each argument role.</p>
+<p>I worked in this regime during my postdoc. The published work from that period is on relation extraction <span class="citation" data-cites="chan_roth_2010 chan_roth_2011">(Chan and Roth 2010, 2011)</span> and minimally-supervised event causality <span class="citation" data-cites="do_etal_2011">(Do et al. 2011)</span>. The relation-extraction setup was typical for the era: a feature engineering pass over syntactic and semantic structures (constituency parses, dependency paths, semantic roles, Wikipedia categories as background knowledge), then a structured classifier.</p>
+<p>The defining property of pre-BERT IE wasn’t any particular model. It was the labor model. Every new task, every new domain, every new ontology required a fresh labeling effort, a fresh feature-engineering pass, and a fresh trained model. Performance was decent on benchmarks and worse in domain transfer. Adapting to a new domain typically meant starting over.</p>
+</section>
+<section id="bert-made-ie-better-not-cheaper" class="level2">
+<h2 class="anchored" data-anchor-id="bert-made-ie-better-not-cheaper">BERT made IE better, not cheaper</h2>
+<p>BERT <span class="citation" data-cites="devlin_etal_2019">(Devlin et al. 2019)</span> changed the modeling but not the labor. The pipeline shape stayed identical to the pre-BERT pipeline; the component models got better:</p>
+<ul>
+<li><strong>NER</strong> became encoder + token classifier with BIO tags (what Hugging Face exposes as <code>AutoModelForTokenClassification</code>).</li>
+<li><strong>Relation extraction</strong> became encoder + span-pair classifier: encode the sentence, pull out the two entity span representations, pool them, run through an MLP head.</li>
+<li><strong>Event extraction</strong> became encoder + token classifier for triggers, plus a span-pair-style classifier for arguments.</li>
+<li><strong>Coreference</strong> became span scoring and clustering over contextualized representations.</li>
+</ul>
+<p>The improvements were real. The transition from feature engineering to learned representations was, in retrospect, the largest single quality jump IE had seen in a decade.</p>
+<p>But the labor model was unchanged. You still needed labeled data per task. You still needed an annotation effort per new domain. The encoder did the feature engineering for you, but the rest of the work (schema design, annotation, evaluation) was the same as before.</p>
+<p>I spent most of the BERT era on this kind of production IE: event extraction <span class="citation" data-cites="chan_etal_2019">(Chan et al. 2019)</span>, KBP-style end-to-end systems <span class="citation" data-cites="deyoung_etal_2017">(DeYoung et al. 2017)</span>, domain-specific machine reading and few-shot event mention retrieval <span class="citation" data-cites="min_etal_2019 min_etal_2020">(Min et al. 2019, 2020)</span>. I designed and built the deep-learning IE platform these systems ran on, layered on the Hugging Face ecosystem and used across government-funded and industry projects.</p>
+<p>One <strong>multilingual event extraction</strong> project captures how sophisticated BERT-era IE had become. The training data was English, the inference target was Arabic, and the ontology covered roughly forty event types with typed argument roles. The stack used XLM-R <span class="citation" data-cites="conneau_etal_2020">(Conneau et al. 2020)</span>, multi-stage fine-tuning, token classification, continued MLM pretraining on mixed English-Arabic text, and automated checkpoint selection. This was not “just put a classifier on BERT.”</p>
+<p>A second project, <strong>rapid customization of event extraction</strong> for new ontologies <span class="citation" data-cites="chan_etal_2019">(Chan et al. 2019)</span>, was already gesturing at the LLM-era interface. The setup: take a small set of event-type definitions and a handful of seed examples, produce a working extractor without a full annotation effort. We compressed the labeling step with bootstrapping; the modern version puts definitions and examples into a prompt instead. <em>What changed is that the definitions-plus-examples now condition a frontier LLM directly rather than seeding a bootstrapping loop.</em></p>
+<p>The point of dwelling on this isn’t nostalgia. Too many current writeups treat the BERT era as a stepping stone: “people used to fine-tune classifiers, then LLMs came along.” That undersells the engineering. The systems were good. They were just expensive to build per task, which is exactly the thing the next era changed.</p>
+</section>
+<section id="llms-changed-the-labor-model" class="level2">
+<h2 class="anchored" data-anchor-id="llms-changed-the-labor-model">LLMs changed the labor model</h2>
+<p>What changed with LLMs wasn’t that you could finally do IE. You could already do IE. What changed was the cost structure.</p>
+<p>A frontier LLM with structured-output support can solve most NER, RE, and slot-filling tasks zero-shot or few-shot from a prompt and a JSON schema. Quality is task-dependent:</p>
+<ul>
+<li>On standard benchmarks like CoNLL-2003, a well-prompted frontier LLM lands within a few F1 points of fine-tuned baselines.</li>
+<li>On harder benchmarks like ACE 2005 event extraction, zero-shot LLMs still trail fine-tuned specialists by double-digit margins <span class="citation" data-cites="zhang_etal_2025">(Zhang et al. 2025)</span>.</li>
+</ul>
+<p>The gap closes with a handful of in-context examples or light fine-tuning on synthetic data. But for most use cases the marginal value of building a specialized BERT-era IE pipeline collapsed, because the engineering cost of getting from “no extractor” to “working extractor” dropped by an order of magnitude even when the LLM isn’t strictly best on F1.</p>
+<p>The mechanics are by now well-known. The prompt asks for structured output. The schema is enforced by the provider’s structured-output mode (OpenAI’s <code>response_format</code>), or by Pydantic schemas as a type-checked output contract. For NER, the schema is a list of typed entities. For RE, a list of (head, relation, tail) triples. For event extraction, a list of frames with event type and roles. The LLM call replaces the entire encoder-plus-classifier-head stack.</p>
+</section>
+<section id="three-modern-ie-patterns" class="level2">
+<h2 class="anchored" data-anchor-id="three-modern-ie-patterns">Three modern IE patterns</h2>
+<div id="fig-ie-patterns" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three panels. Direct extraction: Document goes to an LLM call producing JSON, then structured output; the LLM is in the serving path; simple and latency-tolerant. LLM-built specialist: a build-time-only LLM produces training data which trains a specialist that serves production; the LLM is offline, the small model serves, cheap, fast, and auditable at scale; example STIX relation extraction with GPT generating data for DeBERTa and T5. IE as workflow state: raw text goes through N parallel extraction calls to frames plus metadata that feed a downstream system; extraction is not the product, it feeds a downstream system; example transcript to frames to clinical note. Footer: what differs is where the LLM sits and whether extraction is the product or the scaffolding.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ie-patterns-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/05-information-extraction/ie_three_patterns.png" class="img-fluid figure-img" alt="Three panels. Direct extraction: Document goes to an LLM call producing JSON, then structured output; the LLM is in the serving path; simple and latency-tolerant. LLM-built specialist: a build-time-only LLM produces training data which trains a specialist that serves production; the LLM is offline, the small model serves, cheap, fast, and auditable at scale; example STIX relation extraction with GPT generating data for DeBERTa and T5. IE as workflow state: raw text goes through N parallel extraction calls to frames plus metadata that feed a downstream system; extraction is not the product, it feeds a downstream system; example transcript to frames to clinical note. Footer: what differs is where the LLM sits and whether extraction is the product or the scaffolding.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ie-patterns-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Three modern IE patterns. They differ in where the LLM sits and what ships: Direct extraction calls the LLM in the serving path and uses its output as-is; the LLM-built specialist uses the LLM offline only to generate training data, then serves a small specialist; IE as workflow state runs parallel extraction calls whose metadata-rich frames feed a downstream product, so extraction is the structured layer rather than the deliverable.
+</figcaption>
+</figure>
+</div>
+<section id="direct-llm-extraction" class="level3">
+<h3 class="anchored" data-anchor-id="direct-llm-extraction">Direct LLM extraction</h3>
+<p>The baseline pattern: the production system makes an LLM call per document or chunk, parses the structured output, and uses it directly. It works for moderate-volume, latency-tolerant settings, and it’s the reference point the other two patterns are defined against.</p>
+</section>
+<section id="llm-for-data-specialist-for-serving" class="level3">
+<h3 class="anchored" data-anchor-id="llm-for-data-specialist-for-serving">LLM for data, specialist for serving</h3>
+<p>The hybrid pattern uses an <strong>LLM to generate training data</strong>, then trains a smaller specialist for production serving.</p>
+<p>I ran into this in relation extraction over the MITRE STIX cyber security ontology (threat-actor, attack-pattern, malware, target, etc.). The available pre-LLM datasets were too sparse, incompletely annotated, or didn’t match STIX cleanly. The path forward: use GPT to extract candidate entities and relations from a few hundred documents. These LLM-generated annotations became training data for a DeBERTa-v3 <span class="citation" data-cites="he_etal_2021">(He et al. 2021)</span> span-pair classifier (relations) and a T5 <span class="citation" data-cites="raffel_etal_2020">(Raffel et al. 2020)</span> seq2seq tagger (NER, chosen because entity spans overlapped). The serving system never called GPT. It used the smaller specialists, trained on GPT-generated data.</p>
+<p>The labor shift is the whole point. The classical version would have started with months of annotation. The LLM-era version started with prompt and schema design. The production model was still a classical encoder; the annotation cost collapsed.</p>
+</section>
+<section id="ie-as-workflow-state" class="level3">
+<h3 class="anchored" data-anchor-id="ie-as-workflow-state">IE as workflow state</h3>
+<p>The other interesting pattern is when extraction stops being the product. The product is a downstream system that uses <strong>extraction as its structured intermediate representation</strong>.</p>
+<p>I’ve designed and led a clinical-documentation pipeline that takes a clinician-patient encounter transcript and produces a structured clinical note. The system uses multiple specialized LLM extraction calls: separate calls for problems and major note sections. Each extraction returns structured frames, with metadata attached so a downstream system can route facts into the right place:</p>
+<ul>
+<li><strong>Example clinical note sections covered.</strong> History of Present Illness (HPI), Assessment &amp; Plan (A&amp;P), Labs / Test Results, Physical Exam, Allergies, Past Medical History.</li>
+<li><strong>Frame fields, for a clinical problem.</strong> Symptoms, severity, duration, status, associated findings, treatments, medications, plan items.</li>
+<li><strong>Metadata on each extracted item.</strong> Temporal status (past / present / future), source and stance (patient-reported vs clinician-assessed), section affinity.</li>
+<li><strong>Downstream routing.</strong> Present-tense problem details go to HPI; clinician assessment and treatment plans go to A&amp;P; past resolved history goes to medical history.</li>
+</ul>
+<p>This is the modern form of IE I see most often: not an extractor that ships as the product, but a structured control layer that lets the rest of the workflow behave reliably. The product is the clinical note; the extractions are what the downstream system builds it from.</p>
+<p>The pattern isn’t unique. SpecialtyScribe <span class="citation" data-cites="goyal_etal_2025">(Goyal et al. 2025)</span> and GENIE <span class="citation" data-cites="ying_etal_2025">(Ying et al. 2025)</span> are published instances of the same idea: IE as the structured intermediate layer of a workflow, with the extraction done by a frontier LLM, a fine-tuned smaller specialist, or a mix.</p>
+<p>GraphRAG <span class="citation" data-cites="edge_etal_2024">(Edge et al. 2024)</span> is another version of the same move: use IE to turn documents into entities, relations, and summaries, then run retrieval and reasoning over that structure rather than over raw chunks. These are entity extraction, relation extraction, and light coreference, with the graph as the structured layer they feed.</p>
+</section>
+</section>
+<section id="the-new-labor-schema-prompts-eval-orchestration" class="level2">
+<h2 class="anchored" data-anchor-id="the-new-labor-schema-prompts-eval-orchestration">The new labor: schema, prompts, eval, orchestration</h2>
+<p>The labor profile is different from BERT-era IE in specific ways. There is no large annotation effort for training. The center of the work is schema design, and the contrast is concrete. A weak schema for clinical problems is <code>{"problems": ["chest pain"]}</code>, a flat list of strings. A schema that lets the downstream system route, deduplicate, and surface evidence for clinician review looks more like:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb1-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb1-2">  <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"problem"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chest pain"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb1-3">  <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"status"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"active | resolved | historical"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb1-4">  <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"temporality"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"past | present | future_planned"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb1-5">  <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"source"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"patient_reported | clinician_assessed"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb1-6">  <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"evidence_span"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"..."</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb1-7"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">}</span></span></code></pre></div></div>
+<p>The richer schema is what makes the workflow possible: every extracted fact carries the metadata the downstream system needs to act on it without re-extracting. Around that, the new labor is:</p>
+<ul>
+<li><strong>Schema design</strong>: the frames, fields, metadata, and uncertainty behavior. The architecture decision that determines what the downstream system can do.</li>
+<li><strong>Prompt design</strong>: per-extraction prompts that reliably fill the schema, iterated against failure cases.</li>
+<li><strong>Evaluation</strong>: still labeled data, but at much smaller scale, for measuring rather than training.</li>
+<li><strong>Workflow orchestration</strong>: how extractions compose, how frames are routed, where metadata gates decisions.</li>
+<li><strong>Cost control</strong>: which calls run on a frontier model, which on a smaller specialist, which can be batched or cached.</li>
+</ul>
+<p>The old labor was annotation, feature engineering, and per-task model training. The new labor is schema, prompts, eval, and orchestration. The label changed, but the work did not vanish. It moved from model training into workflow design.</p>
+</section>
+<section id="when-classical-ie-still-wins" class="level2">
+<h2 class="anchored" data-anchor-id="when-classical-ie-still-wins">When classical IE still wins</h2>
+<p>The “LLMs absorbed IE” framing oversells. There are concrete situations where classical IE wins.</p>
+<p><strong>High-volume or latency-sensitive serving.</strong> A DeBERTa-v3-base NER system runs at thousands of tokens per second per GPU at near-zero marginal cost; a frontier LLM call costs cents per document at a fraction of that throughput. If you process millions of documents per day, or a pipeline step has to run in tens of milliseconds, the encoder wins on cost and latency by an order of magnitude. The hybrid pattern (LLM-generated data, classical model serves) is the standard answer here.</p>
+<p><strong>Fine-grained span tasks under audit constraint.</strong> Medical coding, legal entity extraction, financial reporting: the span boundaries matter exactly, and LLM hallucination is unacceptable. A trained span-classifier with auditable failure modes is the safer choice. The LLM may generate the training data; the production extractor stays classical.</p>
+<p><strong>Ontology-backed coding and normalization.</strong> ICD-10 coding is not just extraction. It requires mapping clinical evidence to a controlled code system, following rules around specificity, exclusions and so on. A standalone LLM should not be trusted to do this from parametric memory alone. Use retrieval or lookup against the official code set and deterministic validation.</p>
+<p><strong>Stable schemas with mature labeled data.</strong> With a CoNLL-2003-scale labeled dataset and a stable schema, a fine-tuned encoder is hard to beat on the headline metric. The crossover varies by task and prompting strategy, but with thousands of labeled examples the encoder typically pulls ahead.</p>
+</section>
+<section id="code-companion-tnlp-ie-examples" class="level2">
+<h2 class="anchored" data-anchor-id="code-companion-tnlp-ie-examples">Code companion: TNLP IE examples</h2>
+<p>To make the transition concrete, my <a href="https://github.com/chanys/tnlp">TNLP repo</a> includes three working IE examples, written in late 2023 and early 2024, that map onto three stages of the shift.</p>
+<ul>
+<li><p><strong>Token classification / NER (BERT-era classical).</strong> <code>microsoft/deberta-v3-base</code> with <code>AutoModelForTokenClassification</code> on CoNLL-2003, predicting the four canonical entity types. The standard “encoder + BIO tagger” pattern that became the default after BERT. <a href="https://github.com/chanys/tnlp/blob/main/src/config/token_model/conll2003.train.yaml">Config</a>, <a href="https://github.com/chanys/tnlp/blob/main/src/scripts/run_model.py">run script</a>.</p></li>
+<li><p><strong>Span-pair classification / relation extraction (BERT-era).</strong> A custom implementation, because span-pair classification has no clean off-the-shelf Hugging Face head when the code was written: encode the sentence with DeBERTa-v3, pool the two span representations, classify the relation. This is what production BERT-era RE actually looked like, a custom span aggregation on top of an encoder. <a href="https://github.com/chanys/tnlp/blob/main/src/model/spanpair_model/custom_spanpair_model.py">Model</a>, <a href="https://github.com/chanys/tnlp/blob/main/src/model/spanpair_model/custom_spanpair_classification.py">training</a>.</p></li>
+<li><p><strong>Seq2seq NER with FLAN-T5 (the bridge to LLM-era).</strong> Instead of BIO tags, the model generates the sentence with bracket-tagged entity spans. <code>google/flan-t5-base</code> with LoRA <span class="citation" data-cites="hu_etal_2022">(Hu et al. 2022)</span> and 8-bit quantization. This handles overlapping and nested spans naturally (token classification can’t easily produce nested entities) and is structurally identical to how LLM-era extraction works: a generative model emits structured output. <a href="https://github.com/chanys/tnlp/blob/main/src/model/seq2seq_model/seq2seq_utils.py">Code</a>, <a href="https://github.com/chanys/tnlp/blob/main/src/config/seq2seq_model/ner.train.yaml">config</a>.</p></li>
+</ul>
+</section>
+<section id="what-people-get-wrong" class="level2">
+<h2 class="anchored" data-anchor-id="what-people-get-wrong">What people get wrong</h2>
+<ol type="1">
+<li><p><strong>Treating IE as deprecated.</strong> It isn’t. It’s everywhere: inside agents, RAG and knowledge graphs, structured data extraction, and so on. It’s just not explicitly labeled “IE”.</p></li>
+<li><p><strong>Skipping schema design.</strong> The schema is the architecture of the extraction layer. The single highest-leverage improvement to most LLM-extraction setups is tightening it.</p></li>
+<li><p><strong>Underweighting evaluation.</strong> Labeled data didn’t go away. It moved from training to eval. You can’t ship an IE workflow you haven’t measured, and measuring requires gold annotations. The eval set is the new annotation effort: smaller, but irreducible.</p></li>
+<li><p><strong>Picking the wrong model for the operating constraints.</strong> Try the LLM first for new or ambiguous tasks. Train a specialist when cost, latency, scale, auditability, or span precision force it. Both reflexes (always train a specialist; always reach for the frontier LLM) are mistakes. The constraints decide, not the fashion.</p></li>
+<li><p><strong>Treating extraction as the product.</strong> In modern systems extraction is rarely the product. It’s the structured intermediate layer between raw text and downstream generation, retrieval, or action.</p></li>
+</ol>
+</section>
+<section id="closing" class="level2">
+<h2 class="anchored" data-anchor-id="closing">Closing</h2>
+<p>For decades, information extraction was a product: annotate, train, extract, ship the knowledge base. BERT made the models better but left the labor model intact; every new domain still cost an annotation effort. LLMs didn’t make IE possible. IE was already possible. They made it low-startup-cost enough that it stopped being a product and became infrastructure: the structured layer between raw text and whatever the system does next.</p>
+<p>The work didn’t disappear. The annotation-and-feature-engineering labor became schema-and-eval labor.</p>
+<p><strong>The extractor stopped being the deliverable and became workflow state.</strong></p>
+<p>The papers on the hard research problems (coreference, cross-document linking, strict argument-role constraints) are still being written; they’re just no longer where most production IE work happens. The next time someone says their system “doesn’t do information extraction,” it’s worth asking what the JSON between their LLM calls is.</p>
+
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-chan_etal_2019" class="csl-entry">
+Chan, Yee Seng, Joshua Fasching, Haoling Qiu, and Bonan Min. 2019. <span>“Rapid Customization for Event Extraction.”</span> <em>Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics: System Demonstrations</em>.
+</div>
+<div id="ref-chan_roth_2010" class="csl-entry">
+Chan, Yee Seng, and Dan Roth. 2010. <span>“Exploiting Background Knowledge for Relation Extraction.”</span> <em>Proceedings of the 23rd International Conference on Computational Linguistics (COLING)</em>.
+</div>
+<div id="ref-chan_roth_2011" class="csl-entry">
+Chan, Yee Seng, and Dan Roth. 2011. <span>“Exploiting Syntactico-Semantic Structures for Relation Extraction.”</span> <em>Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies</em>.
+</div>
+<div id="ref-conneau_etal_2020" class="csl-entry">
+Conneau, Alexis, Kartikay Khandelwal, Naman Goyal, et al. 2020. <span>“Unsupervised Cross-Lingual Representation Learning at Scale.”</span> <em>Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics</em>. <a href="https://arxiv.org/abs/1911.02116">https://arxiv.org/abs/1911.02116</a>.
+</div>
+<div id="ref-devlin_etal_2019" class="csl-entry">
+Devlin, Jacob, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. 2019. <span>“BERT: Pre-Training of Deep Bidirectional Transformers for Language Understanding.”</span> <em>Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (NAACL-HLT)</em>. <a href="https://arxiv.org/abs/1810.04805">https://arxiv.org/abs/1810.04805</a>.
+</div>
+<div id="ref-deyoung_etal_2017" class="csl-entry">
+DeYoung, Jay, Yee Seng Chan, Chester Pittapally, Hannah Provenza, Ryan Gabbard, and Marjorie Freedman. 2017. <span>“BBN’s 2017 KBP EAL Submission.”</span> <em>Proceedings of the 2017 Text Analysis Conference (TAC)</em>.
+</div>
+<div id="ref-do_etal_2011" class="csl-entry">
+Do, Quang, Yee Seng Chan, and Dan Roth. 2011. <span>“Minimally Supervised Event Causality Identification.”</span> <em>Proceedings of the 2011 Conference on Empirical Methods in Natural Language Processing</em>.
+</div>
+<div id="ref-edge_etal_2024" class="csl-entry">
+Edge, Darren, Ha Trinh, Newman Cheng, et al. 2024. <span>“From Local to Global: A Graph RAG Approach to Query-Focused Summarization.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/2404.16130">https://arxiv.org/abs/2404.16130</a>.
+</div>
+<div id="ref-goyal_etal_2025" class="csl-entry">
+Goyal, Sagar, Eti Rastogi, Fen Zhao, Dong Yuan, and Andrew Beinstein. 2025. <span>“SpecialtyScribe: Enhancing SOAP Note Scribing for Medical Specialties Using LLMs.”</span> <em>Proceedings of the Second Workshop on Patient-Oriented Language Processing (CL4Health)</em>.
+</div>
+<div id="ref-he_etal_2021" class="csl-entry">
+He, Pengcheng, Xiaodong Liu, Jianfeng Gao, and Weizhu Chen. 2021. <span>“DeBERTaV3: Improving DeBERTa Using ELECTRA-Style Pre-Training with Gradient-Disentangled Embedding Sharing.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/2111.09543">https://arxiv.org/abs/2111.09543</a>.
+</div>
+<div id="ref-hovy_etal_2006" class="csl-entry">
+Hovy, Eduard, Mitchell Marcus, Martha Palmer, Lance Ramshaw, and Ralph Weischedel. 2006. <span>“OntoNotes: The 90% Solution.”</span> <em>Proceedings of the Human Language Technology Conference of the NAACL, Companion Volume: Short Papers</em>.
+</div>
+<div id="ref-hu_etal_2022" class="csl-entry">
+Hu, Edward J., Yelong Shen, Phillip Wallis, et al. 2022. <span>“LoRA: Low-Rank Adaptation of Large Language Models.”</span> <em>International Conference on Learning Representations</em>. <a href="https://arxiv.org/abs/2106.09685">https://arxiv.org/abs/2106.09685</a>.
+</div>
+<div id="ref-ji_grishman_2011" class="csl-entry">
+Ji, Heng, and Ralph Grishman. 2011. <span>“Knowledge Base Population: Successful Approaches and Challenges.”</span> <em>Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies</em>.
+</div>
+<div id="ref-min_etal_2019" class="csl-entry">
+Min, Bonan, Yee Seng Chan, Haoling Qiu, and Joshua Fasching. 2019. <span>“Towards Machine Reading for Interventions from Humanitarian-Assistance Program Literature.”</span> <em>Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)</em>.
+</div>
+<div id="ref-min_etal_2020" class="csl-entry">
+Min, Bonan, Yee Seng Chan, and Lingjun Zhao. 2020. <span>“Towards Few-Shot Event Mention Retrieval: An Evaluation Framework and a Siamese Network Approach.”</span> <em>Proceedings of the Twelfth Language Resources and Evaluation Conference (LREC)</em>.
+</div>
+<div id="ref-raffel_etal_2020" class="csl-entry">
+Raffel, Colin, Noam Shazeer, Adam Roberts, et al. 2020. <span>“Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer.”</span> <em>Journal of Machine Learning Research</em>. <a href="https://arxiv.org/abs/1910.10683">https://arxiv.org/abs/1910.10683</a>.
+</div>
+<div id="ref-sang_demeulder_2003" class="csl-entry">
+Tjong Kim Sang, Erik F., and Fien De Meulder. 2003. <span>“Introduction to the CoNLL-2003 Shared Task: Language-Independent Named Entity Recognition.”</span> <em>Proceedings of the Seventh Conference on Natural Language Learning at HLT-NAACL 2003 (CoNLL)</em>.
+</div>
+<div id="ref-walker_etal_2006" class="csl-entry">
+Walker, Christopher, Stephanie Strassel, Julie Medero, and Kazuaki Maeda. 2006. <em>ACE 2005 Multilingual Training Corpus</em>. Linguistic Data Consortium, LDC2006T06.
+</div>
+<div id="ref-ying_etal_2025" class="csl-entry">
+Ying, Huaiyuan, Hongyi Yuan, Jinsen Lu, et al. 2025. <span>“GENIE: Generative Note Information Extraction Model for Structuring EHR Data.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/2501.18435">https://arxiv.org/abs/2501.18435</a>.
+</div>
+<div id="ref-zhang_etal_2025" class="csl-entry">
+Zhang, Zikun, Wei You, Tongtao Wu, Xiaolong Wang, Jianxin Li, and Min Zhang. 2025. <span>“A Survey of Generative Information Extraction.”</span> <em>Proceedings of the 31st International Conference on Computational Linguistics (COLING)</em>.
+</div>
+</div></section></div> ]]></description>
+  <category>Research foundations of modern LLMs</category>
+  <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/05-information-extraction/</guid>
+  <pubDate>Sun, 05 Apr 2026 00:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>The fine-tuning stack: one loss, different data</title>
+  <dc:creator>Yee Seng Chan</dc:creator>
+  <link>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/04-fine-tuning-stack/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+Research foundations of modern LLMs
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-pretraining-objectives/">Pretraining objectives: Why decoder-only won</a></li>
+<li><a href="../02-encoder-embeddings/">The encoder didn’t die. It became the embedding model</a></li>
+<li><a href="../03-retrieval/">Retrieval is older than RAG: From DPR to end-to-end</a></li>
+<li><a href="../04-fine-tuning-stack/">The fine-tuning stack: One loss, different data</a></li>
+<li><a href="../05-information-extraction/">Information extraction didn’t disappear. It moved inside the workflow</a></li>
+</ol>
+</div>
+<p>The standard story about post-pretraining is: first supervised fine-tuning (often called instruction tuning), then alignment with RLHF or DPO. Two stages, presented as several distinct techniques because the SFT stage has gone by many names: supervised fine-tuning, instruction tuning, distilled SFT, chat tuning. Mechanically, they’re the same operation.</p>
+<p>Here’s the thesis: SFT shares its loss function with pretraining. They’re both next-token cross-entropy, differing only in what data goes in and which tokens contribute to the loss. Preference optimization is the only stage that introduces a genuinely new loss family.</p>
+<section id="two-loss-families-across-three-stages" class="level2">
+<h2 class="anchored" data-anchor-id="two-loss-families-across-three-stages">Two loss families across three stages</h2>
+<div id="fig-three-jobs" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A diagram of three training stages grouped by loss family. Pretraining and supervised fine-tuning are bracketed together as one group because both use next-token cross-entropy; the diagram contrasts them only by their input data and by which tokens contribute to the loss. Preference optimization sits in a separate group, labeled as the only stage that introduces a different loss family.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-three-jobs-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/04-fine-tuning-stack/three_jobs.png" class="img-fluid figure-img" alt="A diagram of three training stages grouped by loss family. Pretraining and supervised fine-tuning are bracketed together as one group because both use next-token cross-entropy; the diagram contrasts them only by their input data and by which tokens contribute to the loss. Preference optimization sits in a separate group, labeled as the only stage that introduces a different loss family.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-three-jobs-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: The three stages, grouped by loss family. Pretraining and SFT share next-token cross-entropy: they differ only in what data goes in and which tokens contribute to the loss. Preference optimization is the only stage that introduces a new loss family.
+</figcaption>
+</figure>
+</div>
+<p>Pretraining and SFT use the same loss: next-token cross-entropy. They differ in:</p>
+<ul>
+<li><strong>What data the model sees.</strong> Raw text for pretraining; (instruction, response) pairs for SFT.</li>
+<li><strong>Which tokens contribute to the loss.</strong> All tokens for pretraining; only response tokens for SFT (the prompt is masked out).</li>
+</ul>
+<p>That’s the whole mechanical difference. SFT is pretraining on more curated data with a loss mask on the prompt.</p>
+<p>Preference optimization is the only stage that introduces a new loss family. The output is no longer compared to a target sequence; it’s compared to a <em>competing</em> sequence under a preference framework. RLHF wraps this in a reward model and PPO; <a href="https://chanys.github.io/dpo/">DPO</a> <span class="citation" data-cites="rafailov_etal_2023">(Rafailov et al. 2023)</span> collapses the same idea into a single supervised loss; GRPO replaces the value network with group statistics. Each has its own deep-dive in this site’s RL series: <a href="../../../../posts/series/how-llms-learn-to-reason/01-ppo/index.html">PPO is REINFORCE Plus Five Fixes</a>, <a href="../../../../posts/series/how-llms-learn-to-reason/03-dpo/index.html">DPO: RLHF Collapsed Into One Loss</a>, and <a href="../../../../posts/series/how-llms-learn-to-reason/02-grpo/index.html">GRPO: The Algorithm Behind Reasoning Models</a>.</p>
+</section>
+<section id="supervised-fine-tuning" class="level2">
+<h2 class="anchored" data-anchor-id="supervised-fine-tuning">Supervised fine-tuning</h2>
+<p>SFT’s loss is the same as pretraining’s. Everything interesting is in the data.</p>
+<p>The mechanics, traced through one example. Take an instruction-response pair:</p>
+<ul>
+<li><strong>Instruction</strong>: “Classify the sentiment of this review and explain why: ‘The food was great but the service was terrible.’”</li>
+<li><strong>Response</strong>: “Mixed sentiment. The reviewer praises the food but criticizes the service.”</li>
+</ul>
+<p>You concatenate the instruction and response into a single sequence and feed it through the model. The model computes next-token cross-entropy as it would in pretraining. The difference: a loss mask zeros out the contribution from instruction tokens. Only the response tokens carry gradient.</p>
+<p>The wrong reading is that the model learns to generate instruction-and-response pairs. It doesn’t. The instruction tokens have no loss contribution, so the model gets no gradient signal saying “produce instructions like these.” What the model learns is to produce response tokens given the instruction tokens as context. At inference, you provide the instruction; the model continues with the response.</p>
+<p>That’s it for the loss. Everything else is data engineering. SFT data comes in a few forms:</p>
+<p><strong>Human-written demonstrations.</strong> The original <a href="https://chanys.github.io/chatgpt/">InstructGPT</a> <span class="citation" data-cites="ouyang_etal_2022">(Ouyang et al. 2022)</span> recipe: humans wrote responses to a curated set of instructions, and the model was fine-tuned on those pairs. High-quality, but expensive and slow.</p>
+<p><strong>Multitask instruction data.</strong> The Sept 2021 <a href="https://chanys.github.io/flan/">FLAN</a> <span class="citation" data-cites="wei_etal_2022">(Wei et al. 2022)</span> paper showed that training on many NLP tasks formatted as instructions improves zero-shot performance on unseen tasks. <a href="https://chanys.github.io/t0/">T0</a> <span class="citation" data-cites="sanh_etal_2022">(Sanh et al. 2022)</span> showed the same on encoder-decoder models; <a href="https://chanys.github.io/tkinstruct/">Tk-INSTRUCT</a> <span class="citation" data-cites="wang_etal_2022_tkinstruct">(Wang et al. 2022)</span> and <a href="https://chanys.github.io/flan-palm/">FLAN-PaLM</a> scaled to 1,600 and 1,800 tasks. More tasks, more diverse templates, and larger base models all help. FLAN also found a size threshold: multitask SFT <em>hurt</em> held-out performance at 8B and below, helped substantially at 137B. T0 found the threshold lower (3B) for encoder-decoder models, the kind of small-scale inductive-bias advantage that scales away (see <a href="../../../../posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/index.html">Pretraining objectives: why decoder-only won</a>).</p>
+<p><strong>Synthetic teacher-generated data.</strong> By late 2022 the bottleneck was data. Self-Instruct <span class="citation" data-cites="wang_etal_2023_selfinstruct">(Wang et al. 2023)</span> showed an instruction-following LLM could generate its own training data: seed with a few human instructions, generate variations and responses, filter for quality. Alpaca and <a href="https://chanys.github.io/zephyr/">Zephyr</a> <span class="citation" data-cites="tunstall_etal_2023">(Tunstall et al. 2023)</span> operationalized this (Zephyr’s UltraChat: 1.47M GPT-3.5 dialogues filtered to 200K). This <em>distilled SFT</em> (dSFT) pattern is now standard; the scale is set by what teacher models can produce, not what humans can write. Two caveats: the student inherits the teacher’s limits, and the filter does real work. The empirical lesson of the past two years is that 10K well-chosen examples often beat 1M scraped ones <span class="citation" data-cites="zhou_etal_2023">(Zhou et al. 2023)</span>.</p>
+<p><strong>Chat-format data.</strong> The same loss is applied across multi-turn conversations, with the loss mask zeroing out user turns and computing loss only on assistant turns. Mechanically identical to single-turn SFT; the data just has more turns.</p>
+<p>A note on single-task vs multi-task SFT. If your application is one task with consistent phrasing, single-task SFT is fine. If your application is a chat assistant handling varied user queries, multi-task SFT is doing real work: the diverse training data is what gives the model robustness across phrasings. Almost everyone does multi-task SFT, because almost everyone is building something at least chat-shaped.</p>
+</section>
+<section id="lora-and-qlora-change-the-memory-story-not-the-objective" class="level2">
+<h2 class="anchored" data-anchor-id="lora-and-qlora-change-the-memory-story-not-the-objective">LoRA and QLoRA change the memory story, not the objective</h2>
+<p>LoRA and QLoRA don’t change what the model is being trained on or how the loss is computed. They change what parameters are trainable and what fits in memory. That distinction matters for the article’s thesis: most of the post-pretraining stack is the same algorithm applied to different data; parameter-efficient methods are a memory-engineering layer on top, not a new training paradigm.</p>
+<div id="fig-lora" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two panels. Left: a frozen base weight matrix W-zero shown alongside a low-rank update formed by multiplying matrix B of size d by r with matrix A of size r by k, where the rank r is much smaller than d or k, so only A and B are trained. Right: a bar chart comparing GPU memory to fine-tune a 7B model under three regimes, roughly 84GB for full fine-tuning at FP32, about 14GB for LoRA on an FP16 base, and about 4GB for QLoRA on a 4-bit quantized base.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-lora-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/04-fine-tuning-stack/lora.png" class="img-fluid figure-img" alt="Two panels. Left: a frozen base weight matrix W-zero shown alongside a low-rank update formed by multiplying matrix B of size d by r with matrix A of size r by k, where the rank r is much smaller than d or k, so only A and B are trained. Right: a bar chart comparing GPU memory to fine-tune a 7B model under three regimes, roughly 84GB for full fine-tuning at FP32, about 14GB for LoRA on an FP16 base, and about 4GB for QLoRA on a 4-bit quantized base.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-lora-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: LoRA decomposes the fine-tuning update into two small matrices B (d×r) and A (r×k), with r much smaller than d or k. The base weight matrix W₀ stays frozen. Right: memory for fine-tuning a 7B model under three regimes; full fine-tuning at FP32 needs ~84GB, LoRA on FP16 base ~14GB, QLoRA on 4-bit base ~4GB.
+</figcaption>
+</figure>
+</div>
+<p><a href="https://chanys.github.io/lora/">LoRA</a> <span class="citation" data-cites="hu_etal_2022">(Hu et al. 2022)</span> trains a small low-rank adapter on top of a frozen base model. The premise: full fine-tuning is overkill for most tasks because fine-tuning updates have low intrinsic rank. The base already knows grammar, world facts, and reasoning patterns; fine-tuning is usually a <em>nudge</em>, not a rewrite. LoRA replaces the full update <img src="https://latex.codecogs.com/png.latex?%5CDelta%20W"> with the product of two much smaller matrices <img src="https://latex.codecogs.com/png.latex?BA">, where the rank <img src="https://latex.codecogs.com/png.latex?r"> is much smaller than the original matrix dimensions. The base <img src="https://latex.codecogs.com/png.latex?W_0"> stays frozen; only the small <img src="https://latex.codecogs.com/png.latex?B"> and <img src="https://latex.codecogs.com/png.latex?A"> are trained. The phrase to remember: LoRA works because fine-tuning is usually steering, not rebuilding.</p>
+<p><a href="https://chanys.github.io/qlora/">QLoRA</a> <span class="citation" data-cites="dettmers_etal_2023">(Dettmers et al. 2023)</span> keeps LoRA’s structure but quantizes the frozen base to 4 bits while leaving the adapter in 16-bit. The QLoRA mechanics (NF4 quantization, double quantization of scale constants, paged optimizers for memory spikes) are covered in the <a href="https://chanys.github.io/qlora/">QLoRA deep-dive post</a>; they’re what makes the memory math work but they’re orthogonal to the article’s thesis.</p>
+<p>Almost all open-source fine-tuning in 2024-2026 uses LoRA or QLoRA. Full fine-tuning still happens for frontier-scale base-model training, but downstream specialization is overwhelmingly LoRA-based. The wave of fine-tuned open-source models from late 2023 onward is downstream of this.</p>
+</section>
+<section id="when-preference-optimization-actually-matters" class="level2">
+<h2 class="anchored" data-anchor-id="when-preference-optimization-actually-matters">When preference optimization actually matters</h2>
+<p>Once a model has been SFT’d, you can do another round of training that uses preference data: pairs of responses where one is judged better than the other. The goal is to push the model toward responses that match human (or proxy) preferences for properties like helpfulness, harmlessness, conciseness.</p>
+<p>Three families dominate the post-2022 alignment landscape:</p>
+<ul>
+<li><strong>RLHF</strong> (<a href="https://chanys.github.io/chatgpt/">InstructGPT</a> <span class="citation" data-cites="ouyang_etal_2022">(Ouyang et al. 2022)</span> recipe): SFT, then train a reward model on preference pairs, then run PPO using the reward model as the reward signal. Four LLM-sized things in memory at training time.</li>
+<li><strong>DPO</strong> (Direct Preference Optimization): skip the reward model and the RL machinery. A single supervised loss on preference pairs. Two models in memory.</li>
+<li><strong>GRPO</strong> (Group Relative Policy Optimization): PPO with the value network removed. Memory-efficient, well-suited to verifiable-reward settings (math, code). The algorithm behind R1 and most open-source reasoning models.</li>
+</ul>
+<p>The mechanics (why DPO’s derivation works, what PPO is doing under the hood, why GRPO works for reasoning) are covered in detail in this site’s RL series: <a href="../../../../posts/series/how-llms-learn-to-reason/01-ppo/index.html">PPO is REINFORCE plus five fixes</a>, <a href="../../../../posts/series/how-llms-learn-to-reason/03-dpo/index.html">DPO: RLHF collapsed into one loss</a>, and <a href="../../../../posts/series/how-llms-learn-to-reason/02-grpo/index.html">GRPO: the algorithm behind reasoning models</a>. For this article the strategic question is simpler: when does preference optimization actually matter for your application?</p>
+<p>For chat assistants serving general users, almost always. SFT alone produces a model that can follow instructions but doesn’t have stable behavioral preferences. It’ll be helpful one moment and verbose or evasive the next. Preference tuning is what shapes that into something consistent.</p>
+<p>For applications where the desired behavior is itself contested (creative writing, advice-giving, judgments about taste), preference tuning is doing the bulk of the work. The model isn’t learning facts; it’s learning whose preferences to optimize for.</p>
+</section>
+<section id="tnlp-showpiece-the-fine-tuning-stack-in-code" class="level2">
+<h2 class="anchored" data-anchor-id="tnlp-showpiece-the-fine-tuning-stack-in-code">TNLP showpiece: the fine-tuning stack in code</h2>
+<p>The <a href="https://github.com/chanys/tnlp">TNLP repo</a> implements the three stages of post-pretraining on LLaMA-2-7B and Mistral-7B: instruction fine-tuning, chat fine-tuning, and DPO:</p>
+<ul>
+<li><a href="https://github.com/chanys/tnlp#instruction-fine-tuning"><strong>Instruction fine-tuning</strong></a> trains LLaMA-2-7B on the Alpaca dataset using <code>AutoModelForCausalLM</code> with LoRA and 8-bit loading.</li>
+<li><a href="https://github.com/chanys/tnlp#chat-fine-tuning"><strong>Chat fine-tuning</strong></a> trains Mistral-7B on the multi-turn UltraChat dataset using TRL’s <code>SFTTrainer</code> with QLoRA (4-bit base, 16-bit adapters). Same next-token objective as instruction tuning; only the data format (turn-based user/assistant exchanges) differs.</li>
+<li><a href="https://github.com/chanys/tnlp#direct-preference-optimization-dpo"><strong>DPO</strong></a> takes the chat-tuned model and runs preference optimization on UltraFeedback (binarized chosen/rejected pairs) via TRL’s <code>DPOTrainer</code>, again with QLoRA. This is where the objective itself changes: from next-token imitation to direct preference optimization against a frozen reference policy.</li>
+</ul>
+<p>The QLoRA setup runs on a single 24GB GPU.</p>
+<p>Related writeups: <a href="https://chanys.github.io/flan-code/">LoRA fine-tuning of LLaMA-2-7B</a> and <a href="../../../../posts/series/how-llms-learn-to-reason/03-dpo/index.html">DPO: RLHF Collapsed Into One Loss</a>.</p>
+</section>
+<section id="closing" class="level2">
+<h2 class="anchored" data-anchor-id="closing">Closing</h2>
+<p>The post-pretraining stack looks complicated because every stage has its own name. Most of those names are about the data, not the algorithm. Pretraining and SFT share next-token cross-entropy; SFT just curates the data and masks the loss to response tokens. Preference optimization is the one place the loss family genuinely changes. LoRA and QLoRA don’t change the loss; they change what fits in memory.</p>
+<p>That’s most of post-pretraining in a paragraph. The depth is in the data engineering (what instruction sources to use, how to filter synthetic data, how to balance task mixtures, when preference data is worth collecting) and in the algorithmic deep-dives for preference optimization.</p>
+
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-dettmers_etal_2023" class="csl-entry">
+Dettmers, Tim, Artidoro Pagnoni, Ari Holtzman, and Luke Zettlemoyer. 2023. <span>“QLoRA: Efficient Finetuning of Quantized LLMs.”</span> <em>Advances in Neural Information Processing Systems (NeurIPS)</em>. <a href="https://arxiv.org/abs/2305.14314">https://arxiv.org/abs/2305.14314</a>.
+</div>
+<div id="ref-hu_etal_2022" class="csl-entry">
+Hu, Edward J., Yelong Shen, Phillip Wallis, et al. 2022. <span>“LoRA: Low-Rank Adaptation of Large Language Models.”</span> <em>International Conference on Learning Representations</em>. <a href="https://arxiv.org/abs/2106.09685">https://arxiv.org/abs/2106.09685</a>.
+</div>
+<div id="ref-ouyang_etal_2022" class="csl-entry">
+Ouyang, Long, Jeff Wu, Xu Jiang, et al. 2022. <span>“Training Language Models to Follow Instructions with Human Feedback.”</span> <em>Advances in Neural Information Processing Systems (NeurIPS)</em>. <a href="https://arxiv.org/abs/2203.02155">https://arxiv.org/abs/2203.02155</a>.
+</div>
+<div id="ref-rafailov_etal_2023" class="csl-entry">
+Rafailov, Rafael, Archit Sharma, Eric Mitchell, Stefano Ermon, Christopher D. Manning, and Chelsea Finn. 2023. <span>“Direct Preference Optimization: Your Language Model Is Secretly a Reward Model.”</span> <em>Advances in Neural Information Processing Systems (NeurIPS)</em>. <a href="https://arxiv.org/abs/2305.18290">https://arxiv.org/abs/2305.18290</a>.
+</div>
+<div id="ref-sanh_etal_2022" class="csl-entry">
+Sanh, Victor, Albert Webson, Colin Raffel, et al. 2022. <span>“Multitask Prompted Training Enables Zero-Shot Task Generalization.”</span> <em>International Conference on Learning Representations (ICLR)</em>. <a href="https://arxiv.org/abs/2110.08207">https://arxiv.org/abs/2110.08207</a>.
+</div>
+<div id="ref-tunstall_etal_2023" class="csl-entry">
+Tunstall, Lewis, Edward Beeching, Nathan Lambert, et al. 2023. <span>“Zephyr: Direct Distillation of LM Alignment.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/2310.16944">https://arxiv.org/abs/2310.16944</a>.
+</div>
+<div id="ref-wang_etal_2023_selfinstruct" class="csl-entry">
+Wang, Yizhong, Yeganeh Kordi, Swaroop Mishra, et al. 2023. <span>“Self-Instruct: Aligning Language Models with Self-Generated Instructions.”</span> <em>Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (ACL)</em>. <a href="https://arxiv.org/abs/2212.10560">https://arxiv.org/abs/2212.10560</a>.
+</div>
+<div id="ref-wang_etal_2022_tkinstruct" class="csl-entry">
+Wang, Yizhong, Swaroop Mishra, Pegah Alipoormolabashi, et al. 2022. <span>“Super-NaturalInstructions: Generalization via Declarative Instructions on 1600+ NLP Tasks.”</span> <em>Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing (EMNLP)</em>. <a href="https://arxiv.org/abs/2204.07705">https://arxiv.org/abs/2204.07705</a>.
+</div>
+<div id="ref-wei_etal_2022" class="csl-entry">
+Wei, Jason, Maarten Bosma, Vincent Y. Zhao, et al. 2022. <span>“Finetuned Language Models Are Zero-Shot Learners.”</span> <em>International Conference on Learning Representations (ICLR)</em>. <a href="https://arxiv.org/abs/2109.01652">https://arxiv.org/abs/2109.01652</a>.
+</div>
+<div id="ref-zhou_etal_2023" class="csl-entry">
+Zhou, Chunting, Pengfei Liu, Puxin Xu, et al. 2023. <span>“LIMA: Less Is More for Alignment.”</span> <em>Advances in Neural Information Processing Systems (NeurIPS)</em>. <a href="https://arxiv.org/abs/2305.11206">https://arxiv.org/abs/2305.11206</a>.
+</div>
+</div></section></div> ]]></description>
+  <category>Research foundations of modern LLMs</category>
+  <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/04-fine-tuning-stack/</guid>
+  <pubDate>Tue, 31 Mar 2026 00:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>Retrieval is older than RAG: from DPR to end-to-end</title>
+  <dc:creator>Yee Seng Chan</dc:creator>
+  <link>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/03-retrieval/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+Research foundations of modern LLMs
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-pretraining-objectives/">Pretraining objectives: Why decoder-only won</a></li>
+<li><a href="../02-encoder-embeddings/">The encoder didn’t die. It became the embedding model</a></li>
+<li><a href="../03-retrieval/">Retrieval is older than RAG: From DPR to end-to-end</a></li>
+<li><a href="../04-fine-tuning-stack/">The fine-tuning stack: One loss, different data</a></li>
+<li><a href="../05-information-extraction/">Information extraction didn’t disappear. It moved inside the workflow</a></li>
+</ol>
+</div>
+<p>Most production RAG systems today are simple pipelines: a frozen embedding model, a vector database, and a frozen LLM connected by prompt assembly. That is closer to <strong>Dense Passage Retrieval</strong> (<a href="https://chanys.github.io/dpr/">DPR</a>), the 2020 bi-encoder retrieval method from Karpukhin et al. <span class="citation" data-cites="karpukhin_etal_2020">(Karpukhin et al. 2020)</span> with a generator, than to the original <a href="https://chanys.github.io/rag/">RAG</a> paper <span class="citation" data-cites="lewis_etal_2020">(Lewis et al. 2020)</span>, which proposed joint training of the retriever and generator with marginalization over retrieved documents.</p>
+<p>This article builds on paper-by-paper notes I wrote on <a href="https://chanys.github.io" class="uri">https://chanys.github.io</a> between 2022 and 2023. Those posts explain the individual papers. Here, I step back and connect them into a larger story: retrieval was already a mature technical lineage before “RAG” became the umbrella term. Later, I also point to my <a href="https://github.com/chanys/tnlp">TNLP</a> code that implements the more expensive end-to-end version.</p>
+<section id="what-rag-meant-in-2020-vs-what-it-means-today" class="level2">
+<h2 class="anchored" data-anchor-id="what-rag-meant-in-2020-vs-what-it-means-today">What RAG meant in 2020 vs what it means today</h2>
+<p>The Lewis et al.&nbsp;(2020) paper proposed:</p>
+<ol type="1">
+<li>A DPR-style bi-encoder retriever</li>
+<li>A BART seq2seq generator</li>
+<li><strong>Joint training</strong> of query encoder and generator (document encoder frozen)</li>
+</ol>
+<p>What most production RAG deploys:</p>
+<ol type="1">
+<li>An off-the-shelf embedding model (BGE, E5, OpenAI text-embedding-3, Cohere), frozen</li>
+<li>A vector database (Pinecone, Weaviate, Qdrant, Milvus, pgvector, Chroma)</li>
+<li>An LLM API (OpenAI, Anthropic, Google), frozen</li>
+<li><strong>No joint training</strong></li>
+</ol>
+<p>This isn’t a critique. The simpler pattern works well for many use cases, doesn’t require ML engineering depth, and decouples the retriever from the generator.</p>
+</section>
+<section id="a-short-history-of-dense-retrieval" class="level2">
+<h2 class="anchored" data-anchor-id="a-short-history-of-dense-retrieval">A short history of dense retrieval</h2>
+<p>The history below is the chronology that produced the drift. Each step changed what was possible, and most of the production world adopted only part of what each step demonstrated. The story is short because it happened fast: almost all the field-defining work landed between 2020 and 2023, on top of a lexical baseline (BM25) you still need.</p>
+<div id="fig-retrieval-lineage" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A swim-lane timeline with four lanes from top to bottom: joint training, late interaction, bi-encoder dense, and lexical. The x-axis is years, with 2009 on the left, then an axis break, then 2020, 2021, 2022, 2023. BM25 sits alone in the lexical lane at 2009. In 2020 four papers appear across three lanes: REALM and RAG on the joint-training lane, ColBERT on the late-interaction lane, DPR on the bi-encoder-dense lane. ColBERTv2 follows in 2021 on the late-interaction lane. End-to-end RAG appears in 2022 and RA-DIT in 2023, both on the joint-training lane. DPR is highlighted with a thicker border and a light indigo fill, with the label production sits here directly below it. The bi-encoder-dense lane is empty to the right of DPR while the joint-training lane keeps going. Caption: production rode the bi-encoder and stopped at DPR; the joint-training lineage is what got skipped.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-retrieval-lineage-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/03-retrieval/retrieval_lineage.png" class="img-fluid figure-img" alt="A swim-lane timeline with four lanes from top to bottom: joint training, late interaction, bi-encoder dense, and lexical. The x-axis is years, with 2009 on the left, then an axis break, then 2020, 2021, 2022, 2023. BM25 sits alone in the lexical lane at 2009. In 2020 four papers appear across three lanes: REALM and RAG on the joint-training lane, ColBERT on the late-interaction lane, DPR on the bi-encoder-dense lane. ColBERTv2 follows in 2021 on the late-interaction lane. End-to-end RAG appears in 2022 and RA-DIT in 2023, both on the joint-training lane. DPR is highlighted with a thicker border and a light indigo fill, with the label production sits here directly below it. The bi-encoder-dense lane is empty to the right of DPR while the joint-training lane keeps going. Caption: production rode the bi-encoder and stopped at DPR; the joint-training lineage is what got skipped.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-retrieval-lineage-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: The dense-retrieval lineage on four paradigm lanes. BM25 has been the lexical baseline since 2009. Between 2020 and 2023 the dense-retrieval lineage splits across three other paths: bi-encoder dense (DPR), late interaction (ColBERT, ColBERTv2), and joint training (REALM, RAG, End-to-end RAG, RA-DIT). Production RAG today is essentially DPR plus a frozen generator: it took the bi-encoder lane and stopped there, while the joint-training lane kept going.
+</figcaption>
+</figure>
+</div>
+<section id="bm25-robertson_zaragoza_2009" class="level3">
+<h3 class="anchored" data-anchor-id="bm25-robertson_zaragoza_2009">BM25 <span class="citation" data-cites="robertson_zaragoza_2009">(Robertson and Zaragoza 2009)</span></h3>
+<p>The baseline that wouldn’t die. Lexical ranking over inverted indices, using TF-IDF with length normalization and term saturation. For roughly two decades, BM25 was the baseline neural methods couldn’t consistently beat. DPR’s primary contribution was beating it cleanly enough that the field finally moved on, but BM25 didn’t go away: hybrid setups (BM25 + dense, often with reciprocal rank fusion <span class="citation" data-cites="cormack_etal_2009">(Cormack et al. 2009)</span>) are common in production today, and pure-dense systems frequently lose to hybrid on tasks with rare-term queries.</p>
+</section>
+<section id="realm-guu_etal_2020" class="level3">
+<h3 class="anchored" data-anchor-id="realm-guu_etal_2020"><a href="https://chanys.github.io/realm/">REALM</a> <span class="citation" data-cites="guu_etal_2020">(Guu et al. 2020)</span></h3>
+<p>Two months before DPR, REALM proposed something more ambitious: retrieval-augmented language model pretraining, with the retriever trained jointly with the generator from MLM signal. It got far less production traction than DPR because joint pretraining was expensive, and DPR’s recipe was simpler and more transferable.</p>
+</section>
+<section id="dpr-karpukhin_etal_2020" class="level3">
+<h3 class="anchored" data-anchor-id="dpr-karpukhin_etal_2020"><a href="https://chanys.github.io/dpr/">DPR</a> <span class="citation" data-cites="karpukhin_etal_2020">(Karpukhin et al. 2020)</span></h3>
+<p>The paper that made bi-encoder dense retrieval practical. Two BERT encoders, <img src="https://latex.codecogs.com/png.latex?E_Q"> for queries and <img src="https://latex.codecogs.com/png.latex?E_P"> for passages. Score by inner product. Train with the negative log-likelihood of the positive passage against negatives (both explicit hard negatives, and in-batch negatives where the positives of other examples in the same batch serve as negatives):</p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Cmathcal%7BL%7D(q_i,%20p_i%5E+,%20p_%7Bi,1%7D%5E-,%20%5Cldots,%20p_%7Bi,n%7D%5E-)%20=%20-%5Clog%20%5Cfrac%7Be%5E%7B%5Cmathrm%7Bsim%7D(q_i,%20p_i%5E+)%7D%7D%7Be%5E%7B%5Cmathrm%7Bsim%7D(q_i,%20p_i%5E+)%7D%20+%20%5Csum_j%20e%5E%7B%5Cmathrm%7Bsim%7D(q_i,%20p_%7Bi,j%7D%5E-)%7D%7D"></p>
+<p>The contributions were practical: in-batch negatives (free supervision), independent encoders for query and passage (asymmetric architecture for asymmetric inputs), and a clean training recipe. The result was the first dense retriever to consistently beat BM25 on open-domain QA.</p>
+<p>DPR’s bi-encoder is the architecture that most RAG systems still use, with newer embedding models in place of BERT. The drift starts here: the production world adopted DPR’s architecture but not its training discipline.</p>
+</section>
+<section id="rag-lewis_etal_2020" class="level3">
+<h3 class="anchored" data-anchor-id="rag-lewis_etal_2020"><a href="https://chanys.github.io/rag/">RAG</a> <span class="citation" data-cites="lewis_etal_2020">(Lewis et al. 2020)</span></h3>
+<p>The paper RAG got its name from, and the one production drift moved furthest away from. DPR retriever plus BART seq2seq generator, jointly fine-tunable. The RAG-token model marginalizes over the top-k retrieved documents per output token:</p>
+<p><img src="https://latex.codecogs.com/png.latex?p_%5Cmathrm%7BRAG%5Ctext%7B-%7DToken%7D(y%7Cx)%20%5Capprox%20%5Cprod_%7Bi=1%7D%5EN%20%5Csum_%7Bz%20%5Cin%20%5Cmathrm%7Btop%5Ctext%7B-%7D%7Dk(p(%5Ccdot%7Cx))%7D%20p_%5Cmathrm%7BDPR%7D(z%7Cx)%20%5Ccdot%20p_%5Ctheta(y_i%20%7C%20x,%20z,%20y_%7B1:i-1%7D)"></p>
+<p>Two important details. First, only the <strong>query encoder</strong> is updated during training; the document encoder (and the FAISS index) stay frozen. Re-encoding the corpus during training is too expensive. Second, the marginalization is per-token: at every output token, the model sums the probability of that token across the retrieved documents weighted by retrieval probability. This is genuinely different from concatenating top-k documents and running a single forward pass, which is what most production RAG does.</p>
+</section>
+<section id="colbert-khattab_zaharia_2020" class="level3">
+<h3 class="anchored" data-anchor-id="colbert-khattab_zaharia_2020"><a href="https://chanys.github.io/colbert/">ColBERT</a> <span class="citation" data-cites="khattab_zaharia_2020">(Khattab and Zaharia 2020)</span></h3>
+<p>Late interaction was the path the field didn’t ultimately take, though it remains the most interesting compromise between bi-encoder speed and cross-encoder accuracy. Encode query and document independently with BERT, then compute similarity at the token level:</p>
+<p><img src="https://latex.codecogs.com/png.latex?S_%7Bq,d%7D%20=%20%5Csum_%7Bi%20%5Cin%20E_q%7D%20%5Cmax_%7Bj%20%5Cin%20E_d%7D%20%5Cleft(%20E_%7Bq_i%7D%20%5Ccdot%20E_%7Bd_j%7D%5E%5Ctop%20%5Cright)"></p>
+<p>For each query token, find the most similar document token, sum the maxima. Encoding stays independent (documents can be indexed offline), but the matching is fine-grained. The cost is storage: ColBERT stores one vector per token instead of one per document, roughly 100x for a 100-token document. That’s its main operational drawback.</p>
+</section>
+<section id="colbertv2-santhanam_etal_2021" class="level3">
+<h3 class="anchored" data-anchor-id="colbertv2-santhanam_etal_2021"><a href="https://chanys.github.io/colbertv2/">ColBERTv2</a> <span class="citation" data-cites="santhanam_etal_2021">(Santhanam et al. 2022)</span></h3>
+<p>Same architecture with two improvements: residual quantization (cluster the per-token embeddings, store each as <code>(centroid_id, residual)</code> with a 2-bit residual; storage drops 6-10x), and distillation from a cross-encoder. ColBERT and ColBERTv2 are the canonical late-interaction systems, and they work at scale. But modern strong bi-encoders have closed enough of the gap that the storage cost is hard to justify for most use cases.</p>
+</section>
+<section id="end-to-end-rag-siriwardhana_etal_2023" class="level3">
+<h3 class="anchored" data-anchor-id="end-to-end-rag-siriwardhana_etal_2023"><a href="https://chanys.github.io/rag-domain-qa/">End-to-end RAG</a> <span class="citation" data-cites="siriwardhana_etal_2023">(Siriwardhana et al. 2023)</span></h3>
+<p>If the original RAG paper described joint training with a frozen document encoder, this is the paper that made even the document encoder trainable. The engineering cost is what most teams won’t pay.</p>
+<p>The original RAG paper kept the document encoder frozen during training because re-encoding the corpus was too expensive. End-to-end RAG removes that constraint with two asynchronous processes: one continuously re-encodes passages with the updated document encoder, and one rebuilds the index. Training proceeds in parallel; the index is updated periodically with the latest version of the encoder.</p>
+<p>This makes joint training of all components feasible: query encoder, document encoder, and generator. The paper also adds an auxiliary loss: regenerate the input query from the retrieved passages. This forces the retriever to find passages that contain enough information to reconstruct the query, which is a useful signal when domain-specific labels are scarce.</p>
+<p>This is the closest to a “real” end-to-end retrieval-augmented model. The async re-encoding pipeline is the cost most production teams won’t pay.</p>
+</section>
+<section id="ra-dit-lin_etal_2023" class="level3">
+<h3 class="anchored" data-anchor-id="ra-dit-lin_etal_2023"><a href="https://chanys.github.io/radit/">RA-DIT</a> <span class="citation" data-cites="lin_etal_2023">(Lin et al. 2023)</span></h3>
+<p>The practical answer to the engineering question end-to-end RAG raises: how do you get most of the benefit of joint training without the async re-indexing pipeline? Two separate fine-tunings, run in sequence. First, fine-tune the LLM to use retrieved chunks. Second, fine-tune the retriever using LM-supervised retrieval (LSR): score documents by how much they raise the LM’s probability of the correct output:</p>
+<p><img src="https://latex.codecogs.com/png.latex?p_%5Cmathrm%7BLSR%7D(c%20%7C%20x,%20y)%20%5Cpropto%20%5Cfrac%7B%5Cexp%5Cleft(%20p_%5Cmathrm%7BLM%7D(y%20%7C%20c%20%5Ccirc%20x)%20/%20%5Ctau%20%5Cright)%7D%7B%5Csum_%7Bc'%20%5Cin%20C'%7D%20%5Cexp%5Cleft(%20p_%5Cmathrm%7BLM%7D(y%20%7C%20c'%20%5Ccirc%20x)%20/%20%5Ctau%20%5Cright)%7D"></p>
+<p>Only the query encoder is updated; the document encoder stays frozen. The two stages can each be done with standard fine-tuning infrastructure. The paper reports SOTA results on MMLU, NQ, TriviaQA, and KILT subsets with a 65B-parameter LLM.</p>
+</section>
+</section>
+<section id="the-retrieval-pattern-most-production-systems-actually-use" class="level2">
+<h2 class="anchored" data-anchor-id="the-retrieval-pattern-most-production-systems-actually-use">The retrieval pattern most production systems actually use</h2>
+<p>Setting aside the joint-training story, here is the pipeline most teams have built. The bi-encoder/cross-encoder split is the operational story; everything else is supporting infrastructure.</p>
+<div id="fig-rag-pipeline" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A two-row pipeline diagram. The top row is offline indexing: source documents are chunked, embedded, and written into a vector index, run once. The bottom row is the online query path: a user query is embedded, used to retrieve candidate chunks from the same vector index, passed through an optional reranker stage, and the top results plus the query are sent to the generator to produce the answer. An arrow shows the vector index built in the top row being read by every request in the bottom row.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-rag-pipeline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/03-retrieval/rag_pipeline.png" class="img-fluid figure-img" alt="A two-row pipeline diagram. The top row is offline indexing: source documents are chunked, embedded, and written into a vector index, run once. The bottom row is the online query path: a user query is embedded, used to retrieve candidate chunks from the same vector index, passed through an optional reranker stage, and the top results plus the query are sent to the generator to produce the answer. An arrow shows the vector index built in the top row being read by every request in the bottom row.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-rag-pipeline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: The production RAG pipeline. Top: offline indexing. Bottom: online query, with the reranker as an optional but usually worthwhile stage. The vector index built once at indexing time is queried at every request.
+</figcaption>
+</figure>
+</div>
+<p><strong>Chunking.</strong> Source documents are split into chunks. Fixed-token chunking (256-512 tokens with 10-20% overlap) is the default and works well enough for most prose. Recursive chunking respects document structure (Markdown headers, paragraph breaks). Semantic chunking (splitting on sentence-embedding distance) is more expensive and rarely justifies the cost on standard text. The ceiling on retrieval quality is often set here: chunks too small lose context, chunks too large produce diffuse embeddings that match weakly. The default chunker in the framework is rarely the right one for your data: PDFs with tables, code with function boundaries, and Markdown with structured sections each need different handling.</p>
+<p><strong>Embedding.</strong> Each chunk is encoded once with a frozen embedding model.</p>
+<p><strong>Vector database.</strong> The encoded chunks live in a vector index, e.g.&nbsp;HNSW or IVF-PQ under the hood. Pinecone, Weaviate, Qdrant, Milvus, pgvector, Chroma: pick on operational fit, not on retrieval quality. The choice of embedding model and chunking strategy usually dominates. pgvector is increasingly competitive when your data is already in Postgres and you don’t want a second system to operate. For the indexing intuition behind approximate nearest-neighbor search and product quantization, see my earlier <a href="https://chanys.github.io/knn/">KNN search note</a>.</p>
+<p><strong>Top-k retrieval.</strong> Encode the query with the same embedding model used at indexing time, retrieve top-<img src="https://latex.codecogs.com/png.latex?k"> by cosine similarity (or dot product if vectors are normalized). Typical <img src="https://latex.codecogs.com/png.latex?k"> is 10-50. Larger <img src="https://latex.codecogs.com/png.latex?k"> is wasted unless you rerank.</p>
+<p><strong>Reranking (optional but usually worth it).</strong> A cross-encoder reranker takes the query and each retrieved chunk together and produces a relevance score. The bi-encoder is fast but cannot model query-document interactions; the cross-encoder can. Bi-encoder retrieves 50, cross-encoder reranks to top 5-10. The off-the-shelf rerankers in 2024-2025 are strong enough that the “no reranker” failure mode is increasingly hard to justify: <a href="https://huggingface.co/BAAI/bge-reranker-v2-m3">BGE-reranker-v2-m3</a>, <a href="https://docs.cohere.com/docs/reranking-with-cohere">Cohere Rerank 3</a>, <a href="https://huggingface.co/mixedbread-ai/mxbai-rerank-large-v1">mxbai-rerank-large-v1</a>, and <a href="https://jina.ai/models/jina-reranker-v2-base-multilingual/">Jina Reranker v2</a> are all usable before you train your own reranker.</p>
+<p>A note on the bi-encoder vs cross-encoder choice: cross-encoders score query-document pairs jointly, so they cannot be precomputed. Running one over millions of documents at query time is infeasible. They belong in reranking, after a bi-encoder narrows the candidates.</p>
+<p><strong>Context assembly.</strong> A prompt template combines the system instruction, the retrieved-and-reranked chunks, and the query. Order matters: long-context models attend more to the start and end of the prompt than to the middle (the “lost in the middle” effect). Some systems include chunk metadata (source URL, section title) to help the LLM cite.</p>
+<p><strong>LLM call.</strong> Frozen API or local model. The LLM generates the answer from the assembled prompt.</p>
+<p>This pipeline is what most blog posts mean when they say RAG. It’s also what most teams should build first before they consider anything more complex.</p>
+</section>
+<section id="code-companion-tnlp-end-to-end-rag" class="level2">
+<h2 class="anchored" data-anchor-id="code-companion-tnlp-end-to-end-rag">Code companion: TNLP end-to-end RAG</h2>
+<p>Most production RAG systems stop at frozen retrieval plus prompt assembly. In <a href="https://github.com/chanys/tnlp">TNLP</a>, I implemented the more expensive pattern: end-to-end RAG with retriever-generator coupling and asynchronous index refresh.</p>
+<p>The point of the exercise isn’t that everyone should joint-train. Most teams shouldn’t. The point is to make the distinction concrete: production RAG is usually a pipeline; end-to-end RAG is a trained retrieval-augmented model.</p>
+</section>
+<section id="rag-evaluation" class="level2">
+<h2 class="anchored" data-anchor-id="rag-evaluation">RAG evaluation</h2>
+<p>Three things tend to go wrong when teams evaluate this pipeline.</p>
+<ol type="1">
+<li><p><strong>Treating RAG as monolithic.</strong> RAG is a pipeline. Each stage (chunking, embedding, retrieval, reranking, prompt assembly, generation) has its own quality and latency tradeoffs. “Our RAG isn’t working” is rarely diagnosed by treating the system as a black box.</p></li>
+<li><p><strong>Vibes-only evaluation.</strong> “It seems to work” is not evaluation. At minimum: a labeled set of (query, relevant_chunk) pairs, <a href="https://chanys.github.io/ir-metrics/">retrieval metrics</a> on a held-out set, and end-to-end answer correctness. Without these, you don’t know whether the embedding model, the reranker, or the LLM is failing.</p></li>
+<li><p><strong>Not measuring retrieval recall before LLM accuracy.</strong> If the relevant chunks aren’t retrieved, no LLM can save you. Measure retrieval recall@k first, then end-to-end accuracy.</p></li>
+</ol>
+</section>
+<section id="closing" class="level2">
+<h2 class="anchored" data-anchor-id="closing">Closing</h2>
+<p>The retrieval lineage from DPR through RA-DIT is a story of escalating sophistication: bi-encoder dense retrieval, then joint training with a frozen index, then joint training with an updating index, then a two-stage practical compromise. Production RAG, meanwhile, mostly stopped at step one. That’s not a critique. The simpler pattern works well for most use cases, and the engineering cost of going further is real.</p>
+<p>But the gap is worth knowing. When the off-the-shelf pipeline isn’t working on your data, the next step isn’t to swap embedding models or try another vector database. It’s to figure out where in the pipeline the loss is happening, and whether the answer is a configuration change, a fine-tune, or the more ambitious territory the original RAG paper was actually about.</p>
+
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-cormack_etal_2009" class="csl-entry">
+Cormack, Gordon V., Charles L. A. Clarke, and Stefan Buettcher. 2009. <span>“Reciprocal Rank Fusion Outperforms Condorcet and Individual Rank Learning Methods.”</span> <em>Proceedings of the 32nd International ACM SIGIR Conference on Research and Development in Information Retrieval</em>.
+</div>
+<div id="ref-guu_etal_2020" class="csl-entry">
+Guu, Kelvin, Kenton Lee, Zora Tung, Panupong Pasupat, and Ming-Wei Chang. 2020. <span>“REALM: Retrieval-Augmented Language Model Pre-Training.”</span> <em>Proceedings of the 37th International Conference on Machine Learning (ICML)</em>. <a href="https://arxiv.org/abs/2002.08909">https://arxiv.org/abs/2002.08909</a>.
+</div>
+<div id="ref-karpukhin_etal_2020" class="csl-entry">
+Karpukhin, Vladimir, Barlas Oğuz, Sewon Min, et al. 2020. <span>“Dense Passage Retrieval for Open-Domain Question Answering.”</span> <em>Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP)</em>. <a href="https://arxiv.org/abs/2004.04906">https://arxiv.org/abs/2004.04906</a>.
+</div>
+<div id="ref-khattab_zaharia_2020" class="csl-entry">
+Khattab, Omar, and Matei Zaharia. 2020. <span>“ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT.”</span> <em>Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval</em>. <a href="https://arxiv.org/abs/2004.12832">https://arxiv.org/abs/2004.12832</a>.
+</div>
+<div id="ref-lewis_etal_2020" class="csl-entry">
+Lewis, Patrick, Ethan Perez, Aleksandra Piktus, et al. 2020. <span>“Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks.”</span> <em>Advances in Neural Information Processing Systems (NeurIPS)</em>. <a href="https://arxiv.org/abs/2005.11401">https://arxiv.org/abs/2005.11401</a>.
+</div>
+<div id="ref-lin_etal_2023" class="csl-entry">
+Lin, Xi Victoria, Xilun Chen, Mingda Chen, et al. 2023. <span>“RA-DIT: Retrieval-Augmented Dual Instruction Tuning.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/2310.01352">https://arxiv.org/abs/2310.01352</a>.
+</div>
+<div id="ref-robertson_zaragoza_2009" class="csl-entry">
+Robertson, Stephen, and Hugo Zaragoza. 2009. <span>“The Probabilistic Relevance Framework: BM25 and Beyond.”</span> <em>Foundations and Trends in Information Retrieval</em> 3 (4): 333–89.
+</div>
+<div id="ref-santhanam_etal_2021" class="csl-entry">
+Santhanam, Keshav, Omar Khattab, Jon Saad-Falcon, Christopher Potts, and Matei Zaharia. 2022. <span>“ColBERTv2: Effective and Efficient Retrieval via Lightweight Late Interaction.”</span> <em>Proceedings of the 2022 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (NAACL-HLT)</em>. <a href="https://arxiv.org/abs/2112.01488">https://arxiv.org/abs/2112.01488</a>.
+</div>
+<div id="ref-siriwardhana_etal_2023" class="csl-entry">
+Siriwardhana, Shamane, Rivindu Weerasekera, Elliott Wen, Tharindu Kaluarachchi, Rajib Rana, and Suranga Nanayakkara. 2023. <span>“Improving the Domain Adaptation of Retrieval Augmented Generation (RAG) Models for Open Domain Question Answering.”</span> <em>Transactions of the Association for Computational Linguistics (TACL)</em>. <a href="https://arxiv.org/abs/2210.02627">https://arxiv.org/abs/2210.02627</a>.
+</div>
+</div></section></div> ]]></description>
+  <category>Research foundations of modern LLMs</category>
+  <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/03-retrieval/</guid>
+  <pubDate>Fri, 27 Mar 2026 00:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>The encoder didn’t die. It became the embedding model</title>
+  <dc:creator>Yee Seng Chan</dc:creator>
+  <link>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/02-encoder-embeddings/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+Research foundations of modern LLMs
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-pretraining-objectives/">Pretraining objectives: Why decoder-only won</a></li>
+<li><a href="../02-encoder-embeddings/">The encoder didn’t die. It became the embedding model</a></li>
+<li><a href="../03-retrieval/">Retrieval is older than RAG: From DPR to end-to-end</a></li>
+<li><a href="../04-fine-tuning-stack/">The fine-tuning stack: One loss, different data</a></li>
+<li><a href="../05-information-extraction/">Information extraction didn’t disappear. It moved inside the workflow</a></li>
+</ol>
+</div>
+<p>The LLM story is usually told as a generation story: GPT scaling, instruction tuning, RLHF, chat, agents.</p>
+<p>But most LLM-powered systems also depend on a quieter model running in the background: an embedding model. RAG, semantic search, reranking, clustering, recommendation, deduplication, and classification all depend on embeddings. The generator gets the headlines, but the embedding model often decides what the generator gets to see.</p>
+<p>This is where encoders went.</p>
+<p>The <a href="../../../../posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/index.html">previous article</a> argued that decoder-only models won the general-purpose generation interface. This article makes the complementary argument: encoders didn’t die. They became the default architecture for turning text into reusable vectors.</p>
+<p>More precisely, the embedding role was won by encoder-style machinery: bidirectional attention, pooled output representations, and contrastive fine-tuning. Even modern decoder-based embedders often move in this direction during fine-tuning, relaxing causal attention and training the model to produce reusable vectors.</p>
+<p>I have been circling this topic for a while. Since late 2022, I have written separate deep dives on <a href="https://chanys.github.io/sbert/">SBERT</a>, <a href="https://chanys.github.io/sgpt/">SGPT</a>, <a href="https://chanys.github.io/mteb-dataset/">MTEB</a>, <a href="https://chanys.github.io/mpnet/">MPNet</a>, <a href="https://chanys.github.io/plm/">PLM/XLNet</a>, <a href="https://chanys.github.io/knowledge-distillation/">knowledge distillation and DistilBERT</a>, and the relevant <a href="https://chanys.github.io/loss-functions/">loss functions</a> and <a href="https://chanys.github.io/knn/">KNN search</a> over at <a href="https://chanys.github.io" class="uri">https://chanys.github.io</a>. Those posts covered the individual papers and techniques; this article steps back from them to make the broader point.</p>
+<p>It is also a bridge between those older paper notes and the <a href="https://github.com/chanys/tnlp">TNLP codebase</a>: the paper trail explains the ideas, and the code shows what they look like when implemented.</p>
+<p>One terminology clarification before going further. “Embedding” refers to two different things: the token embedding table, which maps token IDs to input vectors, and the output embedding, which is the pooled vector representing a sentence, paragraph, or document. When practitioners today say “an embedding,” they usually mean the latter. This article is about the latter.</p>
+<section id="where-embeddings-actually-live-in-modern-systems" class="level2">
+<h2 class="anchored" data-anchor-id="where-embeddings-actually-live-in-modern-systems">Where embeddings actually live in modern systems</h2>
+<p>Embeddings are the input layer of many AI systems. They show up anywhere we need to turn text into something searchable, comparable, clusterable, or rankable.</p>
+<ul>
+<li><strong>Retrieval (RAG).</strong> Embed the document corpus once, index the vectors in a vector database, embed the query at runtime, and retrieve nearest neighbors. If the embedding model can’t tell that “what causes type 2 diabetes” and “diabetes risk factors” should be close, the RAG system breaks before the LLM ever sees the query.</li>
+<li><strong>Reranking.</strong> Retrieval gives you candidates; a stronger model reranks the top results. This second model is often a cross-encoder, another transformer encoder used in a different way.</li>
+<li><strong>Classification heads.</strong> Encode text once, then run a classifier for sentiment, intent, moderation, or routing. The “encoder plus linear head” recipe predates BERT, but BERT made it the default.</li>
+<li><strong>Semantic deduplication.</strong> Large training datasets need more than exact-match deduplication. Embeddings catch near-duplicates that lexical matching misses.</li>
+<li><strong>Clustering and topic discovery.</strong> Embed a document collection, cluster the vectors, then inspect the clusters. This is a standard recipe for analyzing customer feedback, support tickets, or other text corpora.</li>
+<li><strong>Recommendation and semantic search.</strong> User embeddings, item embeddings, query-item matching, and document search are all variations of the same idea: represent things as vectors, then compare them.</li>
+</ul>
+<p>The practical test is simple: pick an LLM-powered product and ask where the embedding model is. In many systems, it is doing critical work before the LLM ever sees the prompt.</p>
+</section>
+<section id="how-a-modern-embedding-model-is-built" class="level2">
+<h2 class="anchored" data-anchor-id="how-a-modern-embedding-model-is-built">How a modern embedding model is built</h2>
+<p>A modern embedding model is usually built in two stages.</p>
+<p>First, start with a pretrained language model backbone. For encoder-based embedders, this is often a BERT-like, MPNet-like, or DeBERTa-like model trained with MLM, RTD, or a related objective. Pretraining gives the model general language understanding: syntax, semantics, factual associations, and domain patterns.</p>
+<p>Second, fine-tune it contrastively. This is the step that turns a language model into an embedding model.</p>
+<p>Raw pretrained representations are not automatically good sentence embeddings. If you simply pool BERT outputs and compare them with cosine similarity, the geometry is often poor <span class="citation" data-cites="ethayarajh_2019 li_etal_2020">(Ethayarajh 2019; Li et al. 2020)</span>: unrelated texts can still end up with surprisingly high similarity scores. Sentence-BERT <span class="citation" data-cites="reimers_gurevych_2019">(Reimers and Gurevych 2019)</span> made this practical problem visible.</p>
+<p>Contrastive training fixes the geometry by pulling related texts closer and pushing unrelated texts farther apart. The result is an embedding space where cosine similarity becomes useful for retrieval, clustering, classification, and semantic matching.</p>
+<p>The key distinction is simple: pretraining gives the model language understanding; contrastive fine-tuning gives it useful embedding geometry.</p>
+<section id="pooling" class="level3">
+<h3 class="anchored" data-anchor-id="pooling">Pooling</h3>
+<p>Transformers produce one vector per token. Embedding systems usually need one vector for the whole input, so they need a pooling strategy.</p>
+<p>Mean pooling is the safest encoder default: average the token representations. <code>[CLS]</code> pooling can work, but only if the model was trained to make <code>[CLS]</code> meaningful. Raw BERT <code>[CLS]</code> is usually weak for sentence similarity. Last-token pooling is common in decoder-based embedders, where the final token has seen the previous context.</p>
+</section>
+</section>
+<section id="how-embedding-models-are-used-for-retrieval" class="level2">
+<h2 class="anchored" data-anchor-id="how-embedding-models-are-used-for-retrieval">How embedding models are used for retrieval</h2>
+<p>Once you have an embedding model, the next question is how to use it to score query-document relevance.</p>
+<div id="fig-similarity-architectures" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three side-by-side architecture diagrams. Left, a bi-encoder: query and document go through separate encoder towers into one vector each, compared by a single similarity score. Middle, a cross-encoder: the concatenated query and document go through one shared encoder that outputs a single relevance score. Right, late interaction: both are encoded but token-level vectors are kept, and the score is the sum over query tokens of each token's maximum similarity to any document token.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-similarity-architectures-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/02-encoder-embeddings/architectures.png" class="img-fluid figure-img" alt="Three side-by-side architecture diagrams. Left, a bi-encoder: query and document go through separate encoder towers into one vector each, compared by a single similarity score. Middle, a cross-encoder: the concatenated query and document go through one shared encoder that outputs a single relevance score. Right, late interaction: both are encoded but token-level vectors are kept, and the score is the sum over query tokens of each token's maximum similarity to any document token.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-similarity-architectures-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Three architectures for similarity scoring. Bi-encoders encode independently and compare; cross-encoders encode the pair jointly; late interaction keeps token-level representations and aggregates with MaxSim.
+</figcaption>
+</figure>
+</div>
+<p><strong>Bi-encoder.</strong> Encode the query and document separately, then compare their vectors. Document vectors can be precomputed, so this is the standard choice for first-stage retrieval.</p>
+<p><strong>Cross-encoder.</strong> Encode the query and document together, then output a relevance score. This is usually more accurate, but too expensive to run over an entire corpus.</p>
+<p><strong>Late interaction.</strong> Models like <a href="https://chanys.github.io/colbert/">ColBERT</a> <span class="citation" data-cites="khattab_zaharia_2020">(Khattab and Zaharia 2020)</span> keep token-level vectors and compare query tokens against document tokens. This sits between bi-encoders and cross-encoders in both cost and accuracy.</p>
+<p>The standard production recipe is simple: bi-encoder for retrieval; cross-encoder or late-interaction model for reranking.</p>
+</section>
+<section id="code-companion-the-tnlp-embedding-experiments" class="level2">
+<h2 class="anchored" data-anchor-id="code-companion-the-tnlp-embedding-experiments">Code companion: the TNLP embedding experiments</h2>
+<p>The <a href="https://github.com/chanys/tnlp">TNLP repo</a> has my working code for the ideas in this article. The most relevant example is a pair of contrastive-training experiments on BioASQ11, a biomedical retrieval dataset with questions, chosen answers, and rejected PubMed snippets. Both experiments train the same behavior: pull the query and chosen answer closer, push the rejected candidate farther away.</p>
+<p>I implemented this two ways, to show two real workflows.</p>
+<p>The first uses <code>sentence-transformers</code> with <code>intfloat/e5-base-v2</code> <span class="citation" data-cites="wang_etal_2022">(Wang et al. 2022)</span>: take a strong existing embedder, rely on the library, and fine-tune with relatively little code. This is what <em>adapting an existing embedding model to your domain</em> looks like in practice.</p>
+<p>The second uses a custom DeBERTa-v3 triplet model with a hand-rolled training loop. Every hidden choice becomes visible: backbone, pooling, projection, distance function, triplet construction, loss. This is what <em>turning a pretrained encoder into an embedding model yourself</em> looks like, when you can’t or don’t want to lean on the library defaults.</p>
+<p>The two are not a head-to-head benchmark. E5 is already contrastively pretrained; DeBERTa-v3 is a general encoder backbone. They’re paired here because together they cover the two starting points a real production team faces.</p>
+</section>
+<section id="decoder-only-models-can-do-embeddings-too" class="level2">
+<h2 class="anchored" data-anchor-id="decoder-only-models-can-do-embeddings-too">Decoder-only models can do embeddings too</h2>
+<p>The article so far has argued that encoder-style machinery won the embedding role. That does not mean only encoder backbones can produce embeddings. Decoder-only models can, and recent work has pushed this direction hard.</p>
+<p>The early version of this idea was <a href="https://chanys.github.io/sgpt/">SGPT</a> <span class="citation" data-cites="muennighoff_2022">(Muennighoff 2022)</span>: take a GPT-style decoder-only model, pool token representations with a position-weighted mean, and contrastively fine-tune for semantic search. It worked, but it was expensive relative to encoder-based alternatives.</p>
+<p>The current generation is stronger. Large decoder backbones (Llama, Mistral) can be turned into embedders that compete at the top of MTEB <span class="citation" data-cites="muennighoff_etal_2022">(Muennighoff et al. 2022)</span>, especially on retrieval and reranking. But notice the recipe they converge on: take a strong decoder-only LLM, relax or replace causal attention during fine-tuning, pool the output representations, and contrastively fine-tune on a large mix of data.</p>
+<p>That recipe looks encoder-like. Bidirectional access, pooled output, contrastive geometry. The starting weights may come from a decoder-only LLM, but the embedding behavior is built by the fine-tuning stage.</p>
+<p>So “decoders caught up” is only half right. The better framing is that large decoder backbones can be adapted into strong embedders when the fine-tuning recipe starts to look encoder-like. For most production systems, small encoder-based embedders remain attractive because they are fast and cheap. For highest-quality retrieval where compute is available, large decoder-based embedders are now real competitors.</p>
+</section>
+<section id="closing" class="level2">
+<h2 class="anchored" data-anchor-id="closing">Closing</h2>
+<p>Decoder-only models won the visible part of the LLM story: generation, chat, instruction following, agents.</p>
+<p>But encoder-style machinery won a quieter role: bidirectional access, pooled output representations, and contrastive fine-tuning. That machinery became the default way to turn text into reusable vectors, and it now powers retrieval, reranking, clustering, classification, deduplication, and semantic search across the modern AI stack.</p>
+<p>That is why the encoder did not die. It moved into the infrastructure.</p>
+<p>The <a href="../../../../posts/series/research-foundations-of-modern-llms/03-retrieval/index.html">next article</a> picks up where this one leaves off: how the retrieval part of RAG was solved well before “RAG” became the popular term, from Dense Passage Retrieval through end-to-end joint training of retriever and generator.</p>
+
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-ethayarajh_2019" class="csl-entry">
+Ethayarajh, Kawin. 2019. <span>“How Contextual Are Contextualized Word Representations? Comparing the Geometry of BERT, ELMo, and GPT-2 Contextualized Representations.”</span> <em>Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)</em>. <a href="https://arxiv.org/abs/1909.00512">https://arxiv.org/abs/1909.00512</a>.
+</div>
+<div id="ref-khattab_zaharia_2020" class="csl-entry">
+Khattab, Omar, and Matei Zaharia. 2020. <span>“ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT.”</span> <em>Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval</em>. <a href="https://arxiv.org/abs/2004.12832">https://arxiv.org/abs/2004.12832</a>.
+</div>
+<div id="ref-li_etal_2020" class="csl-entry">
+Li, Bohan, Hao Zhou, Junxian He, Mingxuan Wang, Yiming Yang, and Lei Li. 2020. <span>“On the Sentence Embeddings from Pre-Trained Language Models.”</span> <em>Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP)</em>. <a href="https://arxiv.org/abs/2011.05864">https://arxiv.org/abs/2011.05864</a>.
+</div>
+<div id="ref-muennighoff_2022" class="csl-entry">
+Muennighoff, Niklas. 2022. <span>“SGPT: GPT Sentence Embeddings for Semantic Search.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/2202.08904">https://arxiv.org/abs/2202.08904</a>.
+</div>
+<div id="ref-muennighoff_etal_2022" class="csl-entry">
+Muennighoff, Niklas, Nouamane Tazi, Loïc Magne, and Nils Reimers. 2022. <span>“MTEB: Massive Text Embedding Benchmark.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/2210.07316">https://arxiv.org/abs/2210.07316</a>.
+</div>
+<div id="ref-reimers_gurevych_2019" class="csl-entry">
+Reimers, Nils, and Iryna Gurevych. 2019. <span>“Sentence-BERT: Sentence Embeddings Using Siamese BERT-Networks.”</span> <em>Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)</em>. <a href="https://arxiv.org/abs/1908.10084">https://arxiv.org/abs/1908.10084</a>.
+</div>
+<div id="ref-wang_etal_2022" class="csl-entry">
+Wang, Liang, Nan Yang, Xiaolong Huang, et al. 2022. <span>“Text Embeddings by Weakly-Supervised Contrastive Pre-Training.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/2212.03533">https://arxiv.org/abs/2212.03533</a>.
+</div>
+</div></section></div> ]]></description>
+  <category>Research foundations of modern LLMs</category>
+  <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/02-encoder-embeddings/</guid>
+  <pubDate>Mon, 23 Mar 2026 00:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>Pretraining objectives: why decoder-only won</title>
+  <dc:creator>Yee Seng Chan</dc:creator>
+  <link>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+Research foundations of modern LLMs
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-pretraining-objectives/">Pretraining objectives: Why decoder-only won</a></li>
+<li><a href="../02-encoder-embeddings/">The encoder didn’t die. It became the embedding model</a></li>
+<li><a href="../03-retrieval/">Retrieval is older than RAG: From DPR to end-to-end</a></li>
+<li><a href="../04-fine-tuning-stack/">The fine-tuning stack: One loss, different data</a></li>
+<li><a href="../05-information-extraction/">Information extraction didn’t disappear. It moved inside the workflow</a></li>
+</ol>
+</div>
+<p>The standard tutorial story: “BERT was bidirectional, T5 was sequence-to-sequence, GPT was autoregressive, and decoder-only won because it was simpler.” Sometimes “scaling worked better.” Sometimes “instruction-tuning needed it.”</p>
+<p>I think this story is shallow. The objective didn’t win; the paradigm did.</p>
+<p>I’ve been writing about these architectures individually since late 2022: deep-dives on <a href="https://chanys.github.io/transformer-architecture/">transformer architecture</a>, <a href="https://chanys.github.io/bert/">BERT</a>, <a href="https://chanys.github.io/roberta/">RoBERTa</a>, <a href="https://chanys.github.io/t5/">T5</a>, <a href="https://chanys.github.io/gpt1/">GPT-1</a>, <a href="https://chanys.github.io/electra/">ELECTRA</a>, <a href="https://chanys.github.io/deberta/">DeBERTa</a>, <a href="https://chanys.github.io/deberta-v3/">DeBERTa-v3</a>, <a href="https://chanys.github.io/ul2/">UL2</a>, <a href="https://chanys.github.io/flan-palm/">FLAN</a>, and <a href="https://chanys.github.io/llama2/">LLaMA-2</a> over at <a href="https://chanys.github.io" class="uri">https://chanys.github.io</a>. This article steps back from those individual treatments to make an argument those posts don’t make explicitly: the field’s reasons for converging on decoder-only are often misstated. Decoder-only did not win because causal language modeling was magically superior. It won because the decoder-only paradigm made pretraining, prompting, generation, inference, and deployment all line up.</p>
+<section id="a-short-tour-of-the-pretraining-objectives" class="level2">
+<h2 class="anchored" data-anchor-id="a-short-tour-of-the-pretraining-objectives">A short tour of the pretraining objectives</h2>
+<p>The objectives that defined the pretraining era can be characterized cleanly by what they hold out, what they leave visible, and which architectural family they imply. Throughout, let <img src="https://latex.codecogs.com/png.latex?x%20=%20(x_1,%20%5Cldots,%20x_n)"> be a sequence of tokens.</p>
+<section id="masked-language-modeling-mlm-bert" class="level3">
+<h3 class="anchored" data-anchor-id="masked-language-modeling-mlm-bert">Masked language modeling (MLM, BERT)</h3>
+<p>BERT’s <span class="citation" data-cites="devlin_etal_2019">(Devlin et al. 2019)</span> pretraining objective. Sample a set of positions <img src="https://latex.codecogs.com/png.latex?M%20%5Csubset%20%5C%7B1,%20%5Cldots,%20n%5C%7D"> (typically 15% of tokens). For each <img src="https://latex.codecogs.com/png.latex?i%20%5Cin%20M">, replace <img src="https://latex.codecogs.com/png.latex?x_i"> with a <code>[MASK]</code> token (80% of the time), a random token (10%), or leave it unchanged (10%). Train to predict the original tokens at the masked positions:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%0A%5Cmathcal%7BL%7D_%7B%5Ctext%7BMLM%7D%7D%20=%20-%5Csum_%7Bi%20%5Cin%20M%7D%20%5Clog%20P(x_i%20%5Cmid%20%5Ctilde%7Bx%7D;%20%5Ctheta)%0A"></p>
+<p>where <img src="https://latex.codecogs.com/png.latex?%5Ctilde%7Bx%7D"> is the corrupted input. The loss only fires at the ~15% of positions that were sampled, so 85% of the input contributes to the gradient via attention but produces no direct prediction. The 80/10/10 mixing prevents the model from learning that <code>[MASK]</code> is the only token requiring prediction (see <a href="https://chanys.github.io/bert/">BERT deep-dive</a> for more details).</p>
+<p>The encoder is bidirectional: every position attends to every other position. However, the cost is that the model can’t generate naturally, since at inference time you’d have to feed <code>[MASK]</code> tokens and the model isn’t trained to compose tokens left-to-right.</p>
+</section>
+<section id="replaced-token-detection-rtd-electra" class="level3">
+<h3 class="anchored" data-anchor-id="replaced-token-detection-rtd-electra">Replaced token detection (RTD, ELECTRA)</h3>
+<p><a href="https://chanys.github.io/electra/">ELECTRA</a> <span class="citation" data-cites="clark_etal_2020">(Clark et al. 2020)</span> replaces MLM with a discriminative objective. A small generator network (typically a smaller MLM model) replaces some tokens with plausible alternatives drawn from its own predictions. A discriminator then predicts, <em>for every token</em>, whether it was original or replaced:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%0A%5Cmathcal%7BL%7D_%7B%5Ctext%7BRTD%7D%7D%20=%20-%5Csum_%7Bi=1%7D%5E%7Bn%7D%20%5Cbig%5B%20%5Cmathbb%7B1%7D%5Bx_i%20=%20%5Ctilde%7Bx%7D_i%5D%20%5Clog%20D(%5Ctilde%7Bx%7D,%20i)%20+%20(1%20-%20%5Cmathbb%7B1%7D%5Bx_i%20=%20%5Ctilde%7Bx%7D_i%5D)%20%5Clog%20(1%20-%20D(%5Ctilde%7Bx%7D,%20i))%20%5Cbig%5D%0A"></p>
+<ul>
+<li>RTD stands for <strong>replaced token detection</strong>.</li>
+<li>The indicator function <img src="https://latex.codecogs.com/png.latex?%5Cmathbb%7B1%7D%5Bx_i%20=%20%5Ctilde%7Bx%7D_i%5D=1"> if the token was not replaced, and <img src="https://latex.codecogs.com/png.latex?0"> if replaced.</li>
+<li>The discriminator <img src="https://latex.codecogs.com/png.latex?D(%5Ctilde%7Bx%7D,%20i)%20=%20P(%5Ctext%7Btoken%20at%20position%20%7D%20i%20%5Ctext%7B%20is%20original%7D%7C%5Ctilde%7Bx%7D)">.</li>
+</ul>
+<p>Two architectural advantages over MLM: (1) loss fires on every token, not just 15%, giving roughly 4× sample efficiency; (2) the input the model sees at training matches its evaluation distribution (real-looking text), instead of <code>[MASK]</code>-laden gibberish.</p>
+<p>At matched scale ELECTRA-Base outperforms BERT-Base on GLUE (85.1 vs 82.2 in the original paper), and ELECTRA-Large reaches RoBERTa-comparable <span class="citation" data-cites="liu_etal_2019">(Liu et al. 2019)</span> quality with under 1/4 the compute. The RTD objective got picked up later in DeBERTa-v3 <span class="citation" data-cites="he_etal_2021">(He et al. 2021)</span>, which combines it with DeBERTa’s disentangled attention.</p>
+</section>
+<section id="span-corruption-t5" class="level3">
+<h3 class="anchored" data-anchor-id="span-corruption-t5">Span corruption (T5)</h3>
+<p><a href="https://chanys.github.io/t5/">T5</a> <span class="citation" data-cites="raffel_etal_2020">(Raffel et al. 2020)</span> corrupts contiguous spans rather than individual tokens. Sample a set of spans (mean length 3, total ~15% of tokens), replace each span with a unique sentinel <code>&lt;X&gt;</code>, <code>&lt;Y&gt;</code>, <code>&lt;Z&gt;</code>, and train an encoder-decoder to autoregressively generate the missing spans as the target sequence. So with the original <code>The cat sat on the mat watching</code>:</p>
+<ul>
+<li>Encoder input: <code>The cat &lt;X&gt; the mat &lt;Y&gt;</code></li>
+<li>Decoder target: <code>&lt;X&gt; sat on &lt;Y&gt; watching &lt;Z&gt;</code></li>
+</ul>
+<p>The decoder is autoregressive over the target, so the loss is:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%0A%5Cmathcal%7BL%7D_%7B%5Ctext%7BSC%7D%7D%20=%20-%5Csum_%7Bt=1%7D%5E%7BT%7D%20%5Clog%20P(y_t%20%5Cmid%20y_%7B%3Ct%7D,%20%5Ctilde%7Bx%7D;%20%5Ctheta)%0A"></p>
+<p>This is generative: the decoder produces a sequence of tokens. But the corruption rate is low so most of the input stays observable to the encoder. T5 reframes a wide variety of NLP tasks (translation, summarization, classification, QA) as text-to-text under this objective.</p>
+</section>
+<section id="causal-language-modeling-clm-gpt" class="level3">
+<h3 class="anchored" data-anchor-id="causal-language-modeling-clm-gpt">Causal language modeling (CLM, GPT)</h3>
+<p>The simplest objective. Predict each token from its left context:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%0A%5Cmathcal%7BL%7D_%7B%5Ctext%7BCLM%7D%7D%20=%20-%5Csum_%7Bi=1%7D%5E%7Bn%7D%20%5Clog%20P(x_i%20%5Cmid%20x_%7B%3Ci%7D;%20%5Ctheta)%0A"></p>
+<p>No masking, no replacement, no sentinels: the data is fed unchanged. Loss fires on every position. The architecture must use causal self-attention so position <img src="https://latex.codecogs.com/png.latex?i"> only sees positions <img src="https://latex.codecogs.com/png.latex?j%20%3C%20i">. The same parameters compute representations and generate tokens; there’s no encoder-decoder split. See <a href="https://chanys.github.io/gpt1/">GPT-1</a> <span class="citation" data-cites="radford_etal_2018">(Radford et al. 2018)</span> for more details.</p>
+</section>
+<section id="mixture-of-denoisers-ul2" class="level3">
+<h3 class="anchored" data-anchor-id="mixture-of-denoisers-ul2">Mixture-of-denoisers (UL2)</h3>
+<p><a href="https://chanys.github.io/ul2/">UL2</a> <span class="citation" data-cites="tay_etal_2022">(Tay et al. 2023)</span> unifies multiple objectives within a single training run by mode-switching. Three denoising paradigms, signaled by special mode tokens (<code>[R]</code>, <code>[S]</code>, <code>[X]</code>) at the start of the sequence:</p>
+<ul>
+<li><strong>R-denoiser</strong> (regular): standard T5-style span corruption (mean span length 3, ~15% rate).</li>
+<li><strong>S-denoiser</strong> (sequential): prefix LM: split the sequence into prefix and target, and predict the target autoregressively given a bidirectional prefix.</li>
+<li><strong>X-denoiser</strong> (extreme): aggressive corruption with long spans (<img src="https://latex.codecogs.com/png.latex?%5Cgeq%2012"> tokens) or high rates (<img src="https://latex.codecogs.com/png.latex?%5Cgeq%2030%5C%25">).</li>
+</ul>
+<p>The model learns to handle all three modes through the explicit mode tokens. UL2 reports that the mixture beats both pure CLM (GPT-style) and pure span corruption (T5-style) on a wide benchmark.</p>
+<p>The interesting part for the argument here is that the S-denoiser is essentially CLM with a bidirectional prefix. In a normal causal LM, every token can only attend to previous tokens. In UL2’s S-denoiser / prefix-LM setup, the prefix is treated more like an encoder context: prefix tokens can see each other bidirectionally before the model starts generating the target.</p>
+<p>UL2 explicitly recognizes prefix-LM as a useful interpolation between encoder-decoder and decoder-only.</p>
+</section>
+<section id="fill-in-the-middle-fim" class="level3">
+<h3 class="anchored" data-anchor-id="fill-in-the-middle-fim">Fill-in-the-middle (FIM)</h3>
+<p>The infilling objective <span class="citation" data-cites="bavarian_etal_2022">(Bavarian et al. 2022)</span> used in code models (StarCoder, Code Llama, OpenAI Codex). Take a sequence, split into prefix, middle, and suffix, then <em>rearrange the data</em> and train autoregressively:</p>
+<p>Training-time order: <code>&lt;PRE&gt; prefix &lt;SUF&gt; suffix &lt;MID&gt; middle</code></p>
+<p>This is just CLM on rearranged data. The model learns to generate <code>middle</code> conditioned on <code>prefix</code> and <code>suffix</code>, while remaining a pure decoder-only autoregressive language model. The cleverness is in the data layout, not the objective. The inference-time prompt is <code>&lt;PRE&gt; {user_prefix} &lt;SUF&gt; {user_suffix} &lt;MID&gt;</code>, after which the model autoregressively generates the missing middle.</p>
+<p>This pattern of getting a span-fill capability by rearranging data into a CLM-shaped task, is a recurring theme in what comes next.</p>
+<div id="fig-objectives" class="quarto-float quarto-figure quarto-figure-center anchored" alt="The same sentence shown five times, once per pretraining objective, with different tokens masked or held out in each copy to illustrate how each objective changes which tokens the model must predict">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-objectives-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/five_objectives.png" class="img-fluid figure-img" alt="The same sentence shown five times, once per pretraining objective, with different tokens masked or held out in each copy to illustrate how each objective changes which tokens the model must predict">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-objectives-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: One sentence under five pretraining objectives: same source text, different held-out tokens.
+</figcaption>
+</figure>
+</div>
+</section>
+</section>
+<section id="architecture-is-mostly-an-attention-pattern" class="level2">
+<h2 class="anchored" data-anchor-id="architecture-is-mostly-an-attention-pattern">Architecture is mostly an attention pattern</h2>
+<p>The key move is to stop treating encoder, encoder-decoder, and decoder-only models as completely separate species. At the transformer level, much of the difference comes down to which tokens are allowed to attend to which other tokens.</p>
+<div id="fig-attention-masks" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three grid diagrams of attention masks: a fully filled bidirectional grid for the encoder, a lower-triangular causal grid for the decoder, and an encoder-decoder grid over a concatenated encoder then decoder sequence showing full attention within the encoder block and causal plus cross attention in the decoder block">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-attention-masks-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/attention_masks.png" class="img-fluid figure-img" alt="Three grid diagrams of attention masks: a fully filled bidirectional grid for the encoder, a lower-triangular causal grid for the decoder, and an encoder-decoder grid over a concatenated encoder then decoder sequence showing full attention within the encoder block and causal plus cross attention in the decoder block">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-attention-masks-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Attention masks across the three transformer families. Filled cells indicate attendable positions; the encoder-decoder panel shows the joint attention pattern over a concatenated [encoder, decoder] sequence.
+</figcaption>
+</figure>
+</div>
+<p>An encoder gives every token bidirectional access to every other token. A decoder-only model gives each token access only to earlier tokens. An encoder-decoder splits the computation into two parts: the encoder reads the input bidirectionally, while the decoder generates the output autoregressively while attending back to the encoder. These are different attention patterns over tokens.</p>
+<p>This matters because some capabilities that look architecture-specific can be recovered by changing the data layout. Prefix-LM gives a decoder-style model bidirectional access to a prefix before generating a continuation. Fill-in-the-middle gives a decoder-only model infilling behavior by rearranging the sequence into prefix, suffix, then middle. Span corruption can be viewed similarly: decide what is visible, decide what is hidden, then train the model to predict the missing text.</p>
+<p>So the important question is not simply, “Which objective is best?” The better question is: Which training setup gives the most useful capabilities per unit of data, compute, and deployment complexity?</p>
+<p>From that angle, decoder-only models had a major advantage. They could absorb many task formats into a single pattern: put context in the prefix, then generate the continuation.</p>
+<p>The claim is not that CLM is theoretically superior to every denoising objective. The claim is that decoder-only made the fewest assumptions about the shape of the task. Once everything can be represented as context followed by continuation, the same model can support pretraining, instruction following, few-shot prompting, chat, tool use, and long-form generation without changing architecture.</p>
+</section>
+<section id="at-small-scale-objective-matters-more" class="level2">
+<h2 class="anchored" data-anchor-id="at-small-scale-objective-matters-more">At small scale, objective matters more</h2>
+<p>At small scale, pretraining objectives strongly shape what the model learns efficiently.</p>
+<p>BERT-style MLM gives the model a bidirectional bias, which helps classification, sequence labeling, and extraction. ELECTRA improves sample efficiency by producing a learning signal at every token. T5-style span corruption gives the model a natural input-output format for tasks like summarization and translation.</p>
+<p>These advantages are real, but they become less decisive as models scale. The objectives are not equivalent, but they all train on the same underlying distribution of language. At large scale, each objective still pushes the model to learn many of the same patterns: syntax, semantics, factual associations, discourse structure, and task formats. The objective matters, but it no longer dominates general-purpose capability the way it does at small scale.</p>
+<p>So the question gradually shifts from “Which objective gives the best inductive bias?” to “Which architecture is easiest to scale, prompt, serve, and adapt?”</p>
+<p>That changes the tradeoff. Once objective-level advantages become less dominant, the practical advantages of decoder-only become harder to ignore: simpler data preparation, direct autoregressive generation, natural prompting, easier serving, and a single architecture for many behaviors.</p>
+<p>So the point is not that MLM, span corruption, or RTD were bad ideas. The point is that their advantages mattered most in regimes where model size, data scale, and deployment patterns looked very different from modern LLMs.</p>
+</section>
+<section id="the-actual-reason-decoder-only-won-unification" class="level2">
+<h2 class="anchored" data-anchor-id="the-actual-reason-decoder-only-won-unification">The actual reason decoder-only won: unification</h2>
+<p>Decoder-only did not win because MLM was “wrong” or span corruption was “worse.” It won because the field moved from many specialized NLP tasks toward one general-purpose modeling interface.</p>
+<p>BERT-style models were excellent for classification, sequence labeling, span extraction, and retrieval. But each task usually required a specific setup: a head, a pooling strategy, a masking scheme, or a fine-tuned output format.</p>
+<p>Decoder-only models made the interface much simpler: <em>Put the context in the prefix, then generate the continuation.</em></p>
+<p>That one pattern absorbs many tasks. Classification becomes completion. Question answering becomes completion. Dialogue becomes completion. Code generation becomes completion. Tool use becomes completion over an action-observation trace.</p>
+<p>So the deeper reason decoder-only won is unification: many task formats became one modeling problem: context in, continuation out.</p>
+<p><strong>1. One interface for many tasks.</strong> Decoder-only models turn many tasks into the same pattern: put the task description, examples, prior turns, or tool outputs in the prefix, then generate the continuation. Classification, QA, dialogue, code generation, and tool use all become variations of completion.</p>
+<p><strong>2. Flexible training data.</strong> CLM trains directly on raw token sequences. No masking, span sampling, task-specific heads, or encoder-decoder split. Documents, code, conversations, transcripts, math, and structured text can all be modeled in the same format.</p>
+<p><strong>3. Training matches inference.</strong> Modern LLM use is generative: chat, instruction following, summarization, code generation, agents, and tool use. Decoder-only models are trained in the same mode in which they are used: condition on previous tokens, then generate the next ones. Encoders remain excellent representation learners, but open-ended generation is not their native mode.</p>
+<p><strong>4. New capabilities become formatting problems.</strong> Decoder-only models can absorb behaviors that once looked like they required specialized objectives. Fill-in-the-middle reframes span filling as autoregressive prediction over rearranged data. Instruction tuning, chat formatting, tool traces, and preference tuning follow the same pattern: keep the architecture fixed, change the data format and training signal.</p>
+<p>The production benefits follow from this unification. One architecture is easier to scale, cache, batch, serve, and adapt than a collection of task-specific modeling setups.</p>
+</section>
+<section id="what-encoders-still-do" class="level2">
+<h2 class="anchored" data-anchor-id="what-encoders-still-do">What encoders still do</h2>
+<p>This story is specifically about general-purpose generative LLMs. It is not a story about encoders becoming useless. Encoders did not disappear; they specialized.</p>
+<p>Encoders are still the right tool when:</p>
+<ul>
+<li>The output is structured per-token (named entity recognition, sequence labeling, span extraction).</li>
+<li>The output is a fixed-length representation of the whole input (sentence embeddings, classification, retrieval).</li>
+<li>The latency budget rules out autoregressive generation.</li>
+<li>The downstream task has small training data and benefits from the strong inductive bias of bidirectional MLM pretraining.</li>
+</ul>
+<p><a href="https://chanys.github.io/deberta-v3/">DeBERTa-v3</a> is in many ways the high-water mark of encoder pretraining, and it’s still the model I reach for on small-data IE tasks. The disentangled attention from <a href="https://chanys.github.io/deberta/">DeBERTa</a>, the <a href="https://chanys.github.io/electra/">RTD objective from ELECTRA</a>, and DeBERTa-v3’s gradient-disentangled embedding sharing combine into a hard-to-beat package below 1B parameters.</p>
+<p>The mistake is to turn “decoder-only won general-purpose generation” into “encoders are obsolete.” It doesn’t. For the IE-shaped tasks they were always good at, they’re still ahead of decoder-only models on a Pareto frontier of accuracy and inference cost.</p>
+</section>
+<section id="code-companion-where-this-shows-up-in-tnlp" class="level2">
+<h2 class="anchored" data-anchor-id="code-companion-where-this-shows-up-in-tnlp">Code companion: where this shows up in TNLP</h2>
+<p>The TNLP repo at <a href="https://github.com/chanys/tnlp" class="uri">https://github.com/chanys/tnlp</a> contains working examples for the model families discussed in this article and the rest of the foundations series.</p>
+<p>The examples most relevant to this article are:</p>
+<ul>
+<li><strong>Token classification / NER</strong>: DeBERTa-v3 base with a token classification head on CoNLL-2003. This is the classic encoder use case: one contextual representation per token, one label per token.</li>
+<li><strong>Span-pair classification / relation extraction</strong>: DeBERTa-v3 with custom span-pair pooling on NYT-H. This shows why encoders remain useful for information extraction: they produce cheap, dense representations over the whole sentence.</li>
+<li><strong>Contrastive modeling / retrieval</strong>: E5 and DeBERTa-based triplet-loss models on BioASQ11. This connects directly to the <a href="../../../../posts/series/research-foundations-of-modern-llms/02-encoder-embeddings/index.html">next article</a>: encoders did not disappear; they became embedding and retrieval models.</li>
+</ul>
+<p>The same repo also includes examples from the other branches of the pretraining story:</p>
+<ul>
+<li><strong>FLAN-T5 seq2seq examples</strong>, representing the encoder-decoder path.</li>
+<li><strong>LLaMA-2 and <a href="https://chanys.github.io/mistral/">Mistral</a> instruction/chat tuning</strong>, representing the decoder-only path after CLM pretraining.</li>
+<li><strong><a href="https://chanys.github.io/dpo/">DPO</a> examples</strong>, representing the alignment stage that comes after supervised instruction tuning.</li>
+</ul>
+<p>I will return to these examples in later articles. For this piece, the main point is narrower: the old pretraining families did not vanish. They separated into different roles. Decoder-only became the default for general-purpose generation, while encoders remained highly useful for embeddings, retrieval, classification, and information extraction.</p>
+
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-bavarian_etal_2022" class="csl-entry">
+Bavarian, Mohammad, Heewoo Jun, Nikolas Tezak, et al. 2022. <span>“Efficient Training of Language Models to Fill in the Middle.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/2207.14255">https://arxiv.org/abs/2207.14255</a>.
+</div>
+<div id="ref-clark_etal_2020" class="csl-entry">
+Clark, Kevin, Minh-Thang Luong, Quoc V. Le, and Christopher D. Manning. 2020. <span>“ELECTRA: Pre-Training Text Encoders as Discriminators Rather Than Generators.”</span> <em>International Conference on Learning Representations</em>. <a href="https://arxiv.org/abs/2003.10555">https://arxiv.org/abs/2003.10555</a>.
+</div>
+<div id="ref-devlin_etal_2019" class="csl-entry">
+Devlin, Jacob, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. 2019. <span>“BERT: Pre-Training of Deep Bidirectional Transformers for Language Understanding.”</span> <em>Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (NAACL-HLT)</em>. <a href="https://arxiv.org/abs/1810.04805">https://arxiv.org/abs/1810.04805</a>.
+</div>
+<div id="ref-he_etal_2021" class="csl-entry">
+He, Pengcheng, Xiaodong Liu, Jianfeng Gao, and Weizhu Chen. 2021. <span>“DeBERTaV3: Improving DeBERTa Using ELECTRA-Style Pre-Training with Gradient-Disentangled Embedding Sharing.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/2111.09543">https://arxiv.org/abs/2111.09543</a>.
+</div>
+<div id="ref-liu_etal_2019" class="csl-entry">
+Liu, Yinhan, Myle Ott, Naman Goyal, et al. 2019. <span>“RoBERTa: A Robustly Optimized BERT Pretraining Approach.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/1907.11692">https://arxiv.org/abs/1907.11692</a>.
+</div>
+<div id="ref-radford_etal_2018" class="csl-entry">
+Radford, Alec, Karthik Narasimhan, Tim Salimans, and Ilya Sutskever. 2018. <em>Improving Language Understanding by Generative Pre-Training</em>. OpenAI.
+</div>
+<div id="ref-raffel_etal_2020" class="csl-entry">
+Raffel, Colin, Noam Shazeer, Adam Roberts, et al. 2020. <span>“Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer.”</span> <em>Journal of Machine Learning Research</em>. <a href="https://arxiv.org/abs/1910.10683">https://arxiv.org/abs/1910.10683</a>.
+</div>
+<div id="ref-tay_etal_2022" class="csl-entry">
+Tay, Yi, Mostafa Dehghani, Vinh Q. Tran, et al. 2023. <span>“UL2: Unifying Language Learning Paradigms.”</span> <em>International Conference on Learning Representations</em>. <a href="https://arxiv.org/abs/2205.05131">https://arxiv.org/abs/2205.05131</a>.
+</div>
+</div></section></div> ]]></description>
+  <category>Research foundations of modern LLMs</category>
+  <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/</guid>
+  <pubDate>Wed, 18 Mar 2026 00:00:00 GMT</pubDate>
+</item>
+</channel>
+</rss>

@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Yee Seng Chan">
+<meta name="description" content="Baselines, advantages, clipping, a value model, stable updates.">
+
+<title>PPO is REINFORCE plus five fixes – Yee Seng Chan</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<link href="../../../../favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap-7b53549d121f5930ef88eb09dda4672c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-3874333d9529686a5a4437217f193688.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-7b53549d121f5930ef88eb09dda4672c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../../../styles.css">
+<meta property="og:title" content="PPO is REINFORCE plus five fixes – Yee Seng Chan">
+<meta property="og:description" content="Baselines, advantages, clipping, a value model, stable updates.">
+<meta property="og:image" content="https://yeesengchan.com/posts/series/how-llms-learn-to-reason/01-ppo/ppo_five_fixes.png">
+<meta property="og:site_name" content="Yee Seng Chan">
+<meta property="og:image:alt" content="A diagram. A REINFORCE box on the left is labelled as having two problems. It branches into two lanes. The top lane, Problem 1 High variance, contains three fixes in order: use the advantage, add a critic, estimate it with GAE. The bottom lane, Problem 2 Data inefficiency, contains two fixes in order: importance sampling, then clip the ratio. Both lanes converge into a PPO box on the right marked both problems solved. Small notes on each fix show how it leads to the next: the advantage needs a value, the critic must be combined with rewards, importance sampling ratios can explode and so must be clipped.">
+<meta property="og:image:height" content="1064">
+<meta property="og:image:width" content="2000">
+<meta name="twitter:title" content="PPO is REINFORCE plus five fixes – Yee Seng Chan">
+<meta name="twitter:description" content="Baselines, advantages, clipping, a value model, stable updates.">
+<meta name="twitter:image" content="https://yeesengchan.com/posts/series/how-llms-learn-to-reason/01-ppo/ppo_five_fixes.png">
+<meta name="twitter:image:alt" content="A diagram. A REINFORCE box on the left is labelled as having two problems. It branches into two lanes. The top lane, Problem 1 High variance, contains three fixes in order: use the advantage, add a critic, estimate it with GAE. The bottom lane, Problem 2 Data inefficiency, contains two fixes in order: importance sampling, then clip the ratio. Both lanes converge into a PPO box on the right marked both problems solved. Small notes on each fix show how it leads to the next: the advantage needs a value, the critic must be combined with rewards, importance sampling ratios can explode and so must be clipped.">
+<meta name="twitter:image-height" content="1064">
+<meta name="twitter:image-width" content="2000">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">Yee Seng Chan</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../writing.html"> 
+<span class="menu-text">Writing</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../series.html"> 
+<span class="menu-text">Series</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../projects.html"> 
+<span class="menu-text">Projects</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../../writing.xml"> <i class="bi bi-rss" role="img" aria-label="RSS feed">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/chanys"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://linkedin.com/in/yeesengchan"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:chanys.nlp@gmail.com"> <i class="bi bi-envelope" role="img" aria-label="Email">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Contents</h2>
+   
+  <ul class="collapse">
+  <li><a href="#reinforce-in-one-breath" id="toc-reinforce-in-one-breath" class="nav-link active" data-scroll-target="#reinforce-in-one-breath">REINFORCE in one breath</a></li>
+  <li><a href="#ppo-as-five-fixes" id="toc-ppo-as-five-fixes" class="nav-link" data-scroll-target="#ppo-as-five-fixes">PPO as five fixes</a></li>
+  <li><a href="#the-unpacking-chain" id="toc-the-unpacking-chain" class="nav-link" data-scroll-target="#the-unpacking-chain">The unpacking chain</a></li>
+  <li><a href="#whats-next" id="toc-whats-next" class="nav-link" data-scroll-target="#whats-next">What’s next</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">PPO is REINFORCE plus five fixes</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">How LLMs learn to reason</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    Baselines, advantages, clipping, a value model, stable updates.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Yee Seng Chan </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">2026 · February 24</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+How LLMs learn to reason
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../00-reinforce-foundations/">REINFORCE: the world before the gradient</a></li>
+<li><a href="../00-reinforce-gradient/">REINFORCE: the gradient that drives training</a></li>
+<li><a href="../01-ppo/">PPO is REINFORCE plus five fixes</a></li>
+<li><a href="../02-grpo/">GRPO: The algorithm behind reasoning models</a></li>
+<li><a href="../03-dpo/">DPO: RLHF collapsed into one loss</a></li>
+<li><a href="../04-r1/">R1-Zero was the result. R1 was the product</a></li>
+<li><a href="../05-tool-use/">How reasoning models learn to use tools</a></li>
+</ol>
+</div>
+<p>Most treatments of PPO either start with MDPs and Bellman equations and lose you in the abstract before the algorithm appears, or treat PPO as a black box. Neither helps when you actually want to understand it. Here’s the framing that finally made it stick for me: PPO <span class="citation" data-cites="schulman_etal_2017">(<a href="#ref-schulman_etal_2017" role="doc-biblioref">Schulman et al. 2017</a>)</span> is REINFORCE with five fixes that, together, solve two problems.</p>
+<p>The plan: walk through the two problems REINFORCE has, watch each PPO fix arise as a response to one of them, and end by tracing how the final objective decomposes all the way down to things you can actually compute.</p>
+<section id="reinforce-in-one-breath" class="level2">
+<h2 class="anchored" data-anchor-id="reinforce-in-one-breath">REINFORCE in one breath</h2>
+<p>Reinforcement learning is the framework where an agent takes actions in an environment, the environment responds with reward and a new state, and the agent’s job is to find a strategy, a policy, that collects as much reward as possible. Unlike supervised learning, the agent generates its own training data by acting. Bad policies generate bad data. That’s what makes RL hard in a way classification never is.</p>
+<p>The simplest policy gradient algorithm is REINFORCE. Run the policy. Observe what happens. Update the policy so good actions become more likely and bad ones less likely. The objective being maximized:</p>
+<p><span class="math display">\[J(\theta) = \sum_t G_t \log \pi_\theta(a_t \mid s_t).\]</span></p>
+<p>Reading the parts: <span class="math inline">\(\pi_\theta(a_t \mid s_t)\)</span> is the probability the policy assigns to the action that was actually taken in state <span class="math inline">\(s_t\)</span>. <span class="math inline">\(G_t\)</span> is the <em>return</em> from time <span class="math inline">\(t\)</span>: the sum of future rewards from that point to the end of the trajectory.</p>
+<section id="reinforce-as-supervised-learning-with-twists" class="level3">
+<h3 class="anchored" data-anchor-id="reinforce-as-supervised-learning-with-twists">REINFORCE as supervised learning, with twists</h3>
+<p>Here’s the framing that finally made REINFORCE click for me. Standard supervised cross-entropy classification minimizes:</p>
+<p><span class="math display">\[L_{\text{sup}} = -\sum_i \log p(y_i \mid x_i),\]</span></p>
+<p>where <span class="math inline">\(y_i\)</span> is the true label for <span class="math inline">\(x_i\)</span>. Compare to REINFORCE:</p>
+<p><span class="math display">\[L_{\text{REINFORCE}} = -\sum_t G_t \log \pi_\theta(a_t \mid s_t).\]</span></p>
+<p>Same form, two changes:</p>
+<ol type="1">
+<li><strong>No labels: use the sampled action as a pseudo-label.</strong> RL doesn’t tell us what the “correct” action was. So we use the action the policy actually sampled as a stand-in. The training signal becomes “do more of what you just did.” Which sounds insane, until you remember the second change.</li>
+<li><strong>Weight each pseudo-labeled example by how the trajectory turned out.</strong> Supervised learning treats every example as equally important. Every label is correct by definition. REINFORCE weights each term by <span class="math inline">\(G_t\)</span>. Positive <span class="math inline">\(G_t\)</span> scales the term up: do more of this. Negative <span class="math inline">\(G_t\)</span> flips its sign: do less.</li>
+</ol>
+<p>Read this way, REINFORCE is supervised learning where the agent generates its own pseudo-labels by sampling, and each pseudo-labeled example is weighted by how things turned out. That’s the whole conceptual content of the algorithm. The gradient mechanics (softmax derivatives, autograd, the chain rule) are <em>exactly</em> the gradient mechanics of supervised cross-entropy, scaled by <span class="math inline">\(G_t\)</span>. If you’ve ever trained a classifier, you’ve already done most of the work.</p>
+</section>
+<section id="the-training-loop" class="level3">
+<h3 class="anchored" data-anchor-id="the-training-loop">The training loop</h3>
+<p>The loop is correspondingly small:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> episode <span class="kw">in</span> <span class="bu">range</span>(num_episodes):</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 1. Roll out a trajectory under the current policy</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    states, actions, rewards <span class="op">=</span> rollout(env, policy)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 2. Compute returns G_t for each timestep, working backward</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    returns <span class="op">=</span> []</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    G <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> r <span class="kw">in</span> <span class="bu">reversed</span>(rewards):</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        G <span class="op">=</span> r <span class="op">+</span> gamma <span class="op">*</span> G</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>        returns.insert(<span class="dv">0</span>, G)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 3. Form the loss and update</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    loss <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> s_t, a_t, G_t <span class="kw">in</span> <span class="bu">zip</span>(states, actions, returns):</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        logits <span class="op">=</span> policy(s_t)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        log_probs <span class="op">=</span> F.log_softmax(logits, dim<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        loss <span class="op">=</span> loss <span class="op">-</span> G_t <span class="op">*</span> log_probs[a_t]</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    optimizer.zero_grad()</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    loss.backward()</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    optimizer.step()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Three things to notice. Autograd does all the work. We never compute the policy gradient by hand. We construct a loss whose gradient <em>is</em> the policy gradient and let the framework handle it. The negation in <code>loss = loss - G_t * log_probs[a_t]</code> is because optimizers minimize by default, so we minimize <span class="math inline">\(-J\)</span>, equivalent to maximizing <span class="math inline">\(J\)</span>. Returns are computed backward through the trajectory in <span class="math inline">\(O(T)\)</span> using the recursion <span class="math inline">\(G_t = r_t + \gamma G_{t+1}\)</span>.</p>
+</section>
+<section id="the-two-problems" class="level3">
+<h3 class="anchored" data-anchor-id="the-two-problems">The two problems</h3>
+<p>REINFORCE works. People used it. Two problems become obvious the moment you scale it.</p>
+<p><strong>Problem 1: high variance.</strong> The “total reward that followed an action” varies wildly across rollouts even when the action itself was fine. Take the same action twice from the same state under a stochastic policy and you might see very different total rewards because what happened <em>afterward</em> was different. The training signal jumps around. Learning is slow and unstable.</p>
+<p><strong>Problem 2: data inefficiency.</strong> A trajectory is expensive to collect. For an LLM, sampling a 500-token response takes real GPU time. REINFORCE throws each one away after a single gradient update, because after that update the policy has changed and the old data is no longer “from the right distribution”: a sense we’ll make precise when we get to importance sampling.</p>
+<p>PPO fixes both. The first three fixes attack variance. The last two attack data inefficiency. Each fix introduces machinery the next one needs, so they’re easiest to read in order.</p>
+<div id="fig-ppo-five-fixes" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A diagram. A REINFORCE box on the left is labelled as having two problems. It branches into two lanes. The top lane, Problem 1 High variance, contains three fixes in order: use the advantage, add a critic, estimate it with GAE. The bottom lane, Problem 2 Data inefficiency, contains two fixes in order: importance sampling, then clip the ratio. Both lanes converge into a PPO box on the right marked both problems solved. Small notes on each fix show how it leads to the next: the advantage needs a value, the critic must be combined with rewards, importance sampling ratios can explode and so must be clipped.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ppo-five-fixes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="ppo_five_fixes.png" class="img-fluid figure-img" alt="A diagram. A REINFORCE box on the left is labelled as having two problems. It branches into two lanes. The top lane, Problem 1 High variance, contains three fixes in order: use the advantage, add a critic, estimate it with GAE. The bottom lane, Problem 2 Data inefficiency, contains two fixes in order: importance sampling, then clip the ratio. Both lanes converge into a PPO box on the right marked both problems solved. Small notes on each fix show how it leads to the next: the advantage needs a value, the critic must be combined with rewards, importance sampling ratios can explode and so must be clipped.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ppo-five-fixes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: PPO is REINFORCE plus five fixes. Fixes 1–3 attack REINFORCE’s variance problem; fixes 4–5 attack its data-inefficiency problem. Each fix introduces machinery the next one needs.
+</figcaption>
+</figure>
+</div>
+</section>
+</section>
+<section id="ppo-as-five-fixes" class="level2">
+<h2 class="anchored" data-anchor-id="ppo-as-five-fixes">PPO as five fixes</h2>
+<section id="fix-1-use-the-advantage-not-the-raw-reward" class="level3">
+<h3 class="anchored" data-anchor-id="fix-1-use-the-advantage-not-the-raw-reward">Fix 1: Use the advantage, not the raw reward</h3>
+<p>The first variance-reduction trick is to stop asking “what reward followed this action?” and start asking “did this action do better than expected?”</p>
+<p>A concrete anchor for the rest of the piece: imagine training a chatbot to answer the question “What is PPO?” The model generates a response token by token: “<em>PPO is a reinforcement learning algorithm…</em>”. Then at the end a reward model scores the whole response. Each token is one action. Each full response is one trajectory.</p>
+<p>When the model picks “reinforcement” partway through, was that a good choice? It depends on what was available at that point. If most plausible alternatives at that position would have led to a coherent response anyway, the choice isn’t special. If most would have led somewhere worse, then “reinforcement” was a good pick we want to reinforce.</p>
+<p>The “expected reward from this state” is the <em>value</em> of the state. The action’s <em>advantage</em> is how much better than the value the actual outcome was:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>Advantage <span class="op">=</span> (what happened) − (what we<span class="st">'d expect on average from this state)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Substituting advantage for raw reward in the policy gradient cuts variance dramatically. Actions that go as expected contribute roughly zero to the gradient. Only genuinely surprising actions, good or bad, drive updates. The noise from “all of these actions were fine, actually” stops contributing.</p>
+<p>The catch: to compute advantage, you need the value of each state. We don’t know it directly. So we <em>learn it</em>, with a second neural network.</p>
+</section>
+<section id="ppo-value-network-critic" class="level3">
+<h3 class="anchored" data-anchor-id="ppo-value-network-critic">Fix 2: Add a value network (the critic)</h3>
+<p>PPO trains two networks in parallel:</p>
+<ul>
+<li>The <strong>policy network</strong> (the actor) takes a state, outputs a distribution over actions. For LLMs, this <em>is</em> the language model.</li>
+<li>The <strong>value network</strong> (the critic) takes a state, outputs a single number: the expected total reward from this state onward.</li>
+</ul>
+<p>For the chatbot, the value network looks at a partial response, e.g.&nbsp;<em>“PPO is a reinforcement learning”</em>, and outputs something like 0.6, meaning “responses that start this way tend to score around 0.6 from the reward model.” After the next token, the partial response becomes <em>“PPO is a reinforcement learning algorithm”</em> and the value might shift to a slightly higher score of 0.65, indicating that the response is heading somewhere good. The critic is essentially a running estimate of “how well is this generation going so far?”</p>
+<p>The critic doesn’t act. It just judges. Taken together, the actor and critic give an <em>actor-critic</em> architecture, of which PPO is one specific instance.</p>
+<p>How does the critic learn? Standard regression. After a rollout, you have actual rewards <span class="math inline">\(r_0, r_1, \ldots, r_T\)</span>. From any state <span class="math inline">\(s_t\)</span> along the trajectory, the actual return is <span class="math inline">\(G_t = r_t + \gamma r_{t+1} + \ldots + \gamma^{T-t} r_T\)</span>. Train the critic to predict <span class="math inline">\(G_t\)</span> from <span class="math inline">\(s_t\)</span> using mean-squared-error. Over many trajectories the critic becomes a calibrated estimator, and the advantages it underwrites become reliable.</p>
+<p>For LLMs, the value network is typically a copy of the policy architecture: same transformer body, with a small linear head outputting a scalar instead of a token distribution. Whether the bodies are <em>shared</em> (parameters trained jointly) or <em>separate copies</em> (parameters trained independently) varies by implementation.</p>
+</section>
+<section id="fix-3-estimate-the-advantage-with-gae" class="level3">
+<h3 class="anchored" data-anchor-id="fix-3-estimate-the-advantage-with-gae">Fix 3: Estimate the advantage with GAE</h3>
+<p>There’s a subtle decision in <em>how</em> to compute the advantage from rollout data. Two extremes:</p>
+<ul>
+<li><strong>Use the actual rewards that followed.</strong> Accurate but noisy: at the mercy of every random thing that happened in the trajectory.</li>
+<li><strong>Trust the value network’s predictions.</strong> Stable but biased: if the critic is wrong, your advantages are wrong.</li>
+</ul>
+<p>You can blend. Use the actual rewards for the next few steps, then have the critic estimate the rest. This is the <em>n-step</em> family of advantage estimators, parameterized by how many real-reward steps to use before deferring to the critic. Small <span class="math inline">\(n\)</span> trusts the critic. Large <span class="math inline">\(n\)</span> trusts the rewards.</p>
+<p>Rather than picking one <span class="math inline">\(n\)</span>, <strong>Generalized Advantage Estimation</strong> <span class="citation" data-cites="schulman_etal_2016">(<a href="#ref-schulman_etal_2016" role="doc-biblioref">Schulman et al. 2016</a>)</span> takes an exponentially-weighted average across all <span class="math inline">\(n\)</span>:</p>
+<p><span class="math display">\[\hat{A}_t^{\text{GAE}} = (1-\lambda)\hat{A}_t^{(1)} + (1-\lambda)\lambda\hat{A}_t^{(2)} + (1-\lambda)\lambda^2\hat{A}_t^{(3)} + \ldots\]</span></p>
+<p>The <span class="math inline">\((1-\lambda)\)</span> prefactors normalize the weights to sum to 1 (geometric series). Small <span class="math inline">\(\lambda\)</span> puts most weight on the 1-step estimator (trust the critic); large <span class="math inline">\(\lambda\)</span> flattens the weights toward the full-trajectory estimator (trust the rewards). Default <span class="math inline">\(\lambda = 0.95\)</span>.</p>
+<p>The pleasing thing is that this weighted average collapses to a clean recursion. The intermediate identity that does the work is the <em>TD residual</em>:</p>
+<p><span class="math display">\[\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t).\]</span></p>
+<p>“TD” stands for <em>Temporal Difference</em>: the residual compares two value predictions (<span class="math inline">\(V(s_t)\)</span> and <span class="math inline">\(V(s_{t+1})\)</span>) separated by one time step, after accounting for the actual reward observed during that step. If the critic were perfect, <span class="math inline">\(\delta_t\)</span> would always be zero. When nonzero, <span class="math inline">\(\delta_t\)</span> measures how wrong the critic was, and in which direction. The same number has two names because it plays two roles: it’s a <em>prediction error of the critic</em> (which is what trains the value network) and it’s the <em>simplest possible advantage estimate</em> (<span class="math inline">\(\delta_t = \hat{A}_t^{(1)}\)</span>, the first row of the n-step ladder).</p>
+<p>Now the GAE collapse. Each n-step advantage can be written as a sum of TD residuals, <span class="math inline">\(\hat{A}_t^{(n)} = \sum_{k=0}^{n-1} \gamma^k \delta_{t+k}\)</span> (the unpacking chain at the end walks through this for the 2-step case). Substituting into the GAE weighted average and collecting by <span class="math inline">\(\delta\)</span>, the geometric series collapses each coefficient: <span class="math inline">\(\delta_{t+k}\)</span> ends up with weight <span class="math inline">\((\gamma\lambda)^k\)</span>. So:</p>
+<p><span class="math display">\[\hat{A}_t^{\text{GAE}} = \delta_t + \gamma\lambda \, \delta_{t+1} + (\gamma\lambda)^2 \, \delta_{t+2} + \ldots = \delta_t + \gamma\lambda \, \hat{A}_{t+1}^{\text{GAE}}.\]</span></p>
+<p>That’s the entire GAE computation: a backward pass through the trajectory accumulating <span class="math inline">\(\gamma\lambda\)</span>-decayed TD residuals.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>advantages <span class="op">=</span> []</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>gae <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> t <span class="kw">in</span> <span class="bu">reversed</span>(<span class="bu">range</span>(<span class="bu">len</span>(rewards))):</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    delta <span class="op">=</span> rewards[t] <span class="op">+</span> gamma <span class="op">*</span> values[t <span class="op">+</span> <span class="dv">1</span>] <span class="op">-</span> values[t]</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    gae <span class="op">=</span> delta <span class="op">+</span> gamma <span class="op">*</span> lam <span class="op">*</span> gae</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    advantages.insert(<span class="dv">0</span>, gae)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>That’s it. GAE is one of the most important practical contributions in policy gradient methods. Almost every modern algorithm uses it. But you don’t need to derive it to use it. Two knobs: <span class="math inline">\(\gamma\)</span> (discount factor, typically 0.99) and <span class="math inline">\(\lambda\)</span> (the GAE parameter, typically 0.95).</p>
+<p>Fixes 1, 2, and 3 together complete the variance-reduction story. Fixes 4 and 5 attack the data-inefficiency problem.</p>
+</section>
+<section id="fix-4-importance-sampling-reusing-data" class="level3">
+<h3 class="anchored" data-anchor-id="fix-4-importance-sampling-reusing-data">Fix 4: Importance sampling: reusing data</h3>
+<p>We collected an expensive trajectory. We’d like to do many gradient steps on it, not one. The wrinkle that’s specific to RL: unlike supervised learning, where data sits in a fixed dataset, here you generate your training data by running the current policy. After one gradient step, the policy is different, and the trajectory we just used is now from the previous policy. Thus reusing this trajectory is, strictly speaking, off-policy.</p>
+<p>Importance sampling is the statistical trick that corrects for this. Each old data point gets a weight equal to the ratio of “how likely is this action under the new policy” to “how likely was it under the old policy”:</p>
+<p><span class="math display">\[r_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_{\text{old}}}(a_t \mid s_t)}.\]</span></p>
+<p>If the new policy still likes the action just as much, the ratio is 1, and the data point counts normally. If the new policy now likes the action more, the ratio is greater than 1; if less, less than 1. Multiplied with the advantage, <span class="math inline">\(r_t(\theta) \cdot \hat{A}_t\)</span> gives a corrected gradient signal that’s valid even though the data wasn’t generated by the current policy.</p>
+<p>This is what lets you take many gradient steps on one batch of trajectories. Exactly the sample efficiency you want.</p>
+<p>But there’s a problem. If the policy moves <em>a lot</em> from where the data was collected, those ratios can blow up. An action the old policy gave probability 0.01 to and the new policy gives probability 0.9 has ratio 90. One sample now contributes 90× as much as a normal one. Training becomes wildly unstable, sometimes catastrophically so: the policy can collapse to garbage and never recover.</p>
+<p>Importance sampling is a great tool, but only if you keep the new policy close to the old one. Which leads to the final ingredient and the actual contribution of the PPO paper.</p>
+</section>
+<section id="fix-5-clip-the-importance-ratio" class="level3">
+<h3 class="anchored" data-anchor-id="fix-5-clip-the-importance-ratio">Fix 5: Clip the importance ratio</h3>
+<p>The four fixes above (advantage, value network, GAE, importance sampling) were already standard prior to PPO.</p>
+<p>To address the instability of importance sampling, TRPO (Trust Region Policy Optimization) added an explicit constraint: the new policy must stay within a KL-divergence bound of the old. This works, but it requires solving a constrained optimization with second-order methods and the implementation is a pain.</p>
+<p>PPO’s contribution to RL, is a single trick that gets <em>most</em> of the stability of TRPO without TRPO’s complexity: <em>If a sample is already pushing the policy in some direction, stop letting it push further.</em></p>
+<p>Concretely:</p>
+<p><span class="math display">\[J^{\text{CLIP}}(\theta) = \mathbb{E}_t\!\left[\min\!\big(r_t(\theta) \, \hat{A}_t, \; \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon) \, \hat{A}_t\big)\right].\]</span></p>
+<p>In words: take the importance-corrected advantage; also take a version where the ratio is clipped to <span class="math inline">\([1-\epsilon, 1+\epsilon]\)</span>; use whichever is smaller. The hyperparameter <span class="math inline">\(\epsilon\)</span> controls “how far is too far”: typically 0.2, so ratios are constrained to roughly <span class="math inline">\([0.8, 1.2]\)</span> before clipping kicks in.</p>
+<p>The asymmetric <em>min</em> matters. The interesting question is when the min picks the unclipped value and when it picks the clipped one.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Advantage</th>
+<th>Ratio</th>
+<th>Unclipped</th>
+<th>Clipped</th>
+<th>min picks</th>
+<th>What this means</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\hat{A} &gt; 0\)</span> (good)</td>
+<td><span class="math inline">\(r_t &gt; 1.2\)</span> (moved toward)</td>
+<td><span class="math inline">\(1.5\hat{A}\)</span> (large +)</td>
+<td><span class="math inline">\(1.2\hat{A}\)</span> (smaller +)</td>
+<td><strong>clipped</strong></td>
+<td>Already pushed right way; cap further reward</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\hat{A} &gt; 0\)</span> (good)</td>
+<td><span class="math inline">\(r_t &lt; 0.8\)</span> (moved away)</td>
+<td><span class="math inline">\(0.5\hat{A}\)</span> (small +)</td>
+<td><span class="math inline">\(0.8\hat{A}\)</span> (larger +)</td>
+<td><strong>unclipped</strong></td>
+<td>Wrong direction; let full corrective gradient through</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(\hat{A} &lt; 0\)</span> (bad)</td>
+<td><span class="math inline">\(r_t &gt; 1.2\)</span> (moved toward)</td>
+<td><span class="math inline">\(1.5\hat{A}\)</span> (very −)</td>
+<td><span class="math inline">\(1.2\hat{A}\)</span> (less −)</td>
+<td><strong>unclipped</strong></td>
+<td>Wrong direction; let full corrective gradient through</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\hat{A} &lt; 0\)</span> (bad)</td>
+<td><span class="math inline">\(r_t &lt; 0.8\)</span> (moved away)</td>
+<td><span class="math inline">\(0.5\hat{A}\)</span> (less −)</td>
+<td><span class="math inline">\(0.8\hat{A}\)</span> (more −)</td>
+<td><strong>clipped</strong></td>
+<td>Already pushed right way; cap further punishment</td>
+</tr>
+</tbody>
+</table>
+<p>The pattern: when the policy has moved in the right direction, the min picks the clipped value, and we stop reinforcing that direction beyond the <span class="math inline">\(\epsilon\)</span> band. When the policy has moved in the wrong direction, the min picks the unclipped value, and the full corrective gradient comes through.</p>
+<p>Three lines of code:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>ratio <span class="op">=</span> torch.exp(log_probs_new <span class="op">-</span> log_probs_old)  <span class="co"># = pi_new / pi_old</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>surr1 <span class="op">=</span> ratio <span class="op">*</span> advantages</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>surr2 <span class="op">=</span> torch.clamp(ratio, <span class="dv">1</span> <span class="op">-</span> epsilon, <span class="dv">1</span> <span class="op">+</span> epsilon) <span class="op">*</span> advantages</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>policy_loss <span class="op">=</span> <span class="op">-</span>torch.<span class="bu">min</span>(surr1, surr2).mean()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>That’s PPO. Five fixes, two problems solved.</p>
+</section>
+</section>
+<section id="the-unpacking-chain" class="level2">
+<h2 class="anchored" data-anchor-id="the-unpacking-chain">The unpacking chain</h2>
+<p>I want to spend the rest of this piece on how to compute the clipped objective:</p>
+<p><span class="math display">\[J^{\text{CLIP}}(\theta) = \mathbb{E}_t\!\left[\min\!\big(r_t(\theta) \, \hat{A}_t, \; \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon) \, \hat{A}_t\big)\right]\]</span></p>
+<p>In particular, let’s drill through how to calculate the advantage <span class="math inline">\(\hat{A}_t\)</span>. The advantage is the deepest piece because it is defined recursively, through several layers of intermediate quantities. The plan: start from the GAE definition at the top and unpack downward until we hit primitives we can actually compute.</p>
+<p><strong>Level 1: GAE as a weighted average of n-step advantages:</strong></p>
+<p><span class="math display">\[\hat{A}_t^{\text{GAE}} = (1-\lambda)\, \hat{A}_t^{(1)} + (1-\lambda)\lambda\, \hat{A}_t^{(2)} + (1-\lambda)\lambda^2\, \hat{A}_t^{(3)} + \ldots\]</span></p>
+<p>This is what GAE <em>is</em> by definition. The parameter <span class="math inline">\(\lambda \in [0, 1]\)</span> controls a bias-variance trade-off. At <span class="math inline">\(\lambda = 0\)</span>, GAE collapses to the 1-step estimate <span class="math inline">\(\hat{A}_t^{(1)}\)</span>: take one real step of reward, then use the value function <span class="math inline">\(V\)</span> to estimate everything that comes after. This is low variance because only one stochastic reward enters, but it inherits whatever errors <span class="math inline">\(V\)</span> has. Larger <span class="math inline">\(\lambda\)</span> shifts weight toward longer-horizon estimates, which use more actual rewards and rely less on <span class="math inline">\(V\)</span>. That lowers the bias but accumulates variance from the rewards themselves. The coefficients <span class="math inline">\((1-\lambda)\lambda^{k-1}\)</span> form a geometric series that sums to 1, so GAE is a properly normalized weighted average.</p>
+<p>The expression is in terms of n-step advantages <span class="math inline">\(\hat{A}_t^{(n)}\)</span>, which themselves need unpacking. Conceptually, an n-step advantage estimates how much better the trajectory turned out than the value function had predicted, by looking <span class="math inline">\(n\)</span> steps ahead before bootstrapping with the value function.</p>
+<p><strong>Level 2: n-step advantages as sums of TD residuals:</strong></p>
+<p><span class="math display">\[\hat{A}_t^{(1)} = \delta_t\]</span> <span class="math display">\[\hat{A}_t^{(2)} = \delta_t + \gamma\delta_{t+1}\]</span> <span class="math display">\[\hat{A}_t^{(3)} = \delta_t + \gamma\delta_{t+1} + \gamma^2\delta_{t+2}\]</span></p>
+<p>Each n-step advantage is a sum of TD residuals weighted by <span class="math inline">\(\gamma^k\)</span>. The TD residual <span class="math inline">\(\delta_t\)</span> is a 1-step “surprise”: the gap between what actually happened in one step and what the value function had predicted. Summing <span class="math inline">\(n\)</span> of these gives the <span class="math inline">\(n\)</span>-step advantage. The n-step structure is now reduced to TD residuals. We still haven’t said what a TD residual <em>is</em>.</p>
+<p><strong>Level 3: TD residuals expanded into rewards and value predictions:</strong></p>
+<p>A TD residual is <em>defined</em> as:</p>
+<p><span class="math display">\[\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)\]</span></p>
+<p>Reading left to right: the actual reward at time <span class="math inline">\(t\)</span>, plus the discounted value of where we ended up, minus what we had predicted before taking the action. A one-step prediction error of the value function.</p>
+<p>Plugging the definition into the 2-step advantage:</p>
+<p><span class="math display">\[\hat{A}_t^{(2)} = \delta_t + \gamma\delta_{t+1} = [r_t + \gamma V(s_{t+1}) - V(s_t)] + \gamma[r_{t+1} + \gamma V(s_{t+2}) - V(s_{t+1})]\]</span></p>
+<p>Distributing the <span class="math inline">\(\gamma\)</span> in the second bracket:</p>
+<p><span class="math display">\[= r_t + \gamma V(s_{t+1}) - V(s_t) + \gamma r_{t+1} + \gamma^2 V(s_{t+2}) - \gamma V(s_{t+1})\]</span></p>
+<p>The <span class="math inline">\(+\gamma V(s_{t+1})\)</span> and <span class="math inline">\(-\gamma V(s_{t+1})\)</span> cancel, leaving:</p>
+<p><span class="math display">\[= r_t + \gamma r_{t+1} + \gamma^2 V(s_{t+2}) - V(s_t)\]</span></p>
+<p>This is the standard 2-step formula. The cancellation is what is meant by <em>the interior value terms telescope away</em>: all the intermediate value predictions drop out, leaving only the rewards along the trajectory and the value function evaluated at the endpoints.</p>
+<p>At this level, GAE has been reduced to two computable building blocks: per-step rewards <span class="math inline">\(r_t\)</span> and critic predictions <span class="math inline">\(V(s_t)\)</span>. The critic predictions are direct outputs of the value network: a forward pass. They don’t need further unpacking. The rewards do.</p>
+<p><strong>Level 4: the per-step reward.</strong></p>
+<p>In standard RL, <span class="math inline">\(r_t\)</span> is whatever the environment gives you. Atari emits a score, a board game emits +1 or -1 at the end. There is nothing to unpack: <span class="math inline">\(r_t\)</span> is a primitive.</p>
+<p>For LLMs, this is the level where the application-specific machinery shows up. RLHF, RLVR, and other variants all attach at exactly this level: they each define <span class="math inline">\(r_t\)</span> differently. That definition is what turns a generic policy gradient into RLHF, RLVR, or any other LLM-RL variant. Everything above this level (GAE, n-step advantages, TD residuals, the clipped objective) stays the same.</p>
+<p>Two common forms:</p>
+<ul>
+<li><strong>RLHF.</strong> A separate <em>reward model</em> is trained on human preference data (pairs of “this response is better than that one”). The reward model then scores each completion the policy generates, and that score is <span class="math inline">\(r_t\)</span>.</li>
+<li><strong>RLVR.</strong> A <em>verifier</em> checks the answer against ground truth: did the math come out right, did the code pass the tests, did the extracted JSON match the schema? The verifier emits a numeric score, and that is <span class="math inline">\(r_t\)</span>.</li>
+</ul>
+<p>Most LLM-RL recipes also add a <em>KL penalty</em> to <span class="math inline">\(r_t\)</span>: a term that penalizes the policy for drifting too far from a frozen reference (usually the base model before RL). This keeps the trained model from collapsing into degenerate high-reward outputs.</p>
+<p>Apart from these substitutions, the algorithm is unchanged. The clipped objective, the GAE advantage, the value model, the policy update: all the same. Switching from RLHF to RLVR is switching what <span class="math inline">\(r_t\)</span> is, nothing more.</p>
+<p>The full chain, top to bottom: clipped objective → GAE advantage → n-step advantages → TD residuals → rewards and value predictions → for LLMs, log-probs and a learned or verified reward signal. Each level answers “but how do you actually compute the thing one level up?” Eventually you bottom out at things produced by neural-network forward passes, plus whatever reward signal your problem provides.</p>
+<p>This is the picture I wish I’d had when I first read the PPO paper. The clipped objective at the top, the unpacking chain underneath, and the application-specific reward sitting at the bottom waiting to be plugged in. Once you have it, the rest is just engineering.</p>
+</section>
+<section id="whats-next" class="level2">
+<h2 class="anchored" data-anchor-id="whats-next">What’s next</h2>
+<p>PPO was the original workhorse for RLHF, but the field has moved. Two algorithms have displaced it in different settings:</p>
+<ul>
+<li><a href="../../../../posts/series/how-llms-learn-to-reason/03-dpo/index.html"><strong>DPO</strong></a> (Direct Preference Optimization) skips the reward model and the RL machinery entirely. Train directly on preference pairs with a clever loss derived from the Bradley-Terry math that justifies RLHF. Much simpler: no PPO, no rollouts, no value network. It also works surprisingly well. It’s displaced PPO in many open-source pipelines.</li>
+<li><a href="../../../../posts/series/how-llms-learn-to-reason/02-grpo/index.html"><strong>GRPO</strong></a> (Group Relative Policy Optimization) is a PPO variant from DeepSeek that drops the value network and computes advantages by comparing rollouts to each other. Memory-efficient and well-suited for <em>verifiable</em> reward settings like math and code, where you don’t need a learned reward model, and a programmatic verifier provides the signal. GRPO is what powers most recent reasoning models.</li>
+</ul>
+<p>Both are easier to understand once PPO is in your head. DPO is “what if we collapsed PPO into a single supervised loss?” GRPO is “what if we kept PPO but dropped the critic?”</p>
+
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-schulman_etal_2016" class="csl-entry" role="listitem">
+Schulman, John, Philipp Moritz, Sergey Levine, Michael Jordan, and and Pieter Abbeel. 2016. <span>“High-Dimensional Continuous Control Using Generalized Advantage Estimation.”</span> <em>International Conference on Learning Representations</em>. <a href="https://arxiv.org/abs/1506.02438">https://arxiv.org/abs/1506.02438</a>.
+</div>
+<div id="ref-schulman_etal_2017" class="csl-entry" role="listitem">
+Schulman, John, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. 2017. <span>“Proximal Policy Optimization Algorithms.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/1707.06347">https://arxiv.org/abs/1707.06347</a>.
+</div>
+</div></section></div></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/yeesengchan\.com");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+© 2026 Yee Seng Chan
+</div>   
+    <div class="nav-footer-center">
+Built with <a href="https://quarto.org">Quarto</a>
+</div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/chanys">
+      <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://linkedin.com/in/yeesengchan">
+      <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="../../../../writing.xml">
+      <i class="bi bi-rss" role="img" aria-label="RSS feed">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+<script>
+(() => {
+  if (!document.querySelector('.series-nav')) return;
+  const toc = document.querySelector('nav#TOC[role="doc-toc"]');
+  if (!toc) return;
+  const links = [...toc.querySelectorAll('a[data-scroll-target]')];
+  if (!links.length) return;
+  const sections = links.map((link) => {
+    const target = link.getAttribute('data-scroll-target') || '';
+    return target.startsWith('#')
+      ? document.getElementById(decodeURI(target.slice(1)))
+      : null;
+  });
+  // Distance below viewport top at which a heading is treated as
+  // "the current section." Small, so the highlight matches what a
+  // reader perceives as the heading at the top of the page.
+  const ACTIVATION_OFFSET = 80;
+  const apply = () => {
+    let idx = 0;
+    const atBottom = window.innerHeight + window.pageYOffset
+      >= document.documentElement.scrollHeight - 2;
+    if (atBottom) {
+      idx = sections.length - 1;
+    } else {
+      for (let i = 0; i < sections.length; i++) {
+        const s = sections[i];
+        if (s && s.getBoundingClientRect().top <= ACTIVATION_OFFSET) idx = i;
+      }
+    }
+    for (let i = 0; i < links.length; i++) {
+      links[i].classList.toggle('active', i === idx);
+    }
+  };
+  // rAF ensures we run after Quarto's synchronous scroll handler
+  // so our active-class choice wins.
+  let pending = false;
+  const schedule = () => {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => { apply(); pending = false; });
+  };
+  schedule();
+  document.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule);
+  window.addEventListener('load', schedule);
+})();
+</script>
+
+
+
+
+</body></html>

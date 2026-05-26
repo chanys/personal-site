@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Yee Seng Chan">
+<meta name="description" content="What actually changes behavior across SFT, instruction tuning, and preference tuning.">
+
+<title>The fine-tuning stack: one loss, different data – Yee Seng Chan</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<link href="../../../../favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap-7b53549d121f5930ef88eb09dda4672c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-3874333d9529686a5a4437217f193688.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-7b53549d121f5930ef88eb09dda4672c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../../../styles.css">
+<meta property="og:title" content="The fine-tuning stack: one loss, different data – Yee Seng Chan">
+<meta property="og:description" content="What actually changes behavior across SFT, instruction tuning, and preference tuning.">
+<meta property="og:image" content="https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/04-fine-tuning-stack/three_jobs.png">
+<meta property="og:site_name" content="Yee Seng Chan">
+<meta property="og:image:alt" content="A diagram of three training stages grouped by loss family. Pretraining and supervised fine-tuning are bracketed together as one group because both use next-token cross-entropy; the diagram contrasts them only by their input data and by which tokens contribute to the loss. Preference optimization sits in a separate group, labeled as the only stage that introduces a different loss family.">
+<meta property="og:image:height" content="980">
+<meta property="og:image:width" content="1600">
+<meta name="twitter:title" content="The fine-tuning stack: one loss, different data – Yee Seng Chan">
+<meta name="twitter:description" content="What actually changes behavior across SFT, instruction tuning, and preference tuning.">
+<meta name="twitter:image" content="https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/04-fine-tuning-stack/three_jobs.png">
+<meta name="twitter:image:alt" content="A diagram of three training stages grouped by loss family. Pretraining and supervised fine-tuning are bracketed together as one group because both use next-token cross-entropy; the diagram contrasts them only by their input data and by which tokens contribute to the loss. Preference optimization sits in a separate group, labeled as the only stage that introduces a different loss family.">
+<meta name="twitter:image-height" content="980">
+<meta name="twitter:image-width" content="1600">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">Yee Seng Chan</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../writing.html"> 
+<span class="menu-text">Writing</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../series.html"> 
+<span class="menu-text">Series</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../projects.html"> 
+<span class="menu-text">Projects</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../../writing.xml"> <i class="bi bi-rss" role="img" aria-label="RSS feed">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/chanys"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://linkedin.com/in/yeesengchan"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:chanys.nlp@gmail.com"> <i class="bi bi-envelope" role="img" aria-label="Email">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Contents</h2>
+   
+  <ul class="collapse">
+  <li><a href="#two-loss-families-across-three-stages" id="toc-two-loss-families-across-three-stages" class="nav-link active" data-scroll-target="#two-loss-families-across-three-stages">Two loss families across three stages</a></li>
+  <li><a href="#supervised-fine-tuning" id="toc-supervised-fine-tuning" class="nav-link" data-scroll-target="#supervised-fine-tuning">Supervised fine-tuning</a></li>
+  <li><a href="#lora-and-qlora-change-the-memory-story-not-the-objective" id="toc-lora-and-qlora-change-the-memory-story-not-the-objective" class="nav-link" data-scroll-target="#lora-and-qlora-change-the-memory-story-not-the-objective">LoRA and QLoRA change the memory story, not the objective</a></li>
+  <li><a href="#when-preference-optimization-actually-matters" id="toc-when-preference-optimization-actually-matters" class="nav-link" data-scroll-target="#when-preference-optimization-actually-matters">When preference optimization actually matters</a></li>
+  <li><a href="#tnlp-showpiece-the-fine-tuning-stack-in-code" id="toc-tnlp-showpiece-the-fine-tuning-stack-in-code" class="nav-link" data-scroll-target="#tnlp-showpiece-the-fine-tuning-stack-in-code">TNLP showpiece: the fine-tuning stack in code</a></li>
+  <li><a href="#closing" id="toc-closing" class="nav-link" data-scroll-target="#closing">Closing</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">The fine-tuning stack: one loss, different data</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">Research foundations of modern LLMs</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    What actually changes behavior across SFT, instruction tuning, and preference tuning.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Yee Seng Chan </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">2026 · March 31</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+Research foundations of modern LLMs
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-pretraining-objectives/">Pretraining objectives: Why decoder-only won</a></li>
+<li><a href="../02-encoder-embeddings/">The encoder didn’t die. It became the embedding model</a></li>
+<li><a href="../03-retrieval/">Retrieval is older than RAG: From DPR to end-to-end</a></li>
+<li><a href="../04-fine-tuning-stack/">The fine-tuning stack: One loss, different data</a></li>
+<li><a href="../05-information-extraction/">Information extraction didn’t disappear. It moved inside the workflow</a></li>
+</ol>
+</div>
+<p>The standard story about post-pretraining is: first supervised fine-tuning (often called instruction tuning), then alignment with RLHF or DPO. Two stages, presented as several distinct techniques because the SFT stage has gone by many names: supervised fine-tuning, instruction tuning, distilled SFT, chat tuning. Mechanically, they’re the same operation.</p>
+<p>Here’s the thesis: SFT shares its loss function with pretraining. They’re both next-token cross-entropy, differing only in what data goes in and which tokens contribute to the loss. Preference optimization is the only stage that introduces a genuinely new loss family.</p>
+<section id="two-loss-families-across-three-stages" class="level2">
+<h2 class="anchored" data-anchor-id="two-loss-families-across-three-stages">Two loss families across three stages</h2>
+<div id="fig-three-jobs" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A diagram of three training stages grouped by loss family. Pretraining and supervised fine-tuning are bracketed together as one group because both use next-token cross-entropy; the diagram contrasts them only by their input data and by which tokens contribute to the loss. Preference optimization sits in a separate group, labeled as the only stage that introduces a different loss family.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-three-jobs-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="three_jobs.png" class="img-fluid figure-img" alt="A diagram of three training stages grouped by loss family. Pretraining and supervised fine-tuning are bracketed together as one group because both use next-token cross-entropy; the diagram contrasts them only by their input data and by which tokens contribute to the loss. Preference optimization sits in a separate group, labeled as the only stage that introduces a different loss family.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-three-jobs-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: The three stages, grouped by loss family. Pretraining and SFT share next-token cross-entropy: they differ only in what data goes in and which tokens contribute to the loss. Preference optimization is the only stage that introduces a new loss family.
+</figcaption>
+</figure>
+</div>
+<p>Pretraining and SFT use the same loss: next-token cross-entropy. They differ in:</p>
+<ul>
+<li><strong>What data the model sees.</strong> Raw text for pretraining; (instruction, response) pairs for SFT.</li>
+<li><strong>Which tokens contribute to the loss.</strong> All tokens for pretraining; only response tokens for SFT (the prompt is masked out).</li>
+</ul>
+<p>That’s the whole mechanical difference. SFT is pretraining on more curated data with a loss mask on the prompt.</p>
+<p>Preference optimization is the only stage that introduces a new loss family. The output is no longer compared to a target sequence; it’s compared to a <em>competing</em> sequence under a preference framework. RLHF wraps this in a reward model and PPO; <a href="https://chanys.github.io/dpo/">DPO</a> <span class="citation" data-cites="rafailov_etal_2023">(<a href="#ref-rafailov_etal_2023" role="doc-biblioref">Rafailov et al. 2023</a>)</span> collapses the same idea into a single supervised loss; GRPO replaces the value network with group statistics. Each has its own deep-dive in this site’s RL series: <a href="../../../../posts/series/how-llms-learn-to-reason/01-ppo/index.html">PPO is REINFORCE Plus Five Fixes</a>, <a href="../../../../posts/series/how-llms-learn-to-reason/03-dpo/index.html">DPO: RLHF Collapsed Into One Loss</a>, and <a href="../../../../posts/series/how-llms-learn-to-reason/02-grpo/index.html">GRPO: The Algorithm Behind Reasoning Models</a>.</p>
+</section>
+<section id="supervised-fine-tuning" class="level2">
+<h2 class="anchored" data-anchor-id="supervised-fine-tuning">Supervised fine-tuning</h2>
+<p>SFT’s loss is the same as pretraining’s. Everything interesting is in the data.</p>
+<p>The mechanics, traced through one example. Take an instruction-response pair:</p>
+<ul>
+<li><strong>Instruction</strong>: “Classify the sentiment of this review and explain why: ‘The food was great but the service was terrible.’”</li>
+<li><strong>Response</strong>: “Mixed sentiment. The reviewer praises the food but criticizes the service.”</li>
+</ul>
+<p>You concatenate the instruction and response into a single sequence and feed it through the model. The model computes next-token cross-entropy as it would in pretraining. The difference: a loss mask zeros out the contribution from instruction tokens. Only the response tokens carry gradient.</p>
+<p>The wrong reading is that the model learns to generate instruction-and-response pairs. It doesn’t. The instruction tokens have no loss contribution, so the model gets no gradient signal saying “produce instructions like these.” What the model learns is to produce response tokens given the instruction tokens as context. At inference, you provide the instruction; the model continues with the response.</p>
+<p>That’s it for the loss. Everything else is data engineering. SFT data comes in a few forms:</p>
+<p><strong>Human-written demonstrations.</strong> The original <a href="https://chanys.github.io/chatgpt/">InstructGPT</a> <span class="citation" data-cites="ouyang_etal_2022">(<a href="#ref-ouyang_etal_2022" role="doc-biblioref">Ouyang et al. 2022</a>)</span> recipe: humans wrote responses to a curated set of instructions, and the model was fine-tuned on those pairs. High-quality, but expensive and slow.</p>
+<p><strong>Multitask instruction data.</strong> The Sept 2021 <a href="https://chanys.github.io/flan/">FLAN</a> <span class="citation" data-cites="wei_etal_2022">(<a href="#ref-wei_etal_2022" role="doc-biblioref">Wei et al. 2022</a>)</span> paper showed that training on many NLP tasks formatted as instructions improves zero-shot performance on unseen tasks. <a href="https://chanys.github.io/t0/">T0</a> <span class="citation" data-cites="sanh_etal_2022">(<a href="#ref-sanh_etal_2022" role="doc-biblioref">Sanh et al. 2022</a>)</span> showed the same on encoder-decoder models; <a href="https://chanys.github.io/tkinstruct/">Tk-INSTRUCT</a> <span class="citation" data-cites="wang_etal_2022_tkinstruct">(<a href="#ref-wang_etal_2022_tkinstruct" role="doc-biblioref">Wang et al. 2022</a>)</span> and <a href="https://chanys.github.io/flan-palm/">FLAN-PaLM</a> scaled to 1,600 and 1,800 tasks. More tasks, more diverse templates, and larger base models all help. FLAN also found a size threshold: multitask SFT <em>hurt</em> held-out performance at 8B and below, helped substantially at 137B. T0 found the threshold lower (3B) for encoder-decoder models, the kind of small-scale inductive-bias advantage that scales away (see <a href="../../../../posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/index.html">Pretraining objectives: why decoder-only won</a>).</p>
+<p><strong>Synthetic teacher-generated data.</strong> By late 2022 the bottleneck was data. Self-Instruct <span class="citation" data-cites="wang_etal_2023_selfinstruct">(<a href="#ref-wang_etal_2023_selfinstruct" role="doc-biblioref">Wang et al. 2023</a>)</span> showed an instruction-following LLM could generate its own training data: seed with a few human instructions, generate variations and responses, filter for quality. Alpaca and <a href="https://chanys.github.io/zephyr/">Zephyr</a> <span class="citation" data-cites="tunstall_etal_2023">(<a href="#ref-tunstall_etal_2023" role="doc-biblioref">Tunstall et al. 2023</a>)</span> operationalized this (Zephyr’s UltraChat: 1.47M GPT-3.5 dialogues filtered to 200K). This <em>distilled SFT</em> (dSFT) pattern is now standard; the scale is set by what teacher models can produce, not what humans can write. Two caveats: the student inherits the teacher’s limits, and the filter does real work. The empirical lesson of the past two years is that 10K well-chosen examples often beat 1M scraped ones <span class="citation" data-cites="zhou_etal_2023">(<a href="#ref-zhou_etal_2023" role="doc-biblioref">Zhou et al. 2023</a>)</span>.</p>
+<p><strong>Chat-format data.</strong> The same loss is applied across multi-turn conversations, with the loss mask zeroing out user turns and computing loss only on assistant turns. Mechanically identical to single-turn SFT; the data just has more turns.</p>
+<p>A note on single-task vs multi-task SFT. If your application is one task with consistent phrasing, single-task SFT is fine. If your application is a chat assistant handling varied user queries, multi-task SFT is doing real work: the diverse training data is what gives the model robustness across phrasings. Almost everyone does multi-task SFT, because almost everyone is building something at least chat-shaped.</p>
+</section>
+<section id="lora-and-qlora-change-the-memory-story-not-the-objective" class="level2">
+<h2 class="anchored" data-anchor-id="lora-and-qlora-change-the-memory-story-not-the-objective">LoRA and QLoRA change the memory story, not the objective</h2>
+<p>LoRA and QLoRA don’t change what the model is being trained on or how the loss is computed. They change what parameters are trainable and what fits in memory. That distinction matters for the article’s thesis: most of the post-pretraining stack is the same algorithm applied to different data; parameter-efficient methods are a memory-engineering layer on top, not a new training paradigm.</p>
+<div id="fig-lora" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two panels. Left: a frozen base weight matrix W-zero shown alongside a low-rank update formed by multiplying matrix B of size d by r with matrix A of size r by k, where the rank r is much smaller than d or k, so only A and B are trained. Right: a bar chart comparing GPU memory to fine-tune a 7B model under three regimes, roughly 84GB for full fine-tuning at FP32, about 14GB for LoRA on an FP16 base, and about 4GB for QLoRA on a 4-bit quantized base.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-lora-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="lora.png" class="img-fluid figure-img" alt="Two panels. Left: a frozen base weight matrix W-zero shown alongside a low-rank update formed by multiplying matrix B of size d by r with matrix A of size r by k, where the rank r is much smaller than d or k, so only A and B are trained. Right: a bar chart comparing GPU memory to fine-tune a 7B model under three regimes, roughly 84GB for full fine-tuning at FP32, about 14GB for LoRA on an FP16 base, and about 4GB for QLoRA on a 4-bit quantized base.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-lora-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: LoRA decomposes the fine-tuning update into two small matrices B (d×r) and A (r×k), with r much smaller than d or k. The base weight matrix W₀ stays frozen. Right: memory for fine-tuning a 7B model under three regimes; full fine-tuning at FP32 needs ~84GB, LoRA on FP16 base ~14GB, QLoRA on 4-bit base ~4GB.
+</figcaption>
+</figure>
+</div>
+<p><a href="https://chanys.github.io/lora/">LoRA</a> <span class="citation" data-cites="hu_etal_2022">(<a href="#ref-hu_etal_2022" role="doc-biblioref">Hu et al. 2022</a>)</span> trains a small low-rank adapter on top of a frozen base model. The premise: full fine-tuning is overkill for most tasks because fine-tuning updates have low intrinsic rank. The base already knows grammar, world facts, and reasoning patterns; fine-tuning is usually a <em>nudge</em>, not a rewrite. LoRA replaces the full update <span class="math inline">\(\Delta W\)</span> with the product of two much smaller matrices <span class="math inline">\(BA\)</span>, where the rank <span class="math inline">\(r\)</span> is much smaller than the original matrix dimensions. The base <span class="math inline">\(W_0\)</span> stays frozen; only the small <span class="math inline">\(B\)</span> and <span class="math inline">\(A\)</span> are trained. The phrase to remember: LoRA works because fine-tuning is usually steering, not rebuilding.</p>
+<p><a href="https://chanys.github.io/qlora/">QLoRA</a> <span class="citation" data-cites="dettmers_etal_2023">(<a href="#ref-dettmers_etal_2023" role="doc-biblioref">Dettmers et al. 2023</a>)</span> keeps LoRA’s structure but quantizes the frozen base to 4 bits while leaving the adapter in 16-bit. The QLoRA mechanics (NF4 quantization, double quantization of scale constants, paged optimizers for memory spikes) are covered in the <a href="https://chanys.github.io/qlora/">QLoRA deep-dive post</a>; they’re what makes the memory math work but they’re orthogonal to the article’s thesis.</p>
+<p>Almost all open-source fine-tuning in 2024-2026 uses LoRA or QLoRA. Full fine-tuning still happens for frontier-scale base-model training, but downstream specialization is overwhelmingly LoRA-based. The wave of fine-tuned open-source models from late 2023 onward is downstream of this.</p>
+</section>
+<section id="when-preference-optimization-actually-matters" class="level2">
+<h2 class="anchored" data-anchor-id="when-preference-optimization-actually-matters">When preference optimization actually matters</h2>
+<p>Once a model has been SFT’d, you can do another round of training that uses preference data: pairs of responses where one is judged better than the other. The goal is to push the model toward responses that match human (or proxy) preferences for properties like helpfulness, harmlessness, conciseness.</p>
+<p>Three families dominate the post-2022 alignment landscape:</p>
+<ul>
+<li><strong>RLHF</strong> (<a href="https://chanys.github.io/chatgpt/">InstructGPT</a> <span class="citation" data-cites="ouyang_etal_2022">(<a href="#ref-ouyang_etal_2022" role="doc-biblioref">Ouyang et al. 2022</a>)</span> recipe): SFT, then train a reward model on preference pairs, then run PPO using the reward model as the reward signal. Four LLM-sized things in memory at training time.</li>
+<li><strong>DPO</strong> (Direct Preference Optimization): skip the reward model and the RL machinery. A single supervised loss on preference pairs. Two models in memory.</li>
+<li><strong>GRPO</strong> (Group Relative Policy Optimization): PPO with the value network removed. Memory-efficient, well-suited to verifiable-reward settings (math, code). The algorithm behind R1 and most open-source reasoning models.</li>
+</ul>
+<p>The mechanics (why DPO’s derivation works, what PPO is doing under the hood, why GRPO works for reasoning) are covered in detail in this site’s RL series: <a href="../../../../posts/series/how-llms-learn-to-reason/01-ppo/index.html">PPO is REINFORCE plus five fixes</a>, <a href="../../../../posts/series/how-llms-learn-to-reason/03-dpo/index.html">DPO: RLHF collapsed into one loss</a>, and <a href="../../../../posts/series/how-llms-learn-to-reason/02-grpo/index.html">GRPO: the algorithm behind reasoning models</a>. For this article the strategic question is simpler: when does preference optimization actually matter for your application?</p>
+<p>For chat assistants serving general users, almost always. SFT alone produces a model that can follow instructions but doesn’t have stable behavioral preferences. It’ll be helpful one moment and verbose or evasive the next. Preference tuning is what shapes that into something consistent.</p>
+<p>For applications where the desired behavior is itself contested (creative writing, advice-giving, judgments about taste), preference tuning is doing the bulk of the work. The model isn’t learning facts; it’s learning whose preferences to optimize for.</p>
+</section>
+<section id="tnlp-showpiece-the-fine-tuning-stack-in-code" class="level2">
+<h2 class="anchored" data-anchor-id="tnlp-showpiece-the-fine-tuning-stack-in-code">TNLP showpiece: the fine-tuning stack in code</h2>
+<p>The <a href="https://github.com/chanys/tnlp">TNLP repo</a> implements the three stages of post-pretraining on LLaMA-2-7B and Mistral-7B: instruction fine-tuning, chat fine-tuning, and DPO:</p>
+<ul>
+<li><a href="https://github.com/chanys/tnlp#instruction-fine-tuning"><strong>Instruction fine-tuning</strong></a> trains LLaMA-2-7B on the Alpaca dataset using <code>AutoModelForCausalLM</code> with LoRA and 8-bit loading.</li>
+<li><a href="https://github.com/chanys/tnlp#chat-fine-tuning"><strong>Chat fine-tuning</strong></a> trains Mistral-7B on the multi-turn UltraChat dataset using TRL’s <code>SFTTrainer</code> with QLoRA (4-bit base, 16-bit adapters). Same next-token objective as instruction tuning; only the data format (turn-based user/assistant exchanges) differs.</li>
+<li><a href="https://github.com/chanys/tnlp#direct-preference-optimization-dpo"><strong>DPO</strong></a> takes the chat-tuned model and runs preference optimization on UltraFeedback (binarized chosen/rejected pairs) via TRL’s <code>DPOTrainer</code>, again with QLoRA. This is where the objective itself changes: from next-token imitation to direct preference optimization against a frozen reference policy.</li>
+</ul>
+<p>The QLoRA setup runs on a single 24GB GPU.</p>
+<p>Related writeups: <a href="https://chanys.github.io/flan-code/">LoRA fine-tuning of LLaMA-2-7B</a> and <a href="../../../../posts/series/how-llms-learn-to-reason/03-dpo/index.html">DPO: RLHF Collapsed Into One Loss</a>.</p>
+</section>
+<section id="closing" class="level2">
+<h2 class="anchored" data-anchor-id="closing">Closing</h2>
+<p>The post-pretraining stack looks complicated because every stage has its own name. Most of those names are about the data, not the algorithm. Pretraining and SFT share next-token cross-entropy; SFT just curates the data and masks the loss to response tokens. Preference optimization is the one place the loss family genuinely changes. LoRA and QLoRA don’t change the loss; they change what fits in memory.</p>
+<p>That’s most of post-pretraining in a paragraph. The depth is in the data engineering (what instruction sources to use, how to filter synthetic data, how to balance task mixtures, when preference data is worth collecting) and in the algorithmic deep-dives for preference optimization.</p>
+
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-dettmers_etal_2023" class="csl-entry" role="listitem">
+Dettmers, Tim, Artidoro Pagnoni, Ari Holtzman, and Luke Zettlemoyer. 2023. <span>“QLoRA: Efficient Finetuning of Quantized LLMs.”</span> <em>Advances in Neural Information Processing Systems (NeurIPS)</em>. <a href="https://arxiv.org/abs/2305.14314">https://arxiv.org/abs/2305.14314</a>.
+</div>
+<div id="ref-hu_etal_2022" class="csl-entry" role="listitem">
+Hu, Edward J., Yelong Shen, Phillip Wallis, et al. 2022. <span>“LoRA: Low-Rank Adaptation of Large Language Models.”</span> <em>International Conference on Learning Representations</em>. <a href="https://arxiv.org/abs/2106.09685">https://arxiv.org/abs/2106.09685</a>.
+</div>
+<div id="ref-ouyang_etal_2022" class="csl-entry" role="listitem">
+Ouyang, Long, Jeff Wu, Xu Jiang, et al. 2022. <span>“Training Language Models to Follow Instructions with Human Feedback.”</span> <em>Advances in Neural Information Processing Systems (NeurIPS)</em>. <a href="https://arxiv.org/abs/2203.02155">https://arxiv.org/abs/2203.02155</a>.
+</div>
+<div id="ref-rafailov_etal_2023" class="csl-entry" role="listitem">
+Rafailov, Rafael, Archit Sharma, Eric Mitchell, Stefano Ermon, Christopher D. Manning, and Chelsea Finn. 2023. <span>“Direct Preference Optimization: Your Language Model Is Secretly a Reward Model.”</span> <em>Advances in Neural Information Processing Systems (NeurIPS)</em>. <a href="https://arxiv.org/abs/2305.18290">https://arxiv.org/abs/2305.18290</a>.
+</div>
+<div id="ref-sanh_etal_2022" class="csl-entry" role="listitem">
+Sanh, Victor, Albert Webson, Colin Raffel, et al. 2022. <span>“Multitask Prompted Training Enables Zero-Shot Task Generalization.”</span> <em>International Conference on Learning Representations (ICLR)</em>. <a href="https://arxiv.org/abs/2110.08207">https://arxiv.org/abs/2110.08207</a>.
+</div>
+<div id="ref-tunstall_etal_2023" class="csl-entry" role="listitem">
+Tunstall, Lewis, Edward Beeching, Nathan Lambert, et al. 2023. <span>“Zephyr: Direct Distillation of LM Alignment.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/2310.16944">https://arxiv.org/abs/2310.16944</a>.
+</div>
+<div id="ref-wang_etal_2023_selfinstruct" class="csl-entry" role="listitem">
+Wang, Yizhong, Yeganeh Kordi, Swaroop Mishra, et al. 2023. <span>“Self-Instruct: Aligning Language Models with Self-Generated Instructions.”</span> <em>Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (ACL)</em>. <a href="https://arxiv.org/abs/2212.10560">https://arxiv.org/abs/2212.10560</a>.
+</div>
+<div id="ref-wang_etal_2022_tkinstruct" class="csl-entry" role="listitem">
+Wang, Yizhong, Swaroop Mishra, Pegah Alipoormolabashi, et al. 2022. <span>“Super-NaturalInstructions: Generalization via Declarative Instructions on 1600+ NLP Tasks.”</span> <em>Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing (EMNLP)</em>. <a href="https://arxiv.org/abs/2204.07705">https://arxiv.org/abs/2204.07705</a>.
+</div>
+<div id="ref-wei_etal_2022" class="csl-entry" role="listitem">
+Wei, Jason, Maarten Bosma, Vincent Y. Zhao, et al. 2022. <span>“Finetuned Language Models Are Zero-Shot Learners.”</span> <em>International Conference on Learning Representations (ICLR)</em>. <a href="https://arxiv.org/abs/2109.01652">https://arxiv.org/abs/2109.01652</a>.
+</div>
+<div id="ref-zhou_etal_2023" class="csl-entry" role="listitem">
+Zhou, Chunting, Pengfei Liu, Puxin Xu, et al. 2023. <span>“LIMA: Less Is More for Alignment.”</span> <em>Advances in Neural Information Processing Systems (NeurIPS)</em>. <a href="https://arxiv.org/abs/2305.11206">https://arxiv.org/abs/2305.11206</a>.
+</div>
+</div></section></div></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/yeesengchan\.com");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+© 2026 Yee Seng Chan
+</div>   
+    <div class="nav-footer-center">
+Built with <a href="https://quarto.org">Quarto</a>
+</div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/chanys">
+      <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://linkedin.com/in/yeesengchan">
+      <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="../../../../writing.xml">
+      <i class="bi bi-rss" role="img" aria-label="RSS feed">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+<script>
+(() => {
+  if (!document.querySelector('.series-nav')) return;
+  const toc = document.querySelector('nav#TOC[role="doc-toc"]');
+  if (!toc) return;
+  const links = [...toc.querySelectorAll('a[data-scroll-target]')];
+  if (!links.length) return;
+  const sections = links.map((link) => {
+    const target = link.getAttribute('data-scroll-target') || '';
+    return target.startsWith('#')
+      ? document.getElementById(decodeURI(target.slice(1)))
+      : null;
+  });
+  // Distance below viewport top at which a heading is treated as
+  // "the current section." Small, so the highlight matches what a
+  // reader perceives as the heading at the top of the page.
+  const ACTIVATION_OFFSET = 80;
+  const apply = () => {
+    let idx = 0;
+    const atBottom = window.innerHeight + window.pageYOffset
+      >= document.documentElement.scrollHeight - 2;
+    if (atBottom) {
+      idx = sections.length - 1;
+    } else {
+      for (let i = 0; i < sections.length; i++) {
+        const s = sections[i];
+        if (s && s.getBoundingClientRect().top <= ACTIVATION_OFFSET) idx = i;
+      }
+    }
+    for (let i = 0; i < links.length; i++) {
+      links[i].classList.toggle('active', i === idx);
+    }
+  };
+  // rAF ensures we run after Quarto's synchronous scroll handler
+  // so our active-class choice wins.
+  let pending = false;
+  const schedule = () => {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => { apply(); pending = false; });
+  };
+  schedule();
+  document.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule);
+  window.addEventListener('load', schedule);
+})();
+</script>
+
+
+
+
+</body></html>

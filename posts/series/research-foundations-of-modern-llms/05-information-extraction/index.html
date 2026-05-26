@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Yee Seng Chan">
+<meta name="description" content="Classic IE was absorbed into prompts, schemas, and pipelines.">
+
+<title>Information extraction didn’t disappear. It moved inside the workflow. – Yee Seng Chan</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<link href="../../../../favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap-7b53549d121f5930ef88eb09dda4672c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-3874333d9529686a5a4437217f193688.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-7b53549d121f5930ef88eb09dda4672c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+
+
+<link rel="stylesheet" href="../../../../styles.css">
+<meta property="og:title" content="Information extraction didn’t disappear. It moved inside the workflow. – Yee Seng Chan">
+<meta property="og:description" content="Classic IE was absorbed into prompts, schemas, and pipelines.">
+<meta property="og:image" content="https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/05-information-extraction/three_eras.png">
+<meta property="og:site_name" content="Yee Seng Chan">
+<meta property="og:image:alt" content="Three stacked panels for three eras of information extraction. The pre-BERT and BERT panels show the same left-to-right pipeline of identical boxes, with only the contents of each box changing between them, hand-built features in the first and learned BERT representations in the second. The LLM panel replaces the linear pipeline with a workflow: several extraction calls run in parallel and emit structured frames that flow into a downstream system. A side label contrasts the labor profile, shifting from data annotation and feature engineering in the earlier eras to schema design, prompt engineering, and evaluation in the LLM era.">
+<meta property="og:image:height" content="1120">
+<meta property="og:image:width" content="1800">
+<meta name="twitter:title" content="Information extraction didn’t disappear. It moved inside the workflow. – Yee Seng Chan">
+<meta name="twitter:description" content="Classic IE was absorbed into prompts, schemas, and pipelines.">
+<meta name="twitter:image" content="https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/05-information-extraction/three_eras.png">
+<meta name="twitter:image:alt" content="Three stacked panels for three eras of information extraction. The pre-BERT and BERT panels show the same left-to-right pipeline of identical boxes, with only the contents of each box changing between them, hand-built features in the first and learned BERT representations in the second. The LLM panel replaces the linear pipeline with a workflow: several extraction calls run in parallel and emit structured frames that flow into a downstream system. A side label contrasts the labor profile, shifting from data annotation and feature engineering in the earlier eras to schema design, prompt engineering, and evaluation in the LLM era.">
+<meta name="twitter:image-height" content="1120">
+<meta name="twitter:image-width" content="1800">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">Yee Seng Chan</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../writing.html"> 
+<span class="menu-text">Writing</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../series.html"> 
+<span class="menu-text">Series</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../projects.html"> 
+<span class="menu-text">Projects</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../../writing.xml"> <i class="bi bi-rss" role="img" aria-label="RSS feed">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/chanys"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://linkedin.com/in/yeesengchan"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:chanys.nlp@gmail.com"> <i class="bi bi-envelope" role="img" aria-label="Email">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Contents</h2>
+   
+  <ul class="collapse">
+  <li><a href="#what-ie-used-to-look-like" id="toc-what-ie-used-to-look-like" class="nav-link active" data-scroll-target="#what-ie-used-to-look-like">What IE used to look like</a></li>
+  <li><a href="#bert-made-ie-better-not-cheaper" id="toc-bert-made-ie-better-not-cheaper" class="nav-link" data-scroll-target="#bert-made-ie-better-not-cheaper">BERT made IE better, not cheaper</a></li>
+  <li><a href="#llms-changed-the-labor-model" id="toc-llms-changed-the-labor-model" class="nav-link" data-scroll-target="#llms-changed-the-labor-model">LLMs changed the labor model</a></li>
+  <li><a href="#three-modern-ie-patterns" id="toc-three-modern-ie-patterns" class="nav-link" data-scroll-target="#three-modern-ie-patterns">Three modern IE patterns</a></li>
+  <li><a href="#the-new-labor-schema-prompts-eval-orchestration" id="toc-the-new-labor-schema-prompts-eval-orchestration" class="nav-link" data-scroll-target="#the-new-labor-schema-prompts-eval-orchestration">The new labor: schema, prompts, eval, orchestration</a></li>
+  <li><a href="#when-classical-ie-still-wins" id="toc-when-classical-ie-still-wins" class="nav-link" data-scroll-target="#when-classical-ie-still-wins">When classical IE still wins</a></li>
+  <li><a href="#code-companion-tnlp-ie-examples" id="toc-code-companion-tnlp-ie-examples" class="nav-link" data-scroll-target="#code-companion-tnlp-ie-examples">Code companion: TNLP IE examples</a></li>
+  <li><a href="#what-people-get-wrong" id="toc-what-people-get-wrong" class="nav-link" data-scroll-target="#what-people-get-wrong">What people get wrong</a></li>
+  <li><a href="#closing" id="toc-closing" class="nav-link" data-scroll-target="#closing">Closing</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Information extraction didn’t disappear. It moved inside the workflow.</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">Research foundations of modern LLMs</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    Classic IE was absorbed into prompts, schemas, and pipelines.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Yee Seng Chan </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">2026 · April 5</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+Research foundations of modern LLMs
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-pretraining-objectives/">Pretraining objectives: Why decoder-only won</a></li>
+<li><a href="../02-encoder-embeddings/">The encoder didn’t die. It became the embedding model</a></li>
+<li><a href="../03-retrieval/">Retrieval is older than RAG: From DPR to end-to-end</a></li>
+<li><a href="../04-fine-tuning-stack/">The fine-tuning stack: One loss, different data</a></li>
+<li><a href="../05-information-extraction/">Information extraction didn’t disappear. It moved inside the workflow</a></li>
+</ol>
+</div>
+<p>For thirty years, information extraction was a real subfield of NLP. Named entity recognition, relation extraction, event extraction, coreference resolution, slot filling, knowledge-base population. Annotated corpora: ACE, OntoNotes, KBP, TAC. A shared-task culture at every major conference. An entire industry of vendors and government-funded R&amp;D organizations whose product was, essentially, structured records pulled out of unstructured text.</p>
+<p>By 2024, the center of gravity had shifted.</p>
+<p>The standard story is that LLMs replaced IE. The truer claim is that IE didn’t disappear. It moved inside the workflow. Where the pre-LLM IE pipeline was the <em>product</em> (extract entities, link them, populate a knowledge base, ship the KB), modern IE is the <em>structured layer</em> between raw text and downstream generation or action.</p>
+<p>What changed wasn’t the existence of the work. It was the labor model. Pre-LLM IE meant labeling thousands of examples per task, engineering features, training task-specific classifiers, and tuning a pipeline. LLM-era IE means designing a JSON schema, writing a prompt, and evaluating the result. Both are real engineering. They are not the same engineering.</p>
+<p>I worked across all three eras the article traces: pre-BERT IE during a postdoc, BERT-era production IE through the late 2010s, and LLM-era workflow IE now.</p>
+<div id="fig-three-eras" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three stacked panels for three eras of information extraction. The pre-BERT and BERT panels show the same left-to-right pipeline of identical boxes, with only the contents of each box changing between them, hand-built features in the first and learned BERT representations in the second. The LLM panel replaces the linear pipeline with a workflow: several extraction calls run in parallel and emit structured frames that flow into a downstream system. A side label contrasts the labor profile, shifting from data annotation and feature engineering in the earlier eras to schema design, prompt engineering, and evaluation in the LLM era.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-three-eras-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="three_eras.png" class="img-fluid figure-img" alt="Three stacked panels for three eras of information extraction. The pre-BERT and BERT panels show the same left-to-right pipeline of identical boxes, with only the contents of each box changing between them, hand-built features in the first and learned BERT representations in the second. The LLM panel replaces the linear pipeline with a workflow: several extraction calls run in parallel and emit structured frames that flow into a downstream system. A side label contrasts the labor profile, shifting from data annotation and feature engineering in the earlier eras to schema design, prompt engineering, and evaluation in the LLM era.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-three-eras-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: The three eras of information extraction. The pipeline shape is unchanged from pre-BERT to BERT era; only the components inside each box change. The LLM era replaces the linear pipeline with a workflow: parallel extraction calls feed structured frames into a downstream system, and the labor profile shifts from annotation and feature engineering to schema design, prompt engineering, and evaluation.
+</figcaption>
+</figure>
+</div>
+<section id="what-ie-used-to-look-like" class="level2">
+<h2 class="anchored" data-anchor-id="what-ie-used-to-look-like">What IE used to look like</h2>
+<p>The canonical IE pipeline went something like this:</p>
+<ol type="1">
+<li><strong>NER</strong>: tag spans of text with entity types (PER, ORG, GPE, LOC).</li>
+<li><strong>Coreference</strong>: cluster mentions that refer to the same entity.</li>
+<li><strong>Relation extraction</strong>: for each pair of entities, classify the relation between them, if any.</li>
+<li><strong>Event extraction</strong>: identify event triggers, classify the event type, then identify the arguments playing each role.</li>
+<li><strong>Knowledge-base population</strong>: combine the above into a structured record per entity, linked across documents.</li>
+</ol>
+<p>Each of these was its own subfield. Each had its own datasets: CoNLL-2003 <span class="citation" data-cites="sang_demeulder_2003">(<a href="#ref-sang_demeulder_2003" role="doc-biblioref">Tjong Kim Sang and Meulder 2003</a>)</span> for NER, ACE-2005 <span class="citation" data-cites="walker_etal_2006">(<a href="#ref-walker_etal_2006" role="doc-biblioref">Walker et al. 2006</a>)</span> for events and relations, OntoNotes <span class="citation" data-cites="hovy_etal_2006">(<a href="#ref-hovy_etal_2006" role="doc-biblioref">Hovy et al. 2006</a>)</span> for coreference, the TAC KBP datasets <span class="citation" data-cites="ji_grishman_2011">(<a href="#ref-ji_grishman_2011" role="doc-biblioref">Ji and Grishman 2011</a>)</span> for end-to-end knowledge-base construction. Each had its own modeling tradition: HMMs and CRFs for sequence labeling, structured-prediction for relation classification, ILP-based joint inference for combining extractions.</p>
+<p>The labor was substantial and concentrated on the input side. To build an NER system for a new entity type, you collected text, annotated mentions (typically thousands per type), engineered features (word identity, POS, gazetteer match, dependency context), and trained a classifier. Relation extraction added another annotation pass per relation type. Event extraction added another for triggers and another for each argument role.</p>
+<p>I worked in this regime during my postdoc. The published work from that period is on relation extraction <span class="citation" data-cites="chan_roth_2010 chan_roth_2011">(<a href="#ref-chan_roth_2010" role="doc-biblioref">Chan and Roth 2010</a>, <a href="#ref-chan_roth_2011" role="doc-biblioref">2011</a>)</span> and minimally-supervised event causality <span class="citation" data-cites="do_etal_2011">(<a href="#ref-do_etal_2011" role="doc-biblioref">Do et al. 2011</a>)</span>. The relation-extraction setup was typical for the era: a feature engineering pass over syntactic and semantic structures (constituency parses, dependency paths, semantic roles, Wikipedia categories as background knowledge), then a structured classifier.</p>
+<p>The defining property of pre-BERT IE wasn’t any particular model. It was the labor model. Every new task, every new domain, every new ontology required a fresh labeling effort, a fresh feature-engineering pass, and a fresh trained model. Performance was decent on benchmarks and worse in domain transfer. Adapting to a new domain typically meant starting over.</p>
+</section>
+<section id="bert-made-ie-better-not-cheaper" class="level2">
+<h2 class="anchored" data-anchor-id="bert-made-ie-better-not-cheaper">BERT made IE better, not cheaper</h2>
+<p>BERT <span class="citation" data-cites="devlin_etal_2019">(<a href="#ref-devlin_etal_2019" role="doc-biblioref">Devlin et al. 2019</a>)</span> changed the modeling but not the labor. The pipeline shape stayed identical to the pre-BERT pipeline; the component models got better:</p>
+<ul>
+<li><strong>NER</strong> became encoder + token classifier with BIO tags (what Hugging Face exposes as <code>AutoModelForTokenClassification</code>).</li>
+<li><strong>Relation extraction</strong> became encoder + span-pair classifier: encode the sentence, pull out the two entity span representations, pool them, run through an MLP head.</li>
+<li><strong>Event extraction</strong> became encoder + token classifier for triggers, plus a span-pair-style classifier for arguments.</li>
+<li><strong>Coreference</strong> became span scoring and clustering over contextualized representations.</li>
+</ul>
+<p>The improvements were real. The transition from feature engineering to learned representations was, in retrospect, the largest single quality jump IE had seen in a decade.</p>
+<p>But the labor model was unchanged. You still needed labeled data per task. You still needed an annotation effort per new domain. The encoder did the feature engineering for you, but the rest of the work (schema design, annotation, evaluation) was the same as before.</p>
+<p>I spent most of the BERT era on this kind of production IE: event extraction <span class="citation" data-cites="chan_etal_2019">(<a href="#ref-chan_etal_2019" role="doc-biblioref">Chan et al. 2019</a>)</span>, KBP-style end-to-end systems <span class="citation" data-cites="deyoung_etal_2017">(<a href="#ref-deyoung_etal_2017" role="doc-biblioref">DeYoung et al. 2017</a>)</span>, domain-specific machine reading and few-shot event mention retrieval <span class="citation" data-cites="min_etal_2019 min_etal_2020">(<a href="#ref-min_etal_2019" role="doc-biblioref">Min et al. 2019</a>, <a href="#ref-min_etal_2020" role="doc-biblioref">2020</a>)</span>. I designed and built the deep-learning IE platform these systems ran on, layered on the Hugging Face ecosystem and used across government-funded and industry projects.</p>
+<p>One <strong>multilingual event extraction</strong> project captures how sophisticated BERT-era IE had become. The training data was English, the inference target was Arabic, and the ontology covered roughly forty event types with typed argument roles. The stack used XLM-R <span class="citation" data-cites="conneau_etal_2020">(<a href="#ref-conneau_etal_2020" role="doc-biblioref">Conneau et al. 2020</a>)</span>, multi-stage fine-tuning, token classification, continued MLM pretraining on mixed English-Arabic text, and automated checkpoint selection. This was not “just put a classifier on BERT.”</p>
+<p>A second project, <strong>rapid customization of event extraction</strong> for new ontologies <span class="citation" data-cites="chan_etal_2019">(<a href="#ref-chan_etal_2019" role="doc-biblioref">Chan et al. 2019</a>)</span>, was already gesturing at the LLM-era interface. The setup: take a small set of event-type definitions and a handful of seed examples, produce a working extractor without a full annotation effort. We compressed the labeling step with bootstrapping; the modern version puts definitions and examples into a prompt instead. <em>What changed is that the definitions-plus-examples now condition a frontier LLM directly rather than seeding a bootstrapping loop.</em></p>
+<p>The point of dwelling on this isn’t nostalgia. Too many current writeups treat the BERT era as a stepping stone: “people used to fine-tune classifiers, then LLMs came along.” That undersells the engineering. The systems were good. They were just expensive to build per task, which is exactly the thing the next era changed.</p>
+</section>
+<section id="llms-changed-the-labor-model" class="level2">
+<h2 class="anchored" data-anchor-id="llms-changed-the-labor-model">LLMs changed the labor model</h2>
+<p>What changed with LLMs wasn’t that you could finally do IE. You could already do IE. What changed was the cost structure.</p>
+<p>A frontier LLM with structured-output support can solve most NER, RE, and slot-filling tasks zero-shot or few-shot from a prompt and a JSON schema. Quality is task-dependent:</p>
+<ul>
+<li>On standard benchmarks like CoNLL-2003, a well-prompted frontier LLM lands within a few F1 points of fine-tuned baselines.</li>
+<li>On harder benchmarks like ACE 2005 event extraction, zero-shot LLMs still trail fine-tuned specialists by double-digit margins <span class="citation" data-cites="zhang_etal_2025">(<a href="#ref-zhang_etal_2025" role="doc-biblioref">Zhang et al. 2025</a>)</span>.</li>
+</ul>
+<p>The gap closes with a handful of in-context examples or light fine-tuning on synthetic data. But for most use cases the marginal value of building a specialized BERT-era IE pipeline collapsed, because the engineering cost of getting from “no extractor” to “working extractor” dropped by an order of magnitude even when the LLM isn’t strictly best on F1.</p>
+<p>The mechanics are by now well-known. The prompt asks for structured output. The schema is enforced by the provider’s structured-output mode (OpenAI’s <code>response_format</code>), or by Pydantic schemas as a type-checked output contract. For NER, the schema is a list of typed entities. For RE, a list of (head, relation, tail) triples. For event extraction, a list of frames with event type and roles. The LLM call replaces the entire encoder-plus-classifier-head stack.</p>
+</section>
+<section id="three-modern-ie-patterns" class="level2">
+<h2 class="anchored" data-anchor-id="three-modern-ie-patterns">Three modern IE patterns</h2>
+<div id="fig-ie-patterns" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three panels. Direct extraction: Document goes to an LLM call producing JSON, then structured output; the LLM is in the serving path; simple and latency-tolerant. LLM-built specialist: a build-time-only LLM produces training data which trains a specialist that serves production; the LLM is offline, the small model serves, cheap, fast, and auditable at scale; example STIX relation extraction with GPT generating data for DeBERTa and T5. IE as workflow state: raw text goes through N parallel extraction calls to frames plus metadata that feed a downstream system; extraction is not the product, it feeds a downstream system; example transcript to frames to clinical note. Footer: what differs is where the LLM sits and whether extraction is the product or the scaffolding.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ie-patterns-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="ie_three_patterns.png" class="img-fluid figure-img" alt="Three panels. Direct extraction: Document goes to an LLM call producing JSON, then structured output; the LLM is in the serving path; simple and latency-tolerant. LLM-built specialist: a build-time-only LLM produces training data which trains a specialist that serves production; the LLM is offline, the small model serves, cheap, fast, and auditable at scale; example STIX relation extraction with GPT generating data for DeBERTa and T5. IE as workflow state: raw text goes through N parallel extraction calls to frames plus metadata that feed a downstream system; extraction is not the product, it feeds a downstream system; example transcript to frames to clinical note. Footer: what differs is where the LLM sits and whether extraction is the product or the scaffolding.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ie-patterns-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Three modern IE patterns. They differ in where the LLM sits and what ships: Direct extraction calls the LLM in the serving path and uses its output as-is; the LLM-built specialist uses the LLM offline only to generate training data, then serves a small specialist; IE as workflow state runs parallel extraction calls whose metadata-rich frames feed a downstream product, so extraction is the structured layer rather than the deliverable.
+</figcaption>
+</figure>
+</div>
+<section id="direct-llm-extraction" class="level3">
+<h3 class="anchored" data-anchor-id="direct-llm-extraction">Direct LLM extraction</h3>
+<p>The baseline pattern: the production system makes an LLM call per document or chunk, parses the structured output, and uses it directly. It works for moderate-volume, latency-tolerant settings, and it’s the reference point the other two patterns are defined against.</p>
+</section>
+<section id="llm-for-data-specialist-for-serving" class="level3">
+<h3 class="anchored" data-anchor-id="llm-for-data-specialist-for-serving">LLM for data, specialist for serving</h3>
+<p>The hybrid pattern uses an <strong>LLM to generate training data</strong>, then trains a smaller specialist for production serving.</p>
+<p>I ran into this in relation extraction over the MITRE STIX cyber security ontology (threat-actor, attack-pattern, malware, target, etc.). The available pre-LLM datasets were too sparse, incompletely annotated, or didn’t match STIX cleanly. The path forward: use GPT to extract candidate entities and relations from a few hundred documents. These LLM-generated annotations became training data for a DeBERTa-v3 <span class="citation" data-cites="he_etal_2021">(<a href="#ref-he_etal_2021" role="doc-biblioref">He et al. 2021</a>)</span> span-pair classifier (relations) and a T5 <span class="citation" data-cites="raffel_etal_2020">(<a href="#ref-raffel_etal_2020" role="doc-biblioref">Raffel et al. 2020</a>)</span> seq2seq tagger (NER, chosen because entity spans overlapped). The serving system never called GPT. It used the smaller specialists, trained on GPT-generated data.</p>
+<p>The labor shift is the whole point. The classical version would have started with months of annotation. The LLM-era version started with prompt and schema design. The production model was still a classical encoder; the annotation cost collapsed.</p>
+</section>
+<section id="ie-as-workflow-state" class="level3">
+<h3 class="anchored" data-anchor-id="ie-as-workflow-state">IE as workflow state</h3>
+<p>The other interesting pattern is when extraction stops being the product. The product is a downstream system that uses <strong>extraction as its structured intermediate representation</strong>.</p>
+<p>I’ve designed and led a clinical-documentation pipeline that takes a clinician-patient encounter transcript and produces a structured clinical note. The system uses multiple specialized LLM extraction calls: separate calls for problems and major note sections. Each extraction returns structured frames, with metadata attached so a downstream system can route facts into the right place:</p>
+<ul>
+<li><strong>Example clinical note sections covered.</strong> History of Present Illness (HPI), Assessment &amp; Plan (A&amp;P), Labs / Test Results, Physical Exam, Allergies, Past Medical History.</li>
+<li><strong>Frame fields, for a clinical problem.</strong> Symptoms, severity, duration, status, associated findings, treatments, medications, plan items.</li>
+<li><strong>Metadata on each extracted item.</strong> Temporal status (past / present / future), source and stance (patient-reported vs clinician-assessed), section affinity.</li>
+<li><strong>Downstream routing.</strong> Present-tense problem details go to HPI; clinician assessment and treatment plans go to A&amp;P; past resolved history goes to medical history.</li>
+</ul>
+<p>This is the modern form of IE I see most often: not an extractor that ships as the product, but a structured control layer that lets the rest of the workflow behave reliably. The product is the clinical note; the extractions are what the downstream system builds it from.</p>
+<p>The pattern isn’t unique. SpecialtyScribe <span class="citation" data-cites="goyal_etal_2025">(<a href="#ref-goyal_etal_2025" role="doc-biblioref">Goyal et al. 2025</a>)</span> and GENIE <span class="citation" data-cites="ying_etal_2025">(<a href="#ref-ying_etal_2025" role="doc-biblioref">Ying et al. 2025</a>)</span> are published instances of the same idea: IE as the structured intermediate layer of a workflow, with the extraction done by a frontier LLM, a fine-tuned smaller specialist, or a mix.</p>
+<p>GraphRAG <span class="citation" data-cites="edge_etal_2024">(<a href="#ref-edge_etal_2024" role="doc-biblioref">Edge et al. 2024</a>)</span> is another version of the same move: use IE to turn documents into entities, relations, and summaries, then run retrieval and reasoning over that structure rather than over raw chunks. These are entity extraction, relation extraction, and light coreference, with the graph as the structured layer they feed.</p>
+</section>
+</section>
+<section id="the-new-labor-schema-prompts-eval-orchestration" class="level2">
+<h2 class="anchored" data-anchor-id="the-new-labor-schema-prompts-eval-orchestration">The new labor: schema, prompts, eval, orchestration</h2>
+<p>The labor profile is different from BERT-era IE in specific ways. There is no large annotation effort for training. The center of the work is schema design, and the contrast is concrete. A weak schema for clinical problems is <code>{"problems": ["chest pain"]}</code>, a flat list of strings. A schema that lets the downstream system route, deduplicate, and surface evidence for clinician review looks more like:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"problem"</span><span class="fu">:</span> <span class="st">"chest pain"</span><span class="fu">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"status"</span><span class="fu">:</span> <span class="st">"active | resolved | historical"</span><span class="fu">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"temporality"</span><span class="fu">:</span> <span class="st">"past | present | future_planned"</span><span class="fu">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"source"</span><span class="fu">:</span> <span class="st">"patient_reported | clinician_assessed"</span><span class="fu">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"evidence_span"</span><span class="fu">:</span> <span class="st">"..."</span><span class="fu">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The richer schema is what makes the workflow possible: every extracted fact carries the metadata the downstream system needs to act on it without re-extracting. Around that, the new labor is:</p>
+<ul>
+<li><strong>Schema design</strong>: the frames, fields, metadata, and uncertainty behavior. The architecture decision that determines what the downstream system can do.</li>
+<li><strong>Prompt design</strong>: per-extraction prompts that reliably fill the schema, iterated against failure cases.</li>
+<li><strong>Evaluation</strong>: still labeled data, but at much smaller scale, for measuring rather than training.</li>
+<li><strong>Workflow orchestration</strong>: how extractions compose, how frames are routed, where metadata gates decisions.</li>
+<li><strong>Cost control</strong>: which calls run on a frontier model, which on a smaller specialist, which can be batched or cached.</li>
+</ul>
+<p>The old labor was annotation, feature engineering, and per-task model training. The new labor is schema, prompts, eval, and orchestration. The label changed, but the work did not vanish. It moved from model training into workflow design.</p>
+</section>
+<section id="when-classical-ie-still-wins" class="level2">
+<h2 class="anchored" data-anchor-id="when-classical-ie-still-wins">When classical IE still wins</h2>
+<p>The “LLMs absorbed IE” framing oversells. There are concrete situations where classical IE wins.</p>
+<p><strong>High-volume or latency-sensitive serving.</strong> A DeBERTa-v3-base NER system runs at thousands of tokens per second per GPU at near-zero marginal cost; a frontier LLM call costs cents per document at a fraction of that throughput. If you process millions of documents per day, or a pipeline step has to run in tens of milliseconds, the encoder wins on cost and latency by an order of magnitude. The hybrid pattern (LLM-generated data, classical model serves) is the standard answer here.</p>
+<p><strong>Fine-grained span tasks under audit constraint.</strong> Medical coding, legal entity extraction, financial reporting: the span boundaries matter exactly, and LLM hallucination is unacceptable. A trained span-classifier with auditable failure modes is the safer choice. The LLM may generate the training data; the production extractor stays classical.</p>
+<p><strong>Ontology-backed coding and normalization.</strong> ICD-10 coding is not just extraction. It requires mapping clinical evidence to a controlled code system, following rules around specificity, exclusions and so on. A standalone LLM should not be trusted to do this from parametric memory alone. Use retrieval or lookup against the official code set and deterministic validation.</p>
+<p><strong>Stable schemas with mature labeled data.</strong> With a CoNLL-2003-scale labeled dataset and a stable schema, a fine-tuned encoder is hard to beat on the headline metric. The crossover varies by task and prompting strategy, but with thousands of labeled examples the encoder typically pulls ahead.</p>
+</section>
+<section id="code-companion-tnlp-ie-examples" class="level2">
+<h2 class="anchored" data-anchor-id="code-companion-tnlp-ie-examples">Code companion: TNLP IE examples</h2>
+<p>To make the transition concrete, my <a href="https://github.com/chanys/tnlp">TNLP repo</a> includes three working IE examples, written in late 2023 and early 2024, that map onto three stages of the shift.</p>
+<ul>
+<li><p><strong>Token classification / NER (BERT-era classical).</strong> <code>microsoft/deberta-v3-base</code> with <code>AutoModelForTokenClassification</code> on CoNLL-2003, predicting the four canonical entity types. The standard “encoder + BIO tagger” pattern that became the default after BERT. <a href="https://github.com/chanys/tnlp/blob/main/src/config/token_model/conll2003.train.yaml">Config</a>, <a href="https://github.com/chanys/tnlp/blob/main/src/scripts/run_model.py">run script</a>.</p></li>
+<li><p><strong>Span-pair classification / relation extraction (BERT-era).</strong> A custom implementation, because span-pair classification has no clean off-the-shelf Hugging Face head when the code was written: encode the sentence with DeBERTa-v3, pool the two span representations, classify the relation. This is what production BERT-era RE actually looked like, a custom span aggregation on top of an encoder. <a href="https://github.com/chanys/tnlp/blob/main/src/model/spanpair_model/custom_spanpair_model.py">Model</a>, <a href="https://github.com/chanys/tnlp/blob/main/src/model/spanpair_model/custom_spanpair_classification.py">training</a>.</p></li>
+<li><p><strong>Seq2seq NER with FLAN-T5 (the bridge to LLM-era).</strong> Instead of BIO tags, the model generates the sentence with bracket-tagged entity spans. <code>google/flan-t5-base</code> with LoRA <span class="citation" data-cites="hu_etal_2022">(<a href="#ref-hu_etal_2022" role="doc-biblioref">Hu et al. 2022</a>)</span> and 8-bit quantization. This handles overlapping and nested spans naturally (token classification can’t easily produce nested entities) and is structurally identical to how LLM-era extraction works: a generative model emits structured output. <a href="https://github.com/chanys/tnlp/blob/main/src/model/seq2seq_model/seq2seq_utils.py">Code</a>, <a href="https://github.com/chanys/tnlp/blob/main/src/config/seq2seq_model/ner.train.yaml">config</a>.</p></li>
+</ul>
+</section>
+<section id="what-people-get-wrong" class="level2">
+<h2 class="anchored" data-anchor-id="what-people-get-wrong">What people get wrong</h2>
+<ol type="1">
+<li><p><strong>Treating IE as deprecated.</strong> It isn’t. It’s everywhere: inside agents, RAG and knowledge graphs, structured data extraction, and so on. It’s just not explicitly labeled “IE”.</p></li>
+<li><p><strong>Skipping schema design.</strong> The schema is the architecture of the extraction layer. The single highest-leverage improvement to most LLM-extraction setups is tightening it.</p></li>
+<li><p><strong>Underweighting evaluation.</strong> Labeled data didn’t go away. It moved from training to eval. You can’t ship an IE workflow you haven’t measured, and measuring requires gold annotations. The eval set is the new annotation effort: smaller, but irreducible.</p></li>
+<li><p><strong>Picking the wrong model for the operating constraints.</strong> Try the LLM first for new or ambiguous tasks. Train a specialist when cost, latency, scale, auditability, or span precision force it. Both reflexes (always train a specialist; always reach for the frontier LLM) are mistakes. The constraints decide, not the fashion.</p></li>
+<li><p><strong>Treating extraction as the product.</strong> In modern systems extraction is rarely the product. It’s the structured intermediate layer between raw text and downstream generation, retrieval, or action.</p></li>
+</ol>
+</section>
+<section id="closing" class="level2">
+<h2 class="anchored" data-anchor-id="closing">Closing</h2>
+<p>For decades, information extraction was a product: annotate, train, extract, ship the knowledge base. BERT made the models better but left the labor model intact; every new domain still cost an annotation effort. LLMs didn’t make IE possible. IE was already possible. They made it low-startup-cost enough that it stopped being a product and became infrastructure: the structured layer between raw text and whatever the system does next.</p>
+<p>The work didn’t disappear. The annotation-and-feature-engineering labor became schema-and-eval labor.</p>
+<p><strong>The extractor stopped being the deliverable and became workflow state.</strong></p>
+<p>The papers on the hard research problems (coreference, cross-document linking, strict argument-role constraints) are still being written; they’re just no longer where most production IE work happens. The next time someone says their system “doesn’t do information extraction,” it’s worth asking what the JSON between their LLM calls is.</p>
+
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-chan_etal_2019" class="csl-entry" role="listitem">
+Chan, Yee Seng, Joshua Fasching, Haoling Qiu, and Bonan Min. 2019. <span>“Rapid Customization for Event Extraction.”</span> <em>Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics: System Demonstrations</em>.
+</div>
+<div id="ref-chan_roth_2010" class="csl-entry" role="listitem">
+Chan, Yee Seng, and Dan Roth. 2010. <span>“Exploiting Background Knowledge for Relation Extraction.”</span> <em>Proceedings of the 23rd International Conference on Computational Linguistics (COLING)</em>.
+</div>
+<div id="ref-chan_roth_2011" class="csl-entry" role="listitem">
+Chan, Yee Seng, and Dan Roth. 2011. <span>“Exploiting Syntactico-Semantic Structures for Relation Extraction.”</span> <em>Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies</em>.
+</div>
+<div id="ref-conneau_etal_2020" class="csl-entry" role="listitem">
+Conneau, Alexis, Kartikay Khandelwal, Naman Goyal, et al. 2020. <span>“Unsupervised Cross-Lingual Representation Learning at Scale.”</span> <em>Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics</em>. <a href="https://arxiv.org/abs/1911.02116">https://arxiv.org/abs/1911.02116</a>.
+</div>
+<div id="ref-devlin_etal_2019" class="csl-entry" role="listitem">
+Devlin, Jacob, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. 2019. <span>“BERT: Pre-Training of Deep Bidirectional Transformers for Language Understanding.”</span> <em>Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (NAACL-HLT)</em>. <a href="https://arxiv.org/abs/1810.04805">https://arxiv.org/abs/1810.04805</a>.
+</div>
+<div id="ref-deyoung_etal_2017" class="csl-entry" role="listitem">
+DeYoung, Jay, Yee Seng Chan, Chester Pittapally, Hannah Provenza, Ryan Gabbard, and Marjorie Freedman. 2017. <span>“BBN’s 2017 KBP EAL Submission.”</span> <em>Proceedings of the 2017 Text Analysis Conference (TAC)</em>.
+</div>
+<div id="ref-do_etal_2011" class="csl-entry" role="listitem">
+Do, Quang, Yee Seng Chan, and Dan Roth. 2011. <span>“Minimally Supervised Event Causality Identification.”</span> <em>Proceedings of the 2011 Conference on Empirical Methods in Natural Language Processing</em>.
+</div>
+<div id="ref-edge_etal_2024" class="csl-entry" role="listitem">
+Edge, Darren, Ha Trinh, Newman Cheng, et al. 2024. <span>“From Local to Global: A Graph RAG Approach to Query-Focused Summarization.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/2404.16130">https://arxiv.org/abs/2404.16130</a>.
+</div>
+<div id="ref-goyal_etal_2025" class="csl-entry" role="listitem">
+Goyal, Sagar, Eti Rastogi, Fen Zhao, Dong Yuan, and Andrew Beinstein. 2025. <span>“SpecialtyScribe: Enhancing SOAP Note Scribing for Medical Specialties Using LLMs.”</span> <em>Proceedings of the Second Workshop on Patient-Oriented Language Processing (CL4Health)</em>.
+</div>
+<div id="ref-he_etal_2021" class="csl-entry" role="listitem">
+He, Pengcheng, Xiaodong Liu, Jianfeng Gao, and Weizhu Chen. 2021. <span>“DeBERTaV3: Improving DeBERTa Using ELECTRA-Style Pre-Training with Gradient-Disentangled Embedding Sharing.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/2111.09543">https://arxiv.org/abs/2111.09543</a>.
+</div>
+<div id="ref-hovy_etal_2006" class="csl-entry" role="listitem">
+Hovy, Eduard, Mitchell Marcus, Martha Palmer, Lance Ramshaw, and Ralph Weischedel. 2006. <span>“OntoNotes: The 90% Solution.”</span> <em>Proceedings of the Human Language Technology Conference of the NAACL, Companion Volume: Short Papers</em>.
+</div>
+<div id="ref-hu_etal_2022" class="csl-entry" role="listitem">
+Hu, Edward J., Yelong Shen, Phillip Wallis, et al. 2022. <span>“LoRA: Low-Rank Adaptation of Large Language Models.”</span> <em>International Conference on Learning Representations</em>. <a href="https://arxiv.org/abs/2106.09685">https://arxiv.org/abs/2106.09685</a>.
+</div>
+<div id="ref-ji_grishman_2011" class="csl-entry" role="listitem">
+Ji, Heng, and Ralph Grishman. 2011. <span>“Knowledge Base Population: Successful Approaches and Challenges.”</span> <em>Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies</em>.
+</div>
+<div id="ref-min_etal_2019" class="csl-entry" role="listitem">
+Min, Bonan, Yee Seng Chan, Haoling Qiu, and Joshua Fasching. 2019. <span>“Towards Machine Reading for Interventions from Humanitarian-Assistance Program Literature.”</span> <em>Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)</em>.
+</div>
+<div id="ref-min_etal_2020" class="csl-entry" role="listitem">
+Min, Bonan, Yee Seng Chan, and Lingjun Zhao. 2020. <span>“Towards Few-Shot Event Mention Retrieval: An Evaluation Framework and a Siamese Network Approach.”</span> <em>Proceedings of the Twelfth Language Resources and Evaluation Conference (LREC)</em>.
+</div>
+<div id="ref-raffel_etal_2020" class="csl-entry" role="listitem">
+Raffel, Colin, Noam Shazeer, Adam Roberts, et al. 2020. <span>“Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer.”</span> <em>Journal of Machine Learning Research</em>. <a href="https://arxiv.org/abs/1910.10683">https://arxiv.org/abs/1910.10683</a>.
+</div>
+<div id="ref-sang_demeulder_2003" class="csl-entry" role="listitem">
+Tjong Kim Sang, Erik F., and Fien De Meulder. 2003. <span>“Introduction to the CoNLL-2003 Shared Task: Language-Independent Named Entity Recognition.”</span> <em>Proceedings of the Seventh Conference on Natural Language Learning at HLT-NAACL 2003 (CoNLL)</em>.
+</div>
+<div id="ref-walker_etal_2006" class="csl-entry" role="listitem">
+Walker, Christopher, Stephanie Strassel, Julie Medero, and Kazuaki Maeda. 2006. <em>ACE 2005 Multilingual Training Corpus</em>. Linguistic Data Consortium, LDC2006T06.
+</div>
+<div id="ref-ying_etal_2025" class="csl-entry" role="listitem">
+Ying, Huaiyuan, Hongyi Yuan, Jinsen Lu, et al. 2025. <span>“GENIE: Generative Note Information Extraction Model for Structuring EHR Data.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/2501.18435">https://arxiv.org/abs/2501.18435</a>.
+</div>
+<div id="ref-zhang_etal_2025" class="csl-entry" role="listitem">
+Zhang, Zikun, Wei You, Tongtao Wu, Xiaolong Wang, Jianxin Li, and Min Zhang. 2025. <span>“A Survey of Generative Information Extraction.”</span> <em>Proceedings of the 31st International Conference on Computational Linguistics (COLING)</em>.
+</div>
+</div></section></div></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/yeesengchan\.com");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+© 2026 Yee Seng Chan
+</div>   
+    <div class="nav-footer-center">
+Built with <a href="https://quarto.org">Quarto</a>
+</div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/chanys">
+      <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://linkedin.com/in/yeesengchan">
+      <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="../../../../writing.xml">
+      <i class="bi bi-rss" role="img" aria-label="RSS feed">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+<script>
+(() => {
+  if (!document.querySelector('.series-nav')) return;
+  const toc = document.querySelector('nav#TOC[role="doc-toc"]');
+  if (!toc) return;
+  const links = [...toc.querySelectorAll('a[data-scroll-target]')];
+  if (!links.length) return;
+  const sections = links.map((link) => {
+    const target = link.getAttribute('data-scroll-target') || '';
+    return target.startsWith('#')
+      ? document.getElementById(decodeURI(target.slice(1)))
+      : null;
+  });
+  // Distance below viewport top at which a heading is treated as
+  // "the current section." Small, so the highlight matches what a
+  // reader perceives as the heading at the top of the page.
+  const ACTIVATION_OFFSET = 80;
+  const apply = () => {
+    let idx = 0;
+    const atBottom = window.innerHeight + window.pageYOffset
+      >= document.documentElement.scrollHeight - 2;
+    if (atBottom) {
+      idx = sections.length - 1;
+    } else {
+      for (let i = 0; i < sections.length; i++) {
+        const s = sections[i];
+        if (s && s.getBoundingClientRect().top <= ACTIVATION_OFFSET) idx = i;
+      }
+    }
+    for (let i = 0; i < links.length; i++) {
+      links[i].classList.toggle('active', i === idx);
+    }
+  };
+  // rAF ensures we run after Quarto's synchronous scroll handler
+  // so our active-class choice wins.
+  let pending = false;
+  const schedule = () => {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => { apply(); pending = false; });
+  };
+  schedule();
+  document.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule);
+  window.addEventListener('load', schedule);
+})();
+</script>
+
+
+
+
+</body></html>

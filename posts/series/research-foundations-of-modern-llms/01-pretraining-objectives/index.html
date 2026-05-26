@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Yee Seng Chan">
+<meta name="description" content="How unification, not raw capability, settled the architecture race.">
+
+<title>Pretraining objectives: why decoder-only won – Yee Seng Chan</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<link href="../../../../favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap-7b53549d121f5930ef88eb09dda4672c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-3874333d9529686a5a4437217f193688.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-7b53549d121f5930ef88eb09dda4672c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../../../styles.css">
+<meta property="og:title" content="Pretraining objectives: why decoder-only won – Yee Seng Chan">
+<meta property="og:description" content="How unification, not raw capability, settled the architecture race.">
+<meta property="og:image" content="https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/five_objectives.png">
+<meta property="og:site_name" content="Yee Seng Chan">
+<meta property="og:image:alt" content="The same sentence shown five times, once per pretraining objective, with different tokens masked or held out in each copy to illustrate how each objective changes which tokens the model must predict">
+<meta property="og:image:height" content="1680">
+<meta property="og:image:width" content="2016">
+<meta name="twitter:title" content="Pretraining objectives: why decoder-only won – Yee Seng Chan">
+<meta name="twitter:description" content="How unification, not raw capability, settled the architecture race.">
+<meta name="twitter:image" content="https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/five_objectives.png">
+<meta name="twitter:image:alt" content="The same sentence shown five times, once per pretraining objective, with different tokens masked or held out in each copy to illustrate how each objective changes which tokens the model must predict">
+<meta name="twitter:image-height" content="1680">
+<meta name="twitter:image-width" content="2016">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">Yee Seng Chan</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../writing.html"> 
+<span class="menu-text">Writing</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../series.html"> 
+<span class="menu-text">Series</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../projects.html"> 
+<span class="menu-text">Projects</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../../writing.xml"> <i class="bi bi-rss" role="img" aria-label="RSS feed">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/chanys"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://linkedin.com/in/yeesengchan"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:chanys.nlp@gmail.com"> <i class="bi bi-envelope" role="img" aria-label="Email">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Contents</h2>
+   
+  <ul class="collapse">
+  <li><a href="#a-short-tour-of-the-pretraining-objectives" id="toc-a-short-tour-of-the-pretraining-objectives" class="nav-link active" data-scroll-target="#a-short-tour-of-the-pretraining-objectives">A short tour of the pretraining objectives</a></li>
+  <li><a href="#architecture-is-mostly-an-attention-pattern" id="toc-architecture-is-mostly-an-attention-pattern" class="nav-link" data-scroll-target="#architecture-is-mostly-an-attention-pattern">Architecture is mostly an attention pattern</a></li>
+  <li><a href="#at-small-scale-objective-matters-more" id="toc-at-small-scale-objective-matters-more" class="nav-link" data-scroll-target="#at-small-scale-objective-matters-more">At small scale, objective matters more</a></li>
+  <li><a href="#the-actual-reason-decoder-only-won-unification" id="toc-the-actual-reason-decoder-only-won-unification" class="nav-link" data-scroll-target="#the-actual-reason-decoder-only-won-unification">The actual reason decoder-only won: unification</a></li>
+  <li><a href="#what-encoders-still-do" id="toc-what-encoders-still-do" class="nav-link" data-scroll-target="#what-encoders-still-do">What encoders still do</a></li>
+  <li><a href="#code-companion-where-this-shows-up-in-tnlp" id="toc-code-companion-where-this-shows-up-in-tnlp" class="nav-link" data-scroll-target="#code-companion-where-this-shows-up-in-tnlp">Code companion: where this shows up in TNLP</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Pretraining objectives: why decoder-only won</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">Research foundations of modern LLMs</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    How unification, not raw capability, settled the architecture race.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Yee Seng Chan </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">2026 · March 18</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+Research foundations of modern LLMs
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-pretraining-objectives/">Pretraining objectives: Why decoder-only won</a></li>
+<li><a href="../02-encoder-embeddings/">The encoder didn’t die. It became the embedding model</a></li>
+<li><a href="../03-retrieval/">Retrieval is older than RAG: From DPR to end-to-end</a></li>
+<li><a href="../04-fine-tuning-stack/">The fine-tuning stack: One loss, different data</a></li>
+<li><a href="../05-information-extraction/">Information extraction didn’t disappear. It moved inside the workflow</a></li>
+</ol>
+</div>
+<p>The standard tutorial story: “BERT was bidirectional, T5 was sequence-to-sequence, GPT was autoregressive, and decoder-only won because it was simpler.” Sometimes “scaling worked better.” Sometimes “instruction-tuning needed it.”</p>
+<p>I think this story is shallow. The objective didn’t win; the paradigm did.</p>
+<p>I’ve been writing about these architectures individually since late 2022: deep-dives on <a href="https://chanys.github.io/transformer-architecture/">transformer architecture</a>, <a href="https://chanys.github.io/bert/">BERT</a>, <a href="https://chanys.github.io/roberta/">RoBERTa</a>, <a href="https://chanys.github.io/t5/">T5</a>, <a href="https://chanys.github.io/gpt1/">GPT-1</a>, <a href="https://chanys.github.io/electra/">ELECTRA</a>, <a href="https://chanys.github.io/deberta/">DeBERTa</a>, <a href="https://chanys.github.io/deberta-v3/">DeBERTa-v3</a>, <a href="https://chanys.github.io/ul2/">UL2</a>, <a href="https://chanys.github.io/flan-palm/">FLAN</a>, and <a href="https://chanys.github.io/llama2/">LLaMA-2</a> over at <a href="https://chanys.github.io" class="uri">https://chanys.github.io</a>. This article steps back from those individual treatments to make an argument those posts don’t make explicitly: the field’s reasons for converging on decoder-only are often misstated. Decoder-only did not win because causal language modeling was magically superior. It won because the decoder-only paradigm made pretraining, prompting, generation, inference, and deployment all line up.</p>
+<section id="a-short-tour-of-the-pretraining-objectives" class="level2">
+<h2 class="anchored" data-anchor-id="a-short-tour-of-the-pretraining-objectives">A short tour of the pretraining objectives</h2>
+<p>The objectives that defined the pretraining era can be characterized cleanly by what they hold out, what they leave visible, and which architectural family they imply. Throughout, let <span class="math inline">\(x = (x_1, \ldots, x_n)\)</span> be a sequence of tokens.</p>
+<section id="masked-language-modeling-mlm-bert" class="level3">
+<h3 class="anchored" data-anchor-id="masked-language-modeling-mlm-bert">Masked language modeling (MLM, BERT)</h3>
+<p>BERT’s <span class="citation" data-cites="devlin_etal_2019">(<a href="#ref-devlin_etal_2019" role="doc-biblioref">Devlin et al. 2019</a>)</span> pretraining objective. Sample a set of positions <span class="math inline">\(M \subset \{1, \ldots, n\}\)</span> (typically 15% of tokens). For each <span class="math inline">\(i \in M\)</span>, replace <span class="math inline">\(x_i\)</span> with a <code>[MASK]</code> token (80% of the time), a random token (10%), or leave it unchanged (10%). Train to predict the original tokens at the masked positions:</p>
+<p><span class="math display">\[
+\mathcal{L}_{\text{MLM}} = -\sum_{i \in M} \log P(x_i \mid \tilde{x}; \theta)
+\]</span></p>
+<p>where <span class="math inline">\(\tilde{x}\)</span> is the corrupted input. The loss only fires at the ~15% of positions that were sampled, so 85% of the input contributes to the gradient via attention but produces no direct prediction. The 80/10/10 mixing prevents the model from learning that <code>[MASK]</code> is the only token requiring prediction (see <a href="https://chanys.github.io/bert/">BERT deep-dive</a> for more details).</p>
+<p>The encoder is bidirectional: every position attends to every other position. However, the cost is that the model can’t generate naturally, since at inference time you’d have to feed <code>[MASK]</code> tokens and the model isn’t trained to compose tokens left-to-right.</p>
+</section>
+<section id="replaced-token-detection-rtd-electra" class="level3">
+<h3 class="anchored" data-anchor-id="replaced-token-detection-rtd-electra">Replaced token detection (RTD, ELECTRA)</h3>
+<p><a href="https://chanys.github.io/electra/">ELECTRA</a> <span class="citation" data-cites="clark_etal_2020">(<a href="#ref-clark_etal_2020" role="doc-biblioref">Clark et al. 2020</a>)</span> replaces MLM with a discriminative objective. A small generator network (typically a smaller MLM model) replaces some tokens with plausible alternatives drawn from its own predictions. A discriminator then predicts, <em>for every token</em>, whether it was original or replaced:</p>
+<p><span class="math display">\[
+\mathcal{L}_{\text{RTD}} = -\sum_{i=1}^{n} \big[ \mathbb{1}[x_i = \tilde{x}_i] \log D(\tilde{x}, i) + (1 - \mathbb{1}[x_i = \tilde{x}_i]) \log (1 - D(\tilde{x}, i)) \big]
+\]</span></p>
+<ul>
+<li>RTD stands for <strong>replaced token detection</strong>.</li>
+<li>The indicator function <span class="math inline">\(\mathbb{1}[x_i = \tilde{x}_i]=1\)</span> if the token was not replaced, and <span class="math inline">\(0\)</span> if replaced.</li>
+<li>The discriminator <span class="math inline">\(D(\tilde{x}, i) = P(\text{token at position } i \text{ is original}|\tilde{x})\)</span>.</li>
+</ul>
+<p>Two architectural advantages over MLM: (1) loss fires on every token, not just 15%, giving roughly 4× sample efficiency; (2) the input the model sees at training matches its evaluation distribution (real-looking text), instead of <code>[MASK]</code>-laden gibberish.</p>
+<p>At matched scale ELECTRA-Base outperforms BERT-Base on GLUE (85.1 vs 82.2 in the original paper), and ELECTRA-Large reaches RoBERTa-comparable <span class="citation" data-cites="liu_etal_2019">(<a href="#ref-liu_etal_2019" role="doc-biblioref">Liu et al. 2019</a>)</span> quality with under 1/4 the compute. The RTD objective got picked up later in DeBERTa-v3 <span class="citation" data-cites="he_etal_2021">(<a href="#ref-he_etal_2021" role="doc-biblioref">He et al. 2021</a>)</span>, which combines it with DeBERTa’s disentangled attention.</p>
+</section>
+<section id="span-corruption-t5" class="level3">
+<h3 class="anchored" data-anchor-id="span-corruption-t5">Span corruption (T5)</h3>
+<p><a href="https://chanys.github.io/t5/">T5</a> <span class="citation" data-cites="raffel_etal_2020">(<a href="#ref-raffel_etal_2020" role="doc-biblioref">Raffel et al. 2020</a>)</span> corrupts contiguous spans rather than individual tokens. Sample a set of spans (mean length 3, total ~15% of tokens), replace each span with a unique sentinel <code>&lt;X&gt;</code>, <code>&lt;Y&gt;</code>, <code>&lt;Z&gt;</code>, and train an encoder-decoder to autoregressively generate the missing spans as the target sequence. So with the original <code>The cat sat on the mat watching</code>:</p>
+<ul>
+<li>Encoder input: <code>The cat &lt;X&gt; the mat &lt;Y&gt;</code></li>
+<li>Decoder target: <code>&lt;X&gt; sat on &lt;Y&gt; watching &lt;Z&gt;</code></li>
+</ul>
+<p>The decoder is autoregressive over the target, so the loss is:</p>
+<p><span class="math display">\[
+\mathcal{L}_{\text{SC}} = -\sum_{t=1}^{T} \log P(y_t \mid y_{&lt;t}, \tilde{x}; \theta)
+\]</span></p>
+<p>This is generative: the decoder produces a sequence of tokens. But the corruption rate is low so most of the input stays observable to the encoder. T5 reframes a wide variety of NLP tasks (translation, summarization, classification, QA) as text-to-text under this objective.</p>
+</section>
+<section id="causal-language-modeling-clm-gpt" class="level3">
+<h3 class="anchored" data-anchor-id="causal-language-modeling-clm-gpt">Causal language modeling (CLM, GPT)</h3>
+<p>The simplest objective. Predict each token from its left context:</p>
+<p><span class="math display">\[
+\mathcal{L}_{\text{CLM}} = -\sum_{i=1}^{n} \log P(x_i \mid x_{&lt;i}; \theta)
+\]</span></p>
+<p>No masking, no replacement, no sentinels: the data is fed unchanged. Loss fires on every position. The architecture must use causal self-attention so position <span class="math inline">\(i\)</span> only sees positions <span class="math inline">\(j &lt; i\)</span>. The same parameters compute representations and generate tokens; there’s no encoder-decoder split. See <a href="https://chanys.github.io/gpt1/">GPT-1</a> <span class="citation" data-cites="radford_etal_2018">(<a href="#ref-radford_etal_2018" role="doc-biblioref">Radford et al. 2018</a>)</span> for more details.</p>
+</section>
+<section id="mixture-of-denoisers-ul2" class="level3">
+<h3 class="anchored" data-anchor-id="mixture-of-denoisers-ul2">Mixture-of-denoisers (UL2)</h3>
+<p><a href="https://chanys.github.io/ul2/">UL2</a> <span class="citation" data-cites="tay_etal_2022">(<a href="#ref-tay_etal_2022" role="doc-biblioref">Tay et al. 2023</a>)</span> unifies multiple objectives within a single training run by mode-switching. Three denoising paradigms, signaled by special mode tokens (<code>[R]</code>, <code>[S]</code>, <code>[X]</code>) at the start of the sequence:</p>
+<ul>
+<li><strong>R-denoiser</strong> (regular): standard T5-style span corruption (mean span length 3, ~15% rate).</li>
+<li><strong>S-denoiser</strong> (sequential): prefix LM: split the sequence into prefix and target, and predict the target autoregressively given a bidirectional prefix.</li>
+<li><strong>X-denoiser</strong> (extreme): aggressive corruption with long spans (<span class="math inline">\(\geq 12\)</span> tokens) or high rates (<span class="math inline">\(\geq 30\%\)</span>).</li>
+</ul>
+<p>The model learns to handle all three modes through the explicit mode tokens. UL2 reports that the mixture beats both pure CLM (GPT-style) and pure span corruption (T5-style) on a wide benchmark.</p>
+<p>The interesting part for the argument here is that the S-denoiser is essentially CLM with a bidirectional prefix. In a normal causal LM, every token can only attend to previous tokens. In UL2’s S-denoiser / prefix-LM setup, the prefix is treated more like an encoder context: prefix tokens can see each other bidirectionally before the model starts generating the target.</p>
+<p>UL2 explicitly recognizes prefix-LM as a useful interpolation between encoder-decoder and decoder-only.</p>
+</section>
+<section id="fill-in-the-middle-fim" class="level3">
+<h3 class="anchored" data-anchor-id="fill-in-the-middle-fim">Fill-in-the-middle (FIM)</h3>
+<p>The infilling objective <span class="citation" data-cites="bavarian_etal_2022">(<a href="#ref-bavarian_etal_2022" role="doc-biblioref">Bavarian et al. 2022</a>)</span> used in code models (StarCoder, Code Llama, OpenAI Codex). Take a sequence, split into prefix, middle, and suffix, then <em>rearrange the data</em> and train autoregressively:</p>
+<p>Training-time order: <code>&lt;PRE&gt; prefix &lt;SUF&gt; suffix &lt;MID&gt; middle</code></p>
+<p>This is just CLM on rearranged data. The model learns to generate <code>middle</code> conditioned on <code>prefix</code> and <code>suffix</code>, while remaining a pure decoder-only autoregressive language model. The cleverness is in the data layout, not the objective. The inference-time prompt is <code>&lt;PRE&gt; {user_prefix} &lt;SUF&gt; {user_suffix} &lt;MID&gt;</code>, after which the model autoregressively generates the missing middle.</p>
+<p>This pattern of getting a span-fill capability by rearranging data into a CLM-shaped task, is a recurring theme in what comes next.</p>
+<div id="fig-objectives" class="quarto-float quarto-figure quarto-figure-center anchored" alt="The same sentence shown five times, once per pretraining objective, with different tokens masked or held out in each copy to illustrate how each objective changes which tokens the model must predict">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-objectives-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="five_objectives.png" class="img-fluid figure-img" alt="The same sentence shown five times, once per pretraining objective, with different tokens masked or held out in each copy to illustrate how each objective changes which tokens the model must predict">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-objectives-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: One sentence under five pretraining objectives: same source text, different held-out tokens.
+</figcaption>
+</figure>
+</div>
+</section>
+</section>
+<section id="architecture-is-mostly-an-attention-pattern" class="level2">
+<h2 class="anchored" data-anchor-id="architecture-is-mostly-an-attention-pattern">Architecture is mostly an attention pattern</h2>
+<p>The key move is to stop treating encoder, encoder-decoder, and decoder-only models as completely separate species. At the transformer level, much of the difference comes down to which tokens are allowed to attend to which other tokens.</p>
+<div id="fig-attention-masks" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three grid diagrams of attention masks: a fully filled bidirectional grid for the encoder, a lower-triangular causal grid for the decoder, and an encoder-decoder grid over a concatenated encoder then decoder sequence showing full attention within the encoder block and causal plus cross attention in the decoder block">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-attention-masks-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attention_masks.png" class="img-fluid figure-img" alt="Three grid diagrams of attention masks: a fully filled bidirectional grid for the encoder, a lower-triangular causal grid for the decoder, and an encoder-decoder grid over a concatenated encoder then decoder sequence showing full attention within the encoder block and causal plus cross attention in the decoder block">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-attention-masks-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Attention masks across the three transformer families. Filled cells indicate attendable positions; the encoder-decoder panel shows the joint attention pattern over a concatenated [encoder, decoder] sequence.
+</figcaption>
+</figure>
+</div>
+<p>An encoder gives every token bidirectional access to every other token. A decoder-only model gives each token access only to earlier tokens. An encoder-decoder splits the computation into two parts: the encoder reads the input bidirectionally, while the decoder generates the output autoregressively while attending back to the encoder. These are different attention patterns over tokens.</p>
+<p>This matters because some capabilities that look architecture-specific can be recovered by changing the data layout. Prefix-LM gives a decoder-style model bidirectional access to a prefix before generating a continuation. Fill-in-the-middle gives a decoder-only model infilling behavior by rearranging the sequence into prefix, suffix, then middle. Span corruption can be viewed similarly: decide what is visible, decide what is hidden, then train the model to predict the missing text.</p>
+<p>So the important question is not simply, “Which objective is best?” The better question is: Which training setup gives the most useful capabilities per unit of data, compute, and deployment complexity?</p>
+<p>From that angle, decoder-only models had a major advantage. They could absorb many task formats into a single pattern: put context in the prefix, then generate the continuation.</p>
+<p>The claim is not that CLM is theoretically superior to every denoising objective. The claim is that decoder-only made the fewest assumptions about the shape of the task. Once everything can be represented as context followed by continuation, the same model can support pretraining, instruction following, few-shot prompting, chat, tool use, and long-form generation without changing architecture.</p>
+</section>
+<section id="at-small-scale-objective-matters-more" class="level2">
+<h2 class="anchored" data-anchor-id="at-small-scale-objective-matters-more">At small scale, objective matters more</h2>
+<p>At small scale, pretraining objectives strongly shape what the model learns efficiently.</p>
+<p>BERT-style MLM gives the model a bidirectional bias, which helps classification, sequence labeling, and extraction. ELECTRA improves sample efficiency by producing a learning signal at every token. T5-style span corruption gives the model a natural input-output format for tasks like summarization and translation.</p>
+<p>These advantages are real, but they become less decisive as models scale. The objectives are not equivalent, but they all train on the same underlying distribution of language. At large scale, each objective still pushes the model to learn many of the same patterns: syntax, semantics, factual associations, discourse structure, and task formats. The objective matters, but it no longer dominates general-purpose capability the way it does at small scale.</p>
+<p>So the question gradually shifts from “Which objective gives the best inductive bias?” to “Which architecture is easiest to scale, prompt, serve, and adapt?”</p>
+<p>That changes the tradeoff. Once objective-level advantages become less dominant, the practical advantages of decoder-only become harder to ignore: simpler data preparation, direct autoregressive generation, natural prompting, easier serving, and a single architecture for many behaviors.</p>
+<p>So the point is not that MLM, span corruption, or RTD were bad ideas. The point is that their advantages mattered most in regimes where model size, data scale, and deployment patterns looked very different from modern LLMs.</p>
+</section>
+<section id="the-actual-reason-decoder-only-won-unification" class="level2">
+<h2 class="anchored" data-anchor-id="the-actual-reason-decoder-only-won-unification">The actual reason decoder-only won: unification</h2>
+<p>Decoder-only did not win because MLM was “wrong” or span corruption was “worse.” It won because the field moved from many specialized NLP tasks toward one general-purpose modeling interface.</p>
+<p>BERT-style models were excellent for classification, sequence labeling, span extraction, and retrieval. But each task usually required a specific setup: a head, a pooling strategy, a masking scheme, or a fine-tuned output format.</p>
+<p>Decoder-only models made the interface much simpler: <em>Put the context in the prefix, then generate the continuation.</em></p>
+<p>That one pattern absorbs many tasks. Classification becomes completion. Question answering becomes completion. Dialogue becomes completion. Code generation becomes completion. Tool use becomes completion over an action-observation trace.</p>
+<p>So the deeper reason decoder-only won is unification: many task formats became one modeling problem: context in, continuation out.</p>
+<p><strong>1. One interface for many tasks.</strong> Decoder-only models turn many tasks into the same pattern: put the task description, examples, prior turns, or tool outputs in the prefix, then generate the continuation. Classification, QA, dialogue, code generation, and tool use all become variations of completion.</p>
+<p><strong>2. Flexible training data.</strong> CLM trains directly on raw token sequences. No masking, span sampling, task-specific heads, or encoder-decoder split. Documents, code, conversations, transcripts, math, and structured text can all be modeled in the same format.</p>
+<p><strong>3. Training matches inference.</strong> Modern LLM use is generative: chat, instruction following, summarization, code generation, agents, and tool use. Decoder-only models are trained in the same mode in which they are used: condition on previous tokens, then generate the next ones. Encoders remain excellent representation learners, but open-ended generation is not their native mode.</p>
+<p><strong>4. New capabilities become formatting problems.</strong> Decoder-only models can absorb behaviors that once looked like they required specialized objectives. Fill-in-the-middle reframes span filling as autoregressive prediction over rearranged data. Instruction tuning, chat formatting, tool traces, and preference tuning follow the same pattern: keep the architecture fixed, change the data format and training signal.</p>
+<p>The production benefits follow from this unification. One architecture is easier to scale, cache, batch, serve, and adapt than a collection of task-specific modeling setups.</p>
+</section>
+<section id="what-encoders-still-do" class="level2">
+<h2 class="anchored" data-anchor-id="what-encoders-still-do">What encoders still do</h2>
+<p>This story is specifically about general-purpose generative LLMs. It is not a story about encoders becoming useless. Encoders did not disappear; they specialized.</p>
+<p>Encoders are still the right tool when:</p>
+<ul>
+<li>The output is structured per-token (named entity recognition, sequence labeling, span extraction).</li>
+<li>The output is a fixed-length representation of the whole input (sentence embeddings, classification, retrieval).</li>
+<li>The latency budget rules out autoregressive generation.</li>
+<li>The downstream task has small training data and benefits from the strong inductive bias of bidirectional MLM pretraining.</li>
+</ul>
+<p><a href="https://chanys.github.io/deberta-v3/">DeBERTa-v3</a> is in many ways the high-water mark of encoder pretraining, and it’s still the model I reach for on small-data IE tasks. The disentangled attention from <a href="https://chanys.github.io/deberta/">DeBERTa</a>, the <a href="https://chanys.github.io/electra/">RTD objective from ELECTRA</a>, and DeBERTa-v3’s gradient-disentangled embedding sharing combine into a hard-to-beat package below 1B parameters.</p>
+<p>The mistake is to turn “decoder-only won general-purpose generation” into “encoders are obsolete.” It doesn’t. For the IE-shaped tasks they were always good at, they’re still ahead of decoder-only models on a Pareto frontier of accuracy and inference cost.</p>
+</section>
+<section id="code-companion-where-this-shows-up-in-tnlp" class="level2">
+<h2 class="anchored" data-anchor-id="code-companion-where-this-shows-up-in-tnlp">Code companion: where this shows up in TNLP</h2>
+<p>The TNLP repo at <a href="https://github.com/chanys/tnlp" class="uri">https://github.com/chanys/tnlp</a> contains working examples for the model families discussed in this article and the rest of the foundations series.</p>
+<p>The examples most relevant to this article are:</p>
+<ul>
+<li><strong>Token classification / NER</strong>: DeBERTa-v3 base with a token classification head on CoNLL-2003. This is the classic encoder use case: one contextual representation per token, one label per token.</li>
+<li><strong>Span-pair classification / relation extraction</strong>: DeBERTa-v3 with custom span-pair pooling on NYT-H. This shows why encoders remain useful for information extraction: they produce cheap, dense representations over the whole sentence.</li>
+<li><strong>Contrastive modeling / retrieval</strong>: E5 and DeBERTa-based triplet-loss models on BioASQ11. This connects directly to the <a href="../../../../posts/series/research-foundations-of-modern-llms/02-encoder-embeddings/index.html">next article</a>: encoders did not disappear; they became embedding and retrieval models.</li>
+</ul>
+<p>The same repo also includes examples from the other branches of the pretraining story:</p>
+<ul>
+<li><strong>FLAN-T5 seq2seq examples</strong>, representing the encoder-decoder path.</li>
+<li><strong>LLaMA-2 and <a href="https://chanys.github.io/mistral/">Mistral</a> instruction/chat tuning</strong>, representing the decoder-only path after CLM pretraining.</li>
+<li><strong><a href="https://chanys.github.io/dpo/">DPO</a> examples</strong>, representing the alignment stage that comes after supervised instruction tuning.</li>
+</ul>
+<p>I will return to these examples in later articles. For this piece, the main point is narrower: the old pretraining families did not vanish. They separated into different roles. Decoder-only became the default for general-purpose generation, while encoders remained highly useful for embeddings, retrieval, classification, and information extraction.</p>
+
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-bavarian_etal_2022" class="csl-entry" role="listitem">
+Bavarian, Mohammad, Heewoo Jun, Nikolas Tezak, et al. 2022. <span>“Efficient Training of Language Models to Fill in the Middle.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/2207.14255">https://arxiv.org/abs/2207.14255</a>.
+</div>
+<div id="ref-clark_etal_2020" class="csl-entry" role="listitem">
+Clark, Kevin, Minh-Thang Luong, Quoc V. Le, and Christopher D. Manning. 2020. <span>“ELECTRA: Pre-Training Text Encoders as Discriminators Rather Than Generators.”</span> <em>International Conference on Learning Representations</em>. <a href="https://arxiv.org/abs/2003.10555">https://arxiv.org/abs/2003.10555</a>.
+</div>
+<div id="ref-devlin_etal_2019" class="csl-entry" role="listitem">
+Devlin, Jacob, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. 2019. <span>“BERT: Pre-Training of Deep Bidirectional Transformers for Language Understanding.”</span> <em>Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (NAACL-HLT)</em>. <a href="https://arxiv.org/abs/1810.04805">https://arxiv.org/abs/1810.04805</a>.
+</div>
+<div id="ref-he_etal_2021" class="csl-entry" role="listitem">
+He, Pengcheng, Xiaodong Liu, Jianfeng Gao, and Weizhu Chen. 2021. <span>“DeBERTaV3: Improving DeBERTa Using ELECTRA-Style Pre-Training with Gradient-Disentangled Embedding Sharing.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/2111.09543">https://arxiv.org/abs/2111.09543</a>.
+</div>
+<div id="ref-liu_etal_2019" class="csl-entry" role="listitem">
+Liu, Yinhan, Myle Ott, Naman Goyal, et al. 2019. <span>“RoBERTa: A Robustly Optimized BERT Pretraining Approach.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/1907.11692">https://arxiv.org/abs/1907.11692</a>.
+</div>
+<div id="ref-radford_etal_2018" class="csl-entry" role="listitem">
+Radford, Alec, Karthik Narasimhan, Tim Salimans, and Ilya Sutskever. 2018. <em>Improving Language Understanding by Generative Pre-Training</em>. OpenAI.
+</div>
+<div id="ref-raffel_etal_2020" class="csl-entry" role="listitem">
+Raffel, Colin, Noam Shazeer, Adam Roberts, et al. 2020. <span>“Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer.”</span> <em>Journal of Machine Learning Research</em>. <a href="https://arxiv.org/abs/1910.10683">https://arxiv.org/abs/1910.10683</a>.
+</div>
+<div id="ref-tay_etal_2022" class="csl-entry" role="listitem">
+Tay, Yi, Mostafa Dehghani, Vinh Q. Tran, et al. 2023. <span>“UL2: Unifying Language Learning Paradigms.”</span> <em>International Conference on Learning Representations</em>. <a href="https://arxiv.org/abs/2205.05131">https://arxiv.org/abs/2205.05131</a>.
+</div>
+</div></section></div></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/yeesengchan\.com");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+© 2026 Yee Seng Chan
+</div>   
+    <div class="nav-footer-center">
+Built with <a href="https://quarto.org">Quarto</a>
+</div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/chanys">
+      <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://linkedin.com/in/yeesengchan">
+      <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="../../../../writing.xml">
+      <i class="bi bi-rss" role="img" aria-label="RSS feed">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+<script>
+(() => {
+  if (!document.querySelector('.series-nav')) return;
+  const toc = document.querySelector('nav#TOC[role="doc-toc"]');
+  if (!toc) return;
+  const links = [...toc.querySelectorAll('a[data-scroll-target]')];
+  if (!links.length) return;
+  const sections = links.map((link) => {
+    const target = link.getAttribute('data-scroll-target') || '';
+    return target.startsWith('#')
+      ? document.getElementById(decodeURI(target.slice(1)))
+      : null;
+  });
+  // Distance below viewport top at which a heading is treated as
+  // "the current section." Small, so the highlight matches what a
+  // reader perceives as the heading at the top of the page.
+  const ACTIVATION_OFFSET = 80;
+  const apply = () => {
+    let idx = 0;
+    const atBottom = window.innerHeight + window.pageYOffset
+      >= document.documentElement.scrollHeight - 2;
+    if (atBottom) {
+      idx = sections.length - 1;
+    } else {
+      for (let i = 0; i < sections.length; i++) {
+        const s = sections[i];
+        if (s && s.getBoundingClientRect().top <= ACTIVATION_OFFSET) idx = i;
+      }
+    }
+    for (let i = 0; i < links.length; i++) {
+      links[i].classList.toggle('active', i === idx);
+    }
+  };
+  // rAF ensures we run after Quarto's synchronous scroll handler
+  // so our active-class choice wins.
+  let pending = false;
+  const schedule = () => {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => { apply(); pending = false; });
+  };
+  schedule();
+  document.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule);
+  window.addEventListener('load', schedule);
+})();
+</script>
+
+
+
+
+</body></html>

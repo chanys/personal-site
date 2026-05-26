@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Yee Seng Chan">
+<meta name="description" content="What RAG inherited from DPR, and what it quietly skipped.">
+
+<title>Retrieval is older than RAG: from DPR to end-to-end – Yee Seng Chan</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<link href="../../../../favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap-7b53549d121f5930ef88eb09dda4672c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-3874333d9529686a5a4437217f193688.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-7b53549d121f5930ef88eb09dda4672c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../../../styles.css">
+<meta property="og:title" content="Retrieval is older than RAG: from DPR to end-to-end – Yee Seng Chan">
+<meta property="og:description" content="What RAG inherited from DPR, and what it quietly skipped.">
+<meta property="og:image" content="https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/03-retrieval/retrieval_lineage.png">
+<meta property="og:site_name" content="Yee Seng Chan">
+<meta property="og:image:alt" content="A swim-lane timeline with four lanes from top to bottom: joint training, late interaction, bi-encoder dense, and lexical. The x-axis is years, with 2009 on the left, then an axis break, then 2020, 2021, 2022, 2023. BM25 sits alone in the lexical lane at 2009. In 2020 four papers appear across three lanes: REALM and RAG on the joint-training lane, ColBERT on the late-interaction lane, DPR on the bi-encoder-dense lane. ColBERTv2 follows in 2021 on the late-interaction lane. End-to-end RAG appears in 2022 and RA-DIT in 2023, both on the joint-training lane. DPR is highlighted with a thicker border and a light indigo fill, with the label production sits here directly below it. The bi-encoder-dense lane is empty to the right of DPR while the joint-training lane keeps going. Caption: production rode the bi-encoder and stopped at DPR; the joint-training lineage is what got skipped.">
+<meta property="og:image:height" content="912">
+<meta property="og:image:width" content="2000">
+<meta name="twitter:title" content="Retrieval is older than RAG: from DPR to end-to-end – Yee Seng Chan">
+<meta name="twitter:description" content="What RAG inherited from DPR, and what it quietly skipped.">
+<meta name="twitter:image" content="https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/03-retrieval/retrieval_lineage.png">
+<meta name="twitter:image:alt" content="A swim-lane timeline with four lanes from top to bottom: joint training, late interaction, bi-encoder dense, and lexical. The x-axis is years, with 2009 on the left, then an axis break, then 2020, 2021, 2022, 2023. BM25 sits alone in the lexical lane at 2009. In 2020 four papers appear across three lanes: REALM and RAG on the joint-training lane, ColBERT on the late-interaction lane, DPR on the bi-encoder-dense lane. ColBERTv2 follows in 2021 on the late-interaction lane. End-to-end RAG appears in 2022 and RA-DIT in 2023, both on the joint-training lane. DPR is highlighted with a thicker border and a light indigo fill, with the label production sits here directly below it. The bi-encoder-dense lane is empty to the right of DPR while the joint-training lane keeps going. Caption: production rode the bi-encoder and stopped at DPR; the joint-training lineage is what got skipped.">
+<meta name="twitter:image-height" content="912">
+<meta name="twitter:image-width" content="2000">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">Yee Seng Chan</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../writing.html"> 
+<span class="menu-text">Writing</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../series.html"> 
+<span class="menu-text">Series</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../projects.html"> 
+<span class="menu-text">Projects</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../../writing.xml"> <i class="bi bi-rss" role="img" aria-label="RSS feed">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/chanys"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://linkedin.com/in/yeesengchan"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:chanys.nlp@gmail.com"> <i class="bi bi-envelope" role="img" aria-label="Email">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Contents</h2>
+   
+  <ul class="collapse">
+  <li><a href="#what-rag-meant-in-2020-vs-what-it-means-today" id="toc-what-rag-meant-in-2020-vs-what-it-means-today" class="nav-link active" data-scroll-target="#what-rag-meant-in-2020-vs-what-it-means-today">What RAG meant in 2020 vs what it means today</a></li>
+  <li><a href="#a-short-history-of-dense-retrieval" id="toc-a-short-history-of-dense-retrieval" class="nav-link" data-scroll-target="#a-short-history-of-dense-retrieval">A short history of dense retrieval</a></li>
+  <li><a href="#the-retrieval-pattern-most-production-systems-actually-use" id="toc-the-retrieval-pattern-most-production-systems-actually-use" class="nav-link" data-scroll-target="#the-retrieval-pattern-most-production-systems-actually-use">The retrieval pattern most production systems actually use</a></li>
+  <li><a href="#code-companion-tnlp-end-to-end-rag" id="toc-code-companion-tnlp-end-to-end-rag" class="nav-link" data-scroll-target="#code-companion-tnlp-end-to-end-rag">Code companion: TNLP end-to-end RAG</a></li>
+  <li><a href="#rag-evaluation" id="toc-rag-evaluation" class="nav-link" data-scroll-target="#rag-evaluation">RAG evaluation</a></li>
+  <li><a href="#closing" id="toc-closing" class="nav-link" data-scroll-target="#closing">Closing</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Retrieval is older than RAG: from DPR to end-to-end</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">Research foundations of modern LLMs</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    What RAG inherited from DPR, and what it quietly skipped.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Yee Seng Chan </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">2026 · March 27</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+Research foundations of modern LLMs
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-pretraining-objectives/">Pretraining objectives: Why decoder-only won</a></li>
+<li><a href="../02-encoder-embeddings/">The encoder didn’t die. It became the embedding model</a></li>
+<li><a href="../03-retrieval/">Retrieval is older than RAG: From DPR to end-to-end</a></li>
+<li><a href="../04-fine-tuning-stack/">The fine-tuning stack: One loss, different data</a></li>
+<li><a href="../05-information-extraction/">Information extraction didn’t disappear. It moved inside the workflow</a></li>
+</ol>
+</div>
+<p>Most production RAG systems today are simple pipelines: a frozen embedding model, a vector database, and a frozen LLM connected by prompt assembly. That is closer to <strong>Dense Passage Retrieval</strong> (<a href="https://chanys.github.io/dpr/">DPR</a>), the 2020 bi-encoder retrieval method from Karpukhin et al. <span class="citation" data-cites="karpukhin_etal_2020">(<a href="#ref-karpukhin_etal_2020" role="doc-biblioref">Karpukhin et al. 2020</a>)</span> with a generator, than to the original <a href="https://chanys.github.io/rag/">RAG</a> paper <span class="citation" data-cites="lewis_etal_2020">(<a href="#ref-lewis_etal_2020" role="doc-biblioref">Lewis et al. 2020</a>)</span>, which proposed joint training of the retriever and generator with marginalization over retrieved documents.</p>
+<p>This article builds on paper-by-paper notes I wrote on <a href="https://chanys.github.io" class="uri">https://chanys.github.io</a> between 2022 and 2023. Those posts explain the individual papers. Here, I step back and connect them into a larger story: retrieval was already a mature technical lineage before “RAG” became the umbrella term. Later, I also point to my <a href="https://github.com/chanys/tnlp">TNLP</a> code that implements the more expensive end-to-end version.</p>
+<section id="what-rag-meant-in-2020-vs-what-it-means-today" class="level2">
+<h2 class="anchored" data-anchor-id="what-rag-meant-in-2020-vs-what-it-means-today">What RAG meant in 2020 vs what it means today</h2>
+<p>The Lewis et al.&nbsp;(2020) paper proposed:</p>
+<ol type="1">
+<li>A DPR-style bi-encoder retriever</li>
+<li>A BART seq2seq generator</li>
+<li><strong>Joint training</strong> of query encoder and generator (document encoder frozen)</li>
+</ol>
+<p>What most production RAG deploys:</p>
+<ol type="1">
+<li>An off-the-shelf embedding model (BGE, E5, OpenAI text-embedding-3, Cohere), frozen</li>
+<li>A vector database (Pinecone, Weaviate, Qdrant, Milvus, pgvector, Chroma)</li>
+<li>An LLM API (OpenAI, Anthropic, Google), frozen</li>
+<li><strong>No joint training</strong></li>
+</ol>
+<p>This isn’t a critique. The simpler pattern works well for many use cases, doesn’t require ML engineering depth, and decouples the retriever from the generator.</p>
+</section>
+<section id="a-short-history-of-dense-retrieval" class="level2">
+<h2 class="anchored" data-anchor-id="a-short-history-of-dense-retrieval">A short history of dense retrieval</h2>
+<p>The history below is the chronology that produced the drift. Each step changed what was possible, and most of the production world adopted only part of what each step demonstrated. The story is short because it happened fast: almost all the field-defining work landed between 2020 and 2023, on top of a lexical baseline (BM25) you still need.</p>
+<div id="fig-retrieval-lineage" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A swim-lane timeline with four lanes from top to bottom: joint training, late interaction, bi-encoder dense, and lexical. The x-axis is years, with 2009 on the left, then an axis break, then 2020, 2021, 2022, 2023. BM25 sits alone in the lexical lane at 2009. In 2020 four papers appear across three lanes: REALM and RAG on the joint-training lane, ColBERT on the late-interaction lane, DPR on the bi-encoder-dense lane. ColBERTv2 follows in 2021 on the late-interaction lane. End-to-end RAG appears in 2022 and RA-DIT in 2023, both on the joint-training lane. DPR is highlighted with a thicker border and a light indigo fill, with the label production sits here directly below it. The bi-encoder-dense lane is empty to the right of DPR while the joint-training lane keeps going. Caption: production rode the bi-encoder and stopped at DPR; the joint-training lineage is what got skipped.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-retrieval-lineage-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="retrieval_lineage.png" class="img-fluid figure-img" alt="A swim-lane timeline with four lanes from top to bottom: joint training, late interaction, bi-encoder dense, and lexical. The x-axis is years, with 2009 on the left, then an axis break, then 2020, 2021, 2022, 2023. BM25 sits alone in the lexical lane at 2009. In 2020 four papers appear across three lanes: REALM and RAG on the joint-training lane, ColBERT on the late-interaction lane, DPR on the bi-encoder-dense lane. ColBERTv2 follows in 2021 on the late-interaction lane. End-to-end RAG appears in 2022 and RA-DIT in 2023, both on the joint-training lane. DPR is highlighted with a thicker border and a light indigo fill, with the label production sits here directly below it. The bi-encoder-dense lane is empty to the right of DPR while the joint-training lane keeps going. Caption: production rode the bi-encoder and stopped at DPR; the joint-training lineage is what got skipped.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-retrieval-lineage-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: The dense-retrieval lineage on four paradigm lanes. BM25 has been the lexical baseline since 2009. Between 2020 and 2023 the dense-retrieval lineage splits across three other paths: bi-encoder dense (DPR), late interaction (ColBERT, ColBERTv2), and joint training (REALM, RAG, End-to-end RAG, RA-DIT). Production RAG today is essentially DPR plus a frozen generator: it took the bi-encoder lane and stopped there, while the joint-training lane kept going.
+</figcaption>
+</figure>
+</div>
+<section id="bm25-robertson_zaragoza_2009" class="level3">
+<h3 class="anchored" data-anchor-id="bm25-robertson_zaragoza_2009">BM25 <span class="citation" data-cites="robertson_zaragoza_2009">(<a href="#ref-robertson_zaragoza_2009" role="doc-biblioref">Robertson and Zaragoza 2009</a>)</span></h3>
+<p>The baseline that wouldn’t die. Lexical ranking over inverted indices, using TF-IDF with length normalization and term saturation. For roughly two decades, BM25 was the baseline neural methods couldn’t consistently beat. DPR’s primary contribution was beating it cleanly enough that the field finally moved on, but BM25 didn’t go away: hybrid setups (BM25 + dense, often with reciprocal rank fusion <span class="citation" data-cites="cormack_etal_2009">(<a href="#ref-cormack_etal_2009" role="doc-biblioref">Cormack et al. 2009</a>)</span>) are common in production today, and pure-dense systems frequently lose to hybrid on tasks with rare-term queries.</p>
+</section>
+<section id="realm-guu_etal_2020" class="level3">
+<h3 class="anchored" data-anchor-id="realm-guu_etal_2020"><a href="https://chanys.github.io/realm/">REALM</a> <span class="citation" data-cites="guu_etal_2020">(<a href="#ref-guu_etal_2020" role="doc-biblioref">Guu et al. 2020</a>)</span></h3>
+<p>Two months before DPR, REALM proposed something more ambitious: retrieval-augmented language model pretraining, with the retriever trained jointly with the generator from MLM signal. It got far less production traction than DPR because joint pretraining was expensive, and DPR’s recipe was simpler and more transferable.</p>
+</section>
+<section id="dpr-karpukhin_etal_2020" class="level3">
+<h3 class="anchored" data-anchor-id="dpr-karpukhin_etal_2020"><a href="https://chanys.github.io/dpr/">DPR</a> <span class="citation" data-cites="karpukhin_etal_2020">(<a href="#ref-karpukhin_etal_2020" role="doc-biblioref">Karpukhin et al. 2020</a>)</span></h3>
+<p>The paper that made bi-encoder dense retrieval practical. Two BERT encoders, <span class="math inline">\(E_Q\)</span> for queries and <span class="math inline">\(E_P\)</span> for passages. Score by inner product. Train with the negative log-likelihood of the positive passage against negatives (both explicit hard negatives, and in-batch negatives where the positives of other examples in the same batch serve as negatives):</p>
+<p><span class="math display">\[\mathcal{L}(q_i, p_i^+, p_{i,1}^-, \ldots, p_{i,n}^-) = -\log \frac{e^{\mathrm{sim}(q_i, p_i^+)}}{e^{\mathrm{sim}(q_i, p_i^+)} + \sum_j e^{\mathrm{sim}(q_i, p_{i,j}^-)}}\]</span></p>
+<p>The contributions were practical: in-batch negatives (free supervision), independent encoders for query and passage (asymmetric architecture for asymmetric inputs), and a clean training recipe. The result was the first dense retriever to consistently beat BM25 on open-domain QA.</p>
+<p>DPR’s bi-encoder is the architecture that most RAG systems still use, with newer embedding models in place of BERT. The drift starts here: the production world adopted DPR’s architecture but not its training discipline.</p>
+</section>
+<section id="rag-lewis_etal_2020" class="level3">
+<h3 class="anchored" data-anchor-id="rag-lewis_etal_2020"><a href="https://chanys.github.io/rag/">RAG</a> <span class="citation" data-cites="lewis_etal_2020">(<a href="#ref-lewis_etal_2020" role="doc-biblioref">Lewis et al. 2020</a>)</span></h3>
+<p>The paper RAG got its name from, and the one production drift moved furthest away from. DPR retriever plus BART seq2seq generator, jointly fine-tunable. The RAG-token model marginalizes over the top-k retrieved documents per output token:</p>
+<p><span class="math display">\[p_\mathrm{RAG\text{-}Token}(y|x) \approx \prod_{i=1}^N \sum_{z \in \mathrm{top\text{-}}k(p(\cdot|x))} p_\mathrm{DPR}(z|x) \cdot p_\theta(y_i | x, z, y_{1:i-1})\]</span></p>
+<p>Two important details. First, only the <strong>query encoder</strong> is updated during training; the document encoder (and the FAISS index) stay frozen. Re-encoding the corpus during training is too expensive. Second, the marginalization is per-token: at every output token, the model sums the probability of that token across the retrieved documents weighted by retrieval probability. This is genuinely different from concatenating top-k documents and running a single forward pass, which is what most production RAG does.</p>
+</section>
+<section id="colbert-khattab_zaharia_2020" class="level3">
+<h3 class="anchored" data-anchor-id="colbert-khattab_zaharia_2020"><a href="https://chanys.github.io/colbert/">ColBERT</a> <span class="citation" data-cites="khattab_zaharia_2020">(<a href="#ref-khattab_zaharia_2020" role="doc-biblioref">Khattab and Zaharia 2020</a>)</span></h3>
+<p>Late interaction was the path the field didn’t ultimately take, though it remains the most interesting compromise between bi-encoder speed and cross-encoder accuracy. Encode query and document independently with BERT, then compute similarity at the token level:</p>
+<p><span class="math display">\[S_{q,d} = \sum_{i \in E_q} \max_{j \in E_d} \left( E_{q_i} \cdot E_{d_j}^\top \right)\]</span></p>
+<p>For each query token, find the most similar document token, sum the maxima. Encoding stays independent (documents can be indexed offline), but the matching is fine-grained. The cost is storage: ColBERT stores one vector per token instead of one per document, roughly 100x for a 100-token document. That’s its main operational drawback.</p>
+</section>
+<section id="colbertv2-santhanam_etal_2021" class="level3">
+<h3 class="anchored" data-anchor-id="colbertv2-santhanam_etal_2021"><a href="https://chanys.github.io/colbertv2/">ColBERTv2</a> <span class="citation" data-cites="santhanam_etal_2021">(<a href="#ref-santhanam_etal_2021" role="doc-biblioref">Santhanam et al. 2022</a>)</span></h3>
+<p>Same architecture with two improvements: residual quantization (cluster the per-token embeddings, store each as <code>(centroid_id, residual)</code> with a 2-bit residual; storage drops 6-10x), and distillation from a cross-encoder. ColBERT and ColBERTv2 are the canonical late-interaction systems, and they work at scale. But modern strong bi-encoders have closed enough of the gap that the storage cost is hard to justify for most use cases.</p>
+</section>
+<section id="end-to-end-rag-siriwardhana_etal_2023" class="level3">
+<h3 class="anchored" data-anchor-id="end-to-end-rag-siriwardhana_etal_2023"><a href="https://chanys.github.io/rag-domain-qa/">End-to-end RAG</a> <span class="citation" data-cites="siriwardhana_etal_2023">(<a href="#ref-siriwardhana_etal_2023" role="doc-biblioref">Siriwardhana et al. 2023</a>)</span></h3>
+<p>If the original RAG paper described joint training with a frozen document encoder, this is the paper that made even the document encoder trainable. The engineering cost is what most teams won’t pay.</p>
+<p>The original RAG paper kept the document encoder frozen during training because re-encoding the corpus was too expensive. End-to-end RAG removes that constraint with two asynchronous processes: one continuously re-encodes passages with the updated document encoder, and one rebuilds the index. Training proceeds in parallel; the index is updated periodically with the latest version of the encoder.</p>
+<p>This makes joint training of all components feasible: query encoder, document encoder, and generator. The paper also adds an auxiliary loss: regenerate the input query from the retrieved passages. This forces the retriever to find passages that contain enough information to reconstruct the query, which is a useful signal when domain-specific labels are scarce.</p>
+<p>This is the closest to a “real” end-to-end retrieval-augmented model. The async re-encoding pipeline is the cost most production teams won’t pay.</p>
+</section>
+<section id="ra-dit-lin_etal_2023" class="level3">
+<h3 class="anchored" data-anchor-id="ra-dit-lin_etal_2023"><a href="https://chanys.github.io/radit/">RA-DIT</a> <span class="citation" data-cites="lin_etal_2023">(<a href="#ref-lin_etal_2023" role="doc-biblioref">Lin et al. 2023</a>)</span></h3>
+<p>The practical answer to the engineering question end-to-end RAG raises: how do you get most of the benefit of joint training without the async re-indexing pipeline? Two separate fine-tunings, run in sequence. First, fine-tune the LLM to use retrieved chunks. Second, fine-tune the retriever using LM-supervised retrieval (LSR): score documents by how much they raise the LM’s probability of the correct output:</p>
+<p><span class="math display">\[p_\mathrm{LSR}(c | x, y) \propto \frac{\exp\left( p_\mathrm{LM}(y | c \circ x) / \tau \right)}{\sum_{c' \in C'} \exp\left( p_\mathrm{LM}(y | c' \circ x) / \tau \right)}\]</span></p>
+<p>Only the query encoder is updated; the document encoder stays frozen. The two stages can each be done with standard fine-tuning infrastructure. The paper reports SOTA results on MMLU, NQ, TriviaQA, and KILT subsets with a 65B-parameter LLM.</p>
+</section>
+</section>
+<section id="the-retrieval-pattern-most-production-systems-actually-use" class="level2">
+<h2 class="anchored" data-anchor-id="the-retrieval-pattern-most-production-systems-actually-use">The retrieval pattern most production systems actually use</h2>
+<p>Setting aside the joint-training story, here is the pipeline most teams have built. The bi-encoder/cross-encoder split is the operational story; everything else is supporting infrastructure.</p>
+<div id="fig-rag-pipeline" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A two-row pipeline diagram. The top row is offline indexing: source documents are chunked, embedded, and written into a vector index, run once. The bottom row is the online query path: a user query is embedded, used to retrieve candidate chunks from the same vector index, passed through an optional reranker stage, and the top results plus the query are sent to the generator to produce the answer. An arrow shows the vector index built in the top row being read by every request in the bottom row.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-rag-pipeline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="rag_pipeline.png" class="img-fluid figure-img" alt="A two-row pipeline diagram. The top row is offline indexing: source documents are chunked, embedded, and written into a vector index, run once. The bottom row is the online query path: a user query is embedded, used to retrieve candidate chunks from the same vector index, passed through an optional reranker stage, and the top results plus the query are sent to the generator to produce the answer. An arrow shows the vector index built in the top row being read by every request in the bottom row.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-rag-pipeline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: The production RAG pipeline. Top: offline indexing. Bottom: online query, with the reranker as an optional but usually worthwhile stage. The vector index built once at indexing time is queried at every request.
+</figcaption>
+</figure>
+</div>
+<p><strong>Chunking.</strong> Source documents are split into chunks. Fixed-token chunking (256-512 tokens with 10-20% overlap) is the default and works well enough for most prose. Recursive chunking respects document structure (Markdown headers, paragraph breaks). Semantic chunking (splitting on sentence-embedding distance) is more expensive and rarely justifies the cost on standard text. The ceiling on retrieval quality is often set here: chunks too small lose context, chunks too large produce diffuse embeddings that match weakly. The default chunker in the framework is rarely the right one for your data: PDFs with tables, code with function boundaries, and Markdown with structured sections each need different handling.</p>
+<p><strong>Embedding.</strong> Each chunk is encoded once with a frozen embedding model.</p>
+<p><strong>Vector database.</strong> The encoded chunks live in a vector index, e.g.&nbsp;HNSW or IVF-PQ under the hood. Pinecone, Weaviate, Qdrant, Milvus, pgvector, Chroma: pick on operational fit, not on retrieval quality. The choice of embedding model and chunking strategy usually dominates. pgvector is increasingly competitive when your data is already in Postgres and you don’t want a second system to operate. For the indexing intuition behind approximate nearest-neighbor search and product quantization, see my earlier <a href="https://chanys.github.io/knn/">KNN search note</a>.</p>
+<p><strong>Top-k retrieval.</strong> Encode the query with the same embedding model used at indexing time, retrieve top-<span class="math inline">\(k\)</span> by cosine similarity (or dot product if vectors are normalized). Typical <span class="math inline">\(k\)</span> is 10-50. Larger <span class="math inline">\(k\)</span> is wasted unless you rerank.</p>
+<p><strong>Reranking (optional but usually worth it).</strong> A cross-encoder reranker takes the query and each retrieved chunk together and produces a relevance score. The bi-encoder is fast but cannot model query-document interactions; the cross-encoder can. Bi-encoder retrieves 50, cross-encoder reranks to top 5-10. The off-the-shelf rerankers in 2024-2025 are strong enough that the “no reranker” failure mode is increasingly hard to justify: <a href="https://huggingface.co/BAAI/bge-reranker-v2-m3">BGE-reranker-v2-m3</a>, <a href="https://docs.cohere.com/docs/reranking-with-cohere">Cohere Rerank 3</a>, <a href="https://huggingface.co/mixedbread-ai/mxbai-rerank-large-v1">mxbai-rerank-large-v1</a>, and <a href="https://jina.ai/models/jina-reranker-v2-base-multilingual/">Jina Reranker v2</a> are all usable before you train your own reranker.</p>
+<p>A note on the bi-encoder vs cross-encoder choice: cross-encoders score query-document pairs jointly, so they cannot be precomputed. Running one over millions of documents at query time is infeasible. They belong in reranking, after a bi-encoder narrows the candidates.</p>
+<p><strong>Context assembly.</strong> A prompt template combines the system instruction, the retrieved-and-reranked chunks, and the query. Order matters: long-context models attend more to the start and end of the prompt than to the middle (the “lost in the middle” effect). Some systems include chunk metadata (source URL, section title) to help the LLM cite.</p>
+<p><strong>LLM call.</strong> Frozen API or local model. The LLM generates the answer from the assembled prompt.</p>
+<p>This pipeline is what most blog posts mean when they say RAG. It’s also what most teams should build first before they consider anything more complex.</p>
+</section>
+<section id="code-companion-tnlp-end-to-end-rag" class="level2">
+<h2 class="anchored" data-anchor-id="code-companion-tnlp-end-to-end-rag">Code companion: TNLP end-to-end RAG</h2>
+<p>Most production RAG systems stop at frozen retrieval plus prompt assembly. In <a href="https://github.com/chanys/tnlp">TNLP</a>, I implemented the more expensive pattern: end-to-end RAG with retriever-generator coupling and asynchronous index refresh.</p>
+<p>The point of the exercise isn’t that everyone should joint-train. Most teams shouldn’t. The point is to make the distinction concrete: production RAG is usually a pipeline; end-to-end RAG is a trained retrieval-augmented model.</p>
+</section>
+<section id="rag-evaluation" class="level2">
+<h2 class="anchored" data-anchor-id="rag-evaluation">RAG evaluation</h2>
+<p>Three things tend to go wrong when teams evaluate this pipeline.</p>
+<ol type="1">
+<li><p><strong>Treating RAG as monolithic.</strong> RAG is a pipeline. Each stage (chunking, embedding, retrieval, reranking, prompt assembly, generation) has its own quality and latency tradeoffs. “Our RAG isn’t working” is rarely diagnosed by treating the system as a black box.</p></li>
+<li><p><strong>Vibes-only evaluation.</strong> “It seems to work” is not evaluation. At minimum: a labeled set of (query, relevant_chunk) pairs, <a href="https://chanys.github.io/ir-metrics/">retrieval metrics</a> on a held-out set, and end-to-end answer correctness. Without these, you don’t know whether the embedding model, the reranker, or the LLM is failing.</p></li>
+<li><p><strong>Not measuring retrieval recall before LLM accuracy.</strong> If the relevant chunks aren’t retrieved, no LLM can save you. Measure retrieval recall@k first, then end-to-end accuracy.</p></li>
+</ol>
+</section>
+<section id="closing" class="level2">
+<h2 class="anchored" data-anchor-id="closing">Closing</h2>
+<p>The retrieval lineage from DPR through RA-DIT is a story of escalating sophistication: bi-encoder dense retrieval, then joint training with a frozen index, then joint training with an updating index, then a two-stage practical compromise. Production RAG, meanwhile, mostly stopped at step one. That’s not a critique. The simpler pattern works well for most use cases, and the engineering cost of going further is real.</p>
+<p>But the gap is worth knowing. When the off-the-shelf pipeline isn’t working on your data, the next step isn’t to swap embedding models or try another vector database. It’s to figure out where in the pipeline the loss is happening, and whether the answer is a configuration change, a fine-tune, or the more ambitious territory the original RAG paper was actually about.</p>
+
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-cormack_etal_2009" class="csl-entry" role="listitem">
+Cormack, Gordon V., Charles L. A. Clarke, and Stefan Buettcher. 2009. <span>“Reciprocal Rank Fusion Outperforms Condorcet and Individual Rank Learning Methods.”</span> <em>Proceedings of the 32nd International ACM SIGIR Conference on Research and Development in Information Retrieval</em>.
+</div>
+<div id="ref-guu_etal_2020" class="csl-entry" role="listitem">
+Guu, Kelvin, Kenton Lee, Zora Tung, Panupong Pasupat, and Ming-Wei Chang. 2020. <span>“REALM: Retrieval-Augmented Language Model Pre-Training.”</span> <em>Proceedings of the 37th International Conference on Machine Learning (ICML)</em>. <a href="https://arxiv.org/abs/2002.08909">https://arxiv.org/abs/2002.08909</a>.
+</div>
+<div id="ref-karpukhin_etal_2020" class="csl-entry" role="listitem">
+Karpukhin, Vladimir, Barlas Oğuz, Sewon Min, et al. 2020. <span>“Dense Passage Retrieval for Open-Domain Question Answering.”</span> <em>Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP)</em>. <a href="https://arxiv.org/abs/2004.04906">https://arxiv.org/abs/2004.04906</a>.
+</div>
+<div id="ref-khattab_zaharia_2020" class="csl-entry" role="listitem">
+Khattab, Omar, and Matei Zaharia. 2020. <span>“ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT.”</span> <em>Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval</em>. <a href="https://arxiv.org/abs/2004.12832">https://arxiv.org/abs/2004.12832</a>.
+</div>
+<div id="ref-lewis_etal_2020" class="csl-entry" role="listitem">
+Lewis, Patrick, Ethan Perez, Aleksandra Piktus, et al. 2020. <span>“Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks.”</span> <em>Advances in Neural Information Processing Systems (NeurIPS)</em>. <a href="https://arxiv.org/abs/2005.11401">https://arxiv.org/abs/2005.11401</a>.
+</div>
+<div id="ref-lin_etal_2023" class="csl-entry" role="listitem">
+Lin, Xi Victoria, Xilun Chen, Mingda Chen, et al. 2023. <span>“RA-DIT: Retrieval-Augmented Dual Instruction Tuning.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/2310.01352">https://arxiv.org/abs/2310.01352</a>.
+</div>
+<div id="ref-robertson_zaragoza_2009" class="csl-entry" role="listitem">
+Robertson, Stephen, and Hugo Zaragoza. 2009. <span>“The Probabilistic Relevance Framework: BM25 and Beyond.”</span> <em>Foundations and Trends in Information Retrieval</em> 3 (4): 333–89.
+</div>
+<div id="ref-santhanam_etal_2021" class="csl-entry" role="listitem">
+Santhanam, Keshav, Omar Khattab, Jon Saad-Falcon, Christopher Potts, and Matei Zaharia. 2022. <span>“ColBERTv2: Effective and Efficient Retrieval via Lightweight Late Interaction.”</span> <em>Proceedings of the 2022 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (NAACL-HLT)</em>. <a href="https://arxiv.org/abs/2112.01488">https://arxiv.org/abs/2112.01488</a>.
+</div>
+<div id="ref-siriwardhana_etal_2023" class="csl-entry" role="listitem">
+Siriwardhana, Shamane, Rivindu Weerasekera, Elliott Wen, Tharindu Kaluarachchi, Rajib Rana, and Suranga Nanayakkara. 2023. <span>“Improving the Domain Adaptation of Retrieval Augmented Generation (RAG) Models for Open Domain Question Answering.”</span> <em>Transactions of the Association for Computational Linguistics (TACL)</em>. <a href="https://arxiv.org/abs/2210.02627">https://arxiv.org/abs/2210.02627</a>.
+</div>
+</div></section></div></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/yeesengchan\.com");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+© 2026 Yee Seng Chan
+</div>   
+    <div class="nav-footer-center">
+Built with <a href="https://quarto.org">Quarto</a>
+</div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/chanys">
+      <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://linkedin.com/in/yeesengchan">
+      <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="../../../../writing.xml">
+      <i class="bi bi-rss" role="img" aria-label="RSS feed">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+<script>
+(() => {
+  if (!document.querySelector('.series-nav')) return;
+  const toc = document.querySelector('nav#TOC[role="doc-toc"]');
+  if (!toc) return;
+  const links = [...toc.querySelectorAll('a[data-scroll-target]')];
+  if (!links.length) return;
+  const sections = links.map((link) => {
+    const target = link.getAttribute('data-scroll-target') || '';
+    return target.startsWith('#')
+      ? document.getElementById(decodeURI(target.slice(1)))
+      : null;
+  });
+  // Distance below viewport top at which a heading is treated as
+  // "the current section." Small, so the highlight matches what a
+  // reader perceives as the heading at the top of the page.
+  const ACTIVATION_OFFSET = 80;
+  const apply = () => {
+    let idx = 0;
+    const atBottom = window.innerHeight + window.pageYOffset
+      >= document.documentElement.scrollHeight - 2;
+    if (atBottom) {
+      idx = sections.length - 1;
+    } else {
+      for (let i = 0; i < sections.length; i++) {
+        const s = sections[i];
+        if (s && s.getBoundingClientRect().top <= ACTIVATION_OFFSET) idx = i;
+      }
+    }
+    for (let i = 0; i < links.length; i++) {
+      links[i].classList.toggle('active', i === idx);
+    }
+  };
+  // rAF ensures we run after Quarto's synchronous scroll handler
+  // so our active-class choice wins.
+  let pending = false;
+  const schedule = () => {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => { apply(); pending = false; });
+  };
+  schedule();
+  document.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule);
+  window.addEventListener('load', schedule);
+})();
+</script>
+
+
+
+
+</body></html>

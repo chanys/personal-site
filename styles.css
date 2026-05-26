@@ -1,1 +1,26 @@
-/* css styles */
+/* ---------------------------------------------------------------------------
+   styles.css — small additive rules only.
+   The design system lives in theme.scss / theme-dark.scss / fieldnotes-rules.scss.
+   Keep this file lean; anything colour-related belongs in the SCSS so it
+   tracks light/dark via the --fn-* tokens.
+   --------------------------------------------------------------------------- */
+
+/* Comfortable focus ring for keyboard users, in the active accent colour */
+a:focus-visible,
+button:focus-visible,
+.nav-link:focus-visible {
+  outline: 2px solid var(--fn-accent, #C23A1B);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Print: drop the chrome, keep the words */
+@media print {
+  .navbar,
+  .nav-footer,
+  #quarto-margin-sidebar,
+  .series-nav,
+  body::before { display: none !important; }
+  main.content { max-width: none; }
+  a { background: none !important; }
+}
