@@ -1,0 +1,36 @@
+# Renders the Quarto site and publishes the built output to the `gh-pages`
+# branch on every push to `main`. GitHub Pages serves the site from
+# `gh-pages`, so a successful run is what makes the live yeesengchan.com
+# reflect the change.
+#
+# `workflow_dispatch` lets you trigger a manual deploy from the Actions tab
+# (handy for re-publishing without an empty commit).
+#
+# `contents: write` is the only permission needed so the action can push to
+# the `gh-pages` branch using the default GITHUB_TOKEN.
+
+name: Publish site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Render and publish to gh-pages
+        uses: quarto-dev/quarto-actions/publish@v2
+        with:
+          target: gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
