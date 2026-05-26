@@ -15,6 +15,1546 @@
 <link>https://yeesengchan.com/posts/series/the-agent-harness/</link>
 </image>
 <generator>quarto-1.9.38</generator>
-<lastBuildDate>Tue, 26 May 2026 14:06:08 GMT</lastBuildDate>
+<lastBuildDate>Sun, 10 May 2026 00:00:00 GMT</lastBuildDate>
+<item>
+  <title>Traces are how agents get better</title>
+  <dc:creator>Yee Seng Chan</dc:creator>
+  <link>https://yeesengchan.com/posts/series/the-agent-harness/05-traces/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+The agent harness
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-demos-break/">Why AI agent demos break in production</a></li>
+<li><a href="../02-harness-is-the-product/">The harness is the product</a></li>
+<li><a href="../03-state-not-transcript/">State, not transcript, is agent memory</a></li>
+<li><a href="../04-prompts-gate/">Prompts guide. Gates enforce</a></li>
+<li><a href="../05-traces/">Traces are how agents get better</a></li>
+</ol>
+</div>
+<p>A user asked the docs Q&amp;A agent: “What’s the data retention policy for trial accounts?”</p>
+<p>The agent answered: “Trial accounts: data is retained for 30 days after closure, after which it is deleted.” The answer was confident, polished, and wrong. The corpus says trial-account data is retained for 90 days. Thirty days is the standard-account window.</p>
+<p>The team finds out a day later, when the user files a correction. The logs show this:</p>
+<pre class="text"><code>2026-05-08 14:23:18  run_551  query received
+2026-05-08 14:23:19  run_551  tool_call: retrieval, status: success
+2026-05-08 14:23:21  run_551  response generated
+2026-05-08 14:23:21  run_551  run completed</code></pre>
+<p>That log records events. It does not show which passages were retrieved, what the model saw, why it chose 30 days, which passage supported the claim, or which validation checks ran. The team can guess. It cannot debug.</p>
+<p>Logs tell you what happened. Traces show why it happened.</p>
+<p>The <a href="../../../../posts/series/the-agent-harness/04-prompts-gate/index.html">previous article</a> covered gates: runtime checks that stop wrong actions before they happen. This article covers traces: structured records that make failures explainable after they happen.</p>
+<section id="what-a-useful-trace-records" class="level2">
+<h2 class="anchored" data-anchor-id="what-a-useful-trace-records">What a useful trace records</h2>
+<p>A trace records one structured step for each meaningful action: a model decision, tool call, verification, phase transition, or gate firing. It should not store a wall of chat text or a dump of model reasoning.</p>
+<p>Each step should record:</p>
+<ul>
+<li><strong>Versions:</strong> prompt, model, tool, index, schema, and validator versions.</li>
+<li><strong>State before:</strong> what the system knew before the step.</li>
+<li><strong>Context pack:</strong> what the model actually saw.</li>
+<li><strong>Action chosen:</strong> what the system decided to do, with a short reason.</li>
+<li><strong>Verification:</strong> what was checked after the action.</li>
+<li><strong>State after:</strong> what changed.</li>
+</ul>
+<p>Here is one step from the failed retention run, captured at synthesis:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1">trace_step <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> {</span>
+<span id="cb2-2">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"step_kind"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"synthesize"</span>,</span>
+<span id="cb2-3">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"versions"</span>: {</span>
+<span id="cb2-4">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"prompt"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"syn_v6"</span>,</span>
+<span id="cb2-5">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"index"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"ri_v3"</span>,</span>
+<span id="cb2-6">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"validator"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"val_v4"</span>,</span>
+<span id="cb2-7">    },</span>
+<span id="cb2-8"></span>
+<span id="cb2-9">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"state_before"</span>: {</span>
+<span id="cb2-10">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"phase"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"synthesize"</span>,</span>
+<span id="cb2-11">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"query"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"What is the data retention policy for trial accounts?"</span>,</span>
+<span id="cb2-12">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"retrieved_passages"</span>: [</span>
+<span id="cb2-13">            {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"id"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"psg_1102"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"category"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"trial_accounts"</span>},</span>
+<span id="cb2-14">            {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"id"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"psg_0871"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"category"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"general"</span>},</span>
+<span id="cb2-15">            {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"id"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"psg_0883"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"category"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"general"</span>},</span>
+<span id="cb2-16">            {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"id"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"psg_0902"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"category"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"general"</span>},</span>
+<span id="cb2-17">            {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"id"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"psg_0915"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"category"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"general"</span>},</span>
+<span id="cb2-18">        ],</span>
+<span id="cb2-19">    },</span>
+<span id="cb2-20"></span>
+<span id="cb2-21">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"context_pack"</span>: {</span>
+<span id="cb2-22">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"retrieved_refs"</span>: [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"psg_1102"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"psg_0871"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"psg_0883"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"psg_0902"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"psg_0915"</span>],</span>
+<span id="cb2-23">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"passage_metadata_included"</span>: <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>,</span>
+<span id="cb2-24">    },</span>
+<span id="cb2-25"></span>
+<span id="cb2-26">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"action_chosen"</span>: {</span>
+<span id="cb2-27">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"type"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"draft_grounded_answer"</span>,</span>
+<span id="cb2-28">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"reason"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"5 passages retrieved; drafting answer from passage content"</span>,</span>
+<span id="cb2-29">    },</span>
+<span id="cb2-30"></span>
+<span id="cb2-31">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"verification"</span>: {</span>
+<span id="cb2-32">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"all_claims_cited"</span>: <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>,</span>
+<span id="cb2-33">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"category_alignment_check"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"not_run"</span>,</span>
+<span id="cb2-34">    },</span>
+<span id="cb2-35"></span>
+<span id="cb2-36">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"state_after"</span>: {</span>
+<span id="cb2-37">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"phase"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"validate"</span>,</span>
+<span id="cb2-38">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"claims"</span>: [</span>
+<span id="cb2-39">            {</span>
+<span id="cb2-40">                <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"text"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Trial accounts: data retained 30 days after closure"</span>,</span>
+<span id="cb2-41">                <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"evidence"</span>: [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"psg_0871"</span>],</span>
+<span id="cb2-42">            },</span>
+<span id="cb2-43">        ],</span>
+<span id="cb2-44">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"drafted_answer"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Trial accounts: data is retained for 30 days after closure..."</span>,</span>
+<span id="cb2-45">    },</span>
+<span id="cb2-46">}</span></code></pre></div></div>
+<p>That is enough to debug the run. <code>general</code> account passages mentioning “30 days” entered the answer path, and no <code>category_alignment_check</code> caught the category mismatch.</p>
+<section id="rationale-not-chain-of-thought" class="level3">
+<h3 class="anchored" data-anchor-id="rationale-not-chain-of-thought">Rationale, not chain-of-thought</h3>
+<p>Store decision rationale, not full chain-of-thought. The rationale should be a short operational reason, captured in <code>action_chosen.reason</code>.</p>
+<p>Examples:</p>
+<ul>
+<li><strong>Clarification:</strong> target was ambiguous, so the agent asked a clarifying question.</li>
+<li><strong>Synthesis:</strong> five passages were retrieved, so the agent drafted from passage content.</li>
+</ul>
+<p>The team needs the reason for the action, not the model’s internal rumination.</p>
+</section>
+</section>
+<section id="walking-the-retention-policy-trace" class="level2">
+<h2 class="anchored" data-anchor-id="walking-the-retention-policy-trace">Walking the retention-policy trace</h2>
+<p>The user asked about trial-account retention. The agent answered 30 days. The corpus says 90 days. The team opens <code>run_551</code>.</p>
+<p>Step 1, <code>receive_query</code>, captured the user’s message and wrote it into state.</p>
+<p>Step 2, <code>retrieve</code>, pulled five passages:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1">retrieved_passages <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> [</span>
+<span id="cb3-2">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"id"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"psg_1102"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"category"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"trial_accounts"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"score"</span>: <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.93</span>,</span>
+<span id="cb3-3">     <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"snippet"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Trial accounts: data retained 90 days after trial expiry."</span>},</span>
+<span id="cb3-4">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"id"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"psg_0871"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"category"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"general"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"score"</span>: <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.91</span>,</span>
+<span id="cb3-5">     <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"snippet"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Standard accounts: data retained 30 days after closure..."</span>},</span>
+<span id="cb3-6">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"id"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"psg_0883"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"category"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"general"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"score"</span>: <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.89</span>,</span>
+<span id="cb3-7">     <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"snippet"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Default retention windows for closed accounts are 30 days..."</span>},</span>
+<span id="cb3-8">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"id"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"psg_0902"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"category"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"general"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"score"</span>: <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.87</span>,</span>
+<span id="cb3-9">     <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"snippet"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"After account closure, customer data is purged within 30 days..."</span>},</span>
+<span id="cb3-10">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"id"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"psg_0915"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"category"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"general"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"score"</span>: <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.85</span>,</span>
+<span id="cb3-11">     <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"snippet"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Standard data retention: 30 days post-closure..."</span>},</span>
+<span id="cb3-12">]</span></code></pre></div></div>
+<p>Retrieval found the right passage and ranked it first. The system did not fail to retrieve the answer.</p>
+<p>Step 3, <code>synthesize</code>, shows the first bad move. Synthesis received passage text without category tags. It saw four general passages saying 30 days and one trial-account passage saying 90 days. Without category metadata, the model had no signal that the 90-day passage was the relevant one.</p>
+<p>Step 4, <code>ground</code>, mapped the drafted claim to <code>psg_0871</code>. Grounding succeeded narrowly because the claim had a citation. The missing check was category alignment. The trace shows <code>category_alignment_check: not_run</code>.</p>
+<p>The failure is now specific: retrieval found the answer, context assembly dropped the metadata, synthesis chose the wrong passage, and validation missed the category mismatch.</p>
+<p>A team reading only the output might edit the synthesis prompt. A team reading the trace fixes the right layer: include category metadata in the context pack, weight category-specific passages for category-specific queries, and validate category alignment before returning the answer.</p>
+</section>
+<section id="from-first-bad-move-to-durable-fix" class="level2">
+<h2 class="anchored" data-anchor-id="from-first-bad-move-to-durable-fix">From first bad move to durable fix</h2>
+<p>A failure should leave behind a trace, a fix, and a regression case.</p>
+<ul>
+<li><strong>First bad move:</strong> locate where the run first went wrong. The trace should show whether the failure began in retrieval, context assembly, action choice, tool arguments, state updates, validation, or workflow phase.</li>
+<li><strong>Durable fix:</strong> change the harness layer that failed. For the retention issue, that means category-aware retrieval, category metadata in the context pack, and category-alignment validation.</li>
+<li><strong>Regression case:</strong> encode the failure shape so it cannot return silently. A “retention policy for [category]” query should retrieve the category-specific passage at rank 1, and the validator should reject answers citing the wrong category.</li>
+</ul>
+<div id="fig-hardening-loop" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A closed feedback loop with four stages. A failure produces a trace; the trace is read to identify the first bad move; the team ships a durable fix to the harness plus a regression test case; the fix and case feed back into the system, where they prevent that failure on future runs. An annotation marks the harness as the part that changes each cycle, so the improvements accumulate over time.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-hardening-loop-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/the-agent-harness/05-traces/hardening_loop.png" class="img-fluid figure-img" alt="A closed feedback loop with four stages. A failure produces a trace; the trace is read to identify the first bad move; the team ships a durable fix to the harness plus a regression test case; the fix and case feed back into the system, where they prevent that failure on future runs. An annotation marks the harness as the part that changes each cycle, so the improvements accumulate over time.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-hardening-loop-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: The hardening loop. A failure produces a trace; the trace identifies the first bad move; the team ships a durable fix and a regression case. The cycle feeds back into the system. The harness is what changes, and what changes is what compounds.
+</figcaption>
+</figure>
+</div>
+<p>Teams that run this loop on every incident are doing reliability engineering. Teams that stop at “patched the prompt, moved on” are managing symptoms. A system improves when the team stops wasting failure.</p>
+</section>
+<section id="minimum-viable-trace" class="level2">
+<h2 class="anchored" data-anchor-id="minimum-viable-trace">Minimum viable trace</h2>
+<p>A v1 agent does not need a perfect observability platform. It needs a minimum viable trace.</p>
+<p>For every meaningful step, record:</p>
+<ul>
+<li><strong>Identity:</strong> <code>run_id</code>, <code>step_id</code>, and step kind.</li>
+<li><strong>Versions:</strong> prompt, model, tool, index, validator, and schema versions.</li>
+<li><strong>State:</strong> <code>state_before</code> and <code>state_after</code>.</li>
+<li><strong>Context:</strong> what entered the model context.</li>
+<li><strong>Action:</strong> <code>action_chosen</code> and a short reason.</li>
+<li><strong>Tool data:</strong> tool inputs and outputs, when a tool runs.</li>
+<li><strong>Verification:</strong> checks that ran and their results.</li>
+<li><strong>Metrics:</strong> latency, cost, token counts, and other operational fields.</li>
+</ul>
+<p>Different agents need different trace fields. For instance, these fields are useful for the <strong>Docs Q&amp;A agent:</strong></p>
+<pre class="text"><code>retrieval query, passage IDs, claims, claim-to-evidence mapping, validator result</code></pre>
+</section>
+<section id="closing-the-loop" class="level2">
+<h2 class="anchored" data-anchor-id="closing-the-loop">Closing the loop</h2>
+<p>Five articles in this series, one argument:</p>
+<ul>
+<li><a href="../../../../posts/series/the-agent-harness/01-demos-break/index.html">Why AI agent demos break in production</a>: recurring production failures live in the system around the model.</li>
+<li><a href="../../../../posts/series/the-agent-harness/02-harness-is-the-product/index.html">The harness is the product</a>: an agent is the model plus the harness around it.</li>
+<li><a href="../../../../posts/series/the-agent-harness/03-state-not-transcript/index.html">State, not transcript, is agent memory</a>: state is the memory layer the runtime can read and update.</li>
+<li><a href="../../../../posts/series/the-agent-harness/04-prompts-gate/index.html">Prompts guide. Gates enforce</a>: gates turn state into runtime enforcement.</li>
+<li>Traces are how agents get better: traces turn failures into durable fixes.</li>
+</ul>
+<p>The harness has four jobs:</p>
+<ul>
+<li><strong>Shape the input:</strong> decide what the model sees.</li>
+<li><strong>Bound the action:</strong> decide what the system allows.</li>
+<li><strong>Verify the outcome:</strong> check what happened.</li>
+<li><strong>Preserve the lesson:</strong> keep enough evidence to improve the system.</li>
+</ul>
+<p>State tells the system what it believes. Gates decide what it may do. Tools let it act. Verification checks the result. Traces preserve the path.</p>
+
+
+</section>
+
+ ]]></description>
+  <category>The agent harness</category>
+  <guid>https://yeesengchan.com/posts/series/the-agent-harness/05-traces/</guid>
+  <pubDate>Sun, 10 May 2026 00:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>Prompts guide. Gates enforce</title>
+  <dc:creator>Yee Seng Chan</dc:creator>
+  <link>https://yeesengchan.com/posts/series/the-agent-harness/04-prompts-gate/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+The agent harness
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-demos-break/">Why AI agent demos break in production</a></li>
+<li><a href="../02-harness-is-the-product/">The harness is the product</a></li>
+<li><a href="../03-state-not-transcript/">State, not transcript, is agent memory</a></li>
+<li><a href="../04-prompts-gate/">Prompts guide. Gates enforce</a></li>
+<li><a href="../05-traces/">Traces are how agents get better</a></li>
+</ol>
+</div>
+<p>A prompt can guide behavior. It cannot enforce behavior.</p>
+<p>The scheduling assistant’s prompt says, “Always confirm the target meeting before making any changes.” A user asks it to move “my Tuesday review with Priya” to Thursday afternoon. The model calls <code>reschedule_event(description="Tuesday review with Priya", new_time="Thursday afternoon")</code>; the API matches a different recurring meeting with Priya; the agent replies, “I’ve moved it, and I’ll keep an eye on it going forward.”</p>
+<p>The failure is not the wording of the prompt. The runtime allowed an unsafe action. A gate should have blocked <code>reschedule_event</code> until the target event was uniquely confirmed, non-recurring, and represented by a specific event ID.</p>
+<p>Prompts shape behavior. Gates enforce behavior.</p>
+<p>The <a href="../../../../posts/series/the-agent-harness/03-state-not-transcript/index.html">previous article</a> established that state holds the system’s beliefs. This article is about the runtime checks that decide whether the system can act on those beliefs.</p>
+<section id="why-prompt-only-control-breaks" class="level2">
+<h2 class="anchored" data-anchor-id="why-prompt-only-control-breaks">Why prompt-only control breaks</h2>
+<p>Prompt-only control works best for soft behavior: tone, formatting, response length, and style. It is weak for the following.</p>
+<ul>
+<li><strong>Fuzzy boundaries:</strong> “Do not commit to remediation timelines” sounds clear, but real language is messy.</li>
+<li><strong>Runtime facts:</strong> a prompt cannot verify that an event ID is unique, that a user has permission, that a write already happened after a timeout, or that every answer claim is supported by evidence.</li>
+<li><strong>Competing rules:</strong> production prompts accumulate rules for tone, safety, tools, escalation, formatting, and edge cases. Rules important enough to block behavior should not live only in text.</li>
+</ul>
+<p>The system asked the model to enforce constraints the runtime should own.</p>
+</section>
+<section id="the-model-proposes.-the-harness-checks." class="level2">
+<h2 class="anchored" data-anchor-id="the-model-proposes.-the-harness-checks.">The model proposes. The harness checks.</h2>
+<p>A gate checks a proposed action or output at runtime. It can allow the proposal, reject it, or route it to a safer path. Two kinds of gates cover most production needs.</p>
+<section id="hard-gates-check-crisp-facts" class="level3">
+<h3 class="anchored" data-anchor-id="hard-gates-check-crisp-facts">Hard gates: check crisp facts</h3>
+<p>Hard gates check conditions that are computable from state. They do not need model judgment.</p>
+<ul>
+<li>Is this tool allowed in the current workflow phase?</li>
+<li>Is the target uniquely identified and confirmed?</li>
+<li>Has approval been granted, and has it expired?</li>
+<li>Is the user authorized, and is the write budget still available?</li>
+</ul>
+<p>If a check fails, the action is rejected before it reaches the tool.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> gate_reschedule(state, action):</span>
+<span id="cb1-2">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> state[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"phase"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">!=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"execute"</span>:</span>
+<span id="cb1-3">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> Reject(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"write_not_allowed_in_phase"</span>)</span>
+<span id="cb1-4">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> state[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"proposed_change"</span>] <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">is</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">None</span>:</span>
+<span id="cb1-5">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> Reject(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"no_proposed_change_materialized"</span>)</span>
+<span id="cb1-6">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> state[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"candidates"</span>][<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>][<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"match_confidence"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">!=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"confirmed"</span>:</span>
+<span id="cb1-7">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> Reject(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"target_not_confirmed"</span>)</span>
+<span id="cb1-8">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> state[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"candidates"</span>][<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>][<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"is_recurring"</span>]:</span>
+<span id="cb1-9">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> Reject(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"recurring_series_requires_human_only"</span>)</span>
+<span id="cb1-10">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> action.get(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"idempotency_key"</span>) <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">is</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">None</span>:</span>
+<span id="cb1-11">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> Reject(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"missing_idempotency_key"</span>)</span>
+<span id="cb1-12">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> Allow()</span></code></pre></div></div>
+<p>Each line is a mechanical check. If a condition is crisp enough to enforce with code, enforce it with code.</p>
+</section>
+<section id="semantic-gates-check-meaning" class="level3">
+<h3 class="anchored" data-anchor-id="semantic-gates-check-meaning">Semantic gates: check meaning</h3>
+<p>Semantic gates check meaning rather than schema or permissions. They answer questions like:</p>
+<ul>
+<li>Does this answer overstate the evidence?</li>
+<li>Does this message imply an unauthorized commitment?</li>
+<li>Does this response give advice outside the agent’s role?</li>
+</ul>
+<p>These checks usually require model judgment. They are slower and more expensive than hard gates, so use them when the risk is semantic and code cannot capture it.</p>
+<p>Use hard gates for crisp conditions. Use semantic gates for judgment calls.</p>
+</section>
+</section>
+<section id="the-tool-executes" class="level2">
+<h2 class="anchored" data-anchor-id="the-tool-executes">The tool executes</h2>
+<p>Gates check proposals before they become actions. Tool contracts narrow what the model can safely propose in the first place.</p>
+<section id="tools-are-contracts-not-functions" class="level3">
+<h3 class="anchored" data-anchor-id="tools-are-contracts-not-functions">Tools are contracts, not functions</h3>
+<p>In a notebook, a tool can be a function with a docstring. In production, a tool is a contract between the model, the runtime, and the outside world. It should define required inputs, allowed use, side effects, retry behavior, and verification.</p>
+<p>A weak tool:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> update_calendar(field: <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">str</span>, value: <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">str</span>) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-&gt;</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">dict</span>:</span>
+<span id="cb2-2">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">"""Update a field on a calendar event."""</span></span></code></pre></div></div>
+<p>A stronger tool:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> reschedule_event(</span>
+<span id="cb3-2">    event_id: <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">str</span>,          <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># confirmed unique target only</span></span>
+<span id="cb3-3">    new_start_iso: <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">str</span>,</span>
+<span id="cb3-4">    new_end_iso: <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">str</span>,</span>
+<span id="cb3-5">    idempotency_key: <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">str</span>,</span>
+<span id="cb3-6">) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-&gt;</span> RescheduleResult:</span>
+<span id="cb3-7">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">"""</span></span>
+<span id="cb3-8"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">    Reschedule one confirmed, non-recurring event.</span></span>
+<span id="cb3-9"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">    Requires a specific event_id, not a free-text description.</span></span>
+<span id="cb3-10"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">    """</span></span></code></pre></div></div>
+<p>The second tool removes unsafe paths. It requires a specific <code>event_id</code>, which forces the workflow to identify the target before the call. It requires an idempotency key. It does not expose a broad <code>field</code> parameter that could update anything.</p>
+<p>Tool contracts should also distinguish reads from writes. Reads can usually be retried after a timeout. Writes need more care. A write should carry an idempotency key, and an ambiguous timeout should route to verification before retry.</p>
+<p>Broad tools push hidden responsibility onto the model. Narrow tools move more of that responsibility into the harness.</p>
+</section>
+</section>
+<section id="the-harness-verifies-and-routes" class="level2">
+<h2 class="anchored" data-anchor-id="the-harness-verifies-and-routes">The harness verifies and routes</h2>
+<p>Gates and tools do not finish the loop. The system also needs controlled fallbacks and safe human approval.</p>
+<section id="gates-need-safe-fallbacks" class="level3">
+<h3 class="anchored" data-anchor-id="gates-need-safe-fallbacks">Gates need safe fallbacks</h3>
+<p>A blocked action should route to a safe next step.</p>
+<p>If the scheduling target is ambiguous, route to a clarifying question. If the corpus does not support an answer, route to an honest “I don’t have enough evidence” response. If the intake user asks for a credit, route the request into the human handoff.</p>
+<p>A gate should return a reason and a next action. A blocked action should become a controlled detour, not a dead end.</p>
+</section>
+<section id="approval-packets-approve-the-exact-action" class="level3">
+<h3 class="anchored" data-anchor-id="approval-packets-approve-the-exact-action">Approval packets: approve the exact action</h3>
+<p>Some actions need human judgment: rescheduling a meeting with eight attendees, sending a customer-facing summary on an enterprise account, or canceling an event from a recurring series.</p>
+<p>The weak pattern asks the human for approval, then asks the model to perform the action. That gives the model a second chance to drift. The human approves one description, and the model may execute a slightly different action.</p>
+<p>The safer pattern uses an approval packet. The packet is a fully materialized action object that the human reviews. After approval, the runtime executes that exact object: same tool name, same arguments, same idempotency key.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1">packet <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> {</span>
+<span id="cb4-2">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"status"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"pending"</span>,</span>
+<span id="cb4-3">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"expires_at"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"2026-05-09T17:32:18Z"</span>,</span>
+<span id="cb4-4">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"tool"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"reschedule_event"</span>,</span>
+<span id="cb4-5">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"args"</span>: {</span>
+<span id="cb4-6">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"event_id"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"evt_8819"</span>,</span>
+<span id="cb4-7">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"new_start"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"2026-05-13T10:00:00-04:00"</span>,</span>
+<span id="cb4-8">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"idempotency_key"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"run_204:evt_8819:reschedule"</span>,</span>
+<span id="cb4-9">    },</span>
+<span id="cb4-10">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"human_summary"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Move Tuesday 2pm with Priya to Wednesday 10am"</span>,</span>
+<span id="cb4-11">}</span></code></pre></div></div>
+<p>Before execution, the runtime checks that the approval has not expired and that the relevant state has not changed. If the target event, user request, or proposed action changed, the packet is stale and should not execute.</p>
+<p>Humans approve specific actions, not summaries of actions.</p>
+</section>
+</section>
+<section id="gate-where-failure-matters" class="level2">
+<h2 class="anchored" data-anchor-id="gate-where-failure-matters">Gate where failure matters</h2>
+<p>Gate the actions where failure matters most. Do not gate everything.</p>
+<p>Heavy gates belong around actions that change the outside world, affect another person, are hard to undo, depend on weak evidence, or may require human escalation. Keep the path light for harmless clarifying questions, read-only lookups, and low-stakes summaries.</p>
+<p>The goal is appropriate gating, not maximum gating. A gate that fires on every action becomes a gate the team learns to ignore.</p>
+</section>
+<section id="the-shape-worth-keeping" class="level2">
+<h2 class="anchored" data-anchor-id="the-shape-worth-keeping">The shape worth keeping</h2>
+<p>The runtime loop is simple:</p>
+<pre class="text"><code>The model proposes.
+The harness checks.
+The tool executes.
+The harness verifies.</code></pre>
+<p>Prompts inform the proposal. Gates check it. Tool contracts narrow what can be proposed. Safe fallbacks turn blocked actions into controlled detours. Approval packets keep humans and runtime aligned on the exact action.</p>
+<p>A prompt alone cannot do those jobs. That is what gates are for.</p>
+<p>The next article <a href="../../../../posts/series/the-agent-harness/05-traces/index.html">Traces are how agents get better</a> shows what useful traces contain, how they reveal the first bad move in a failing run, and how one bad run becomes a permanent improvement to the harness.</p>
+
+
+</section>
+
+ ]]></description>
+  <category>The agent harness</category>
+  <guid>https://yeesengchan.com/posts/series/the-agent-harness/04-prompts-gate/</guid>
+  <pubDate>Fri, 01 May 2026 00:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>State, not transcript, is agent memory</title>
+  <dc:creator>Yee Seng Chan</dc:creator>
+  <link>https://yeesengchan.com/posts/series/the-agent-harness/03-state-not-transcript/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+The agent harness
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-demos-break/">Why AI agent demos break in production</a></li>
+<li><a href="../02-harness-is-the-product/">The harness is the product</a></li>
+<li><a href="../03-state-not-transcript/">State, not transcript, is agent memory</a></li>
+<li><a href="../04-prompts-gate/">Prompts guide. Gates enforce</a></li>
+<li><a href="../05-traces/">Traces are how agents get better</a></li>
+</ol>
+</div>
+<p>Conversation history looks like memory, so many agents use it that way. Each turn gets appended to the transcript, the transcript gets passed back to the model, and the model is expected to remember what matters. This works in short demos because the conversation is small and the stakes are low. It breaks when the agent has to make reliable decisions across many turns.</p>
+<p>The intake agent makes the failure concrete. On turn 2, the user said, “We’re on the enterprise plan, and the dashboard is the only feature we use.” On turn 9, the agent asked, “Just to confirm, are you on the standard or enterprise plan?” On turn 12, the handoff record went out with <code>plan_tier: unknown</code>.</p>
+<p>The system failed because it never stored the plan tier in state. The answer stayed buried in the transcript instead of becoming <code>plan_tier = enterprise</code>. Any fact that affects future behavior should become a field that later steps can read.</p>
+<p><a href="../../../../posts/series/the-agent-harness/02-harness-is-the-product/index.html">The previous article</a> argued that the harness is the product. State is the first concrete part of that harness: the facts, uncertainties, workflow status, and pending actions that the runtime and model read before the next step.</p>
+<section id="raw-history-is-a-record-not-a-decision-layer" class="level2">
+<h2 class="anchored" data-anchor-id="raw-history-is-a-record-not-a-decision-layer">Raw history is a record, not a decision layer</h2>
+<p>Raw history preserves the original material, including user messages and tool outputs. The transcript may contain the answer, but later steps need explicit fields to read.</p>
+<p>For the intake agent, the handoff writer needed this field:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">"plan_tier"</span>: {</span>
+<span id="cb1-2">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"value"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"enterprise"</span>,</span>
+<span id="cb1-3">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"confidence"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"confirmed"</span>,</span>
+<span id="cb1-4">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"source"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"user_turn_2"</span>,</span>
+<span id="cb1-5">}</span></code></pre></div></div>
+<p>That field lets the agent skip a redundant plan-tier question, lets the handoff writer emit <code>plan_tier: enterprise</code>, and lets a required-field check decide whether the handoff is ready.</p>
+<p>State also records reliability. If a user first says, “I think it might be the migration,” and later says, “Support confirmed it was the migration,” state should mark one claim as uncertain and the other as confirmed. The transcript preserves both sentences, but state tells the system how to use them.</p>
+<p>The same issue appears in handoff readiness. If the handoff requires <code>plan_tier</code>, <code>affected_feature</code>, and <code>confirmed_root_cause</code>, state should show which fields are filled, which are uncertain, and which still need follow-up. The agent can then read state instead of reconstructing the situation from the transcript every turn.</p>
+</section>
+<section id="state-turns-remembered-facts-into-usable-facts" class="level2">
+<h2 class="anchored" data-anchor-id="state-turns-remembered-facts-into-usable-facts">State turns remembered facts into usable facts</h2>
+<p>After turn 2, the intake agent should have written this state:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1">state <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> {</span>
+<span id="cb2-2">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"facts"</span>: {</span>
+<span id="cb2-3">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"plan_tier"</span>: {</span>
+<span id="cb2-4">            <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"value"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"enterprise"</span>,</span>
+<span id="cb2-5">            <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"confidence"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"confirmed"</span>,</span>
+<span id="cb2-6">            <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"source"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"user_turn_2"</span>,</span>
+<span id="cb2-7">        },</span>
+<span id="cb2-8">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"affected_feature"</span>: {</span>
+<span id="cb2-9">            <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"value"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"dashboard"</span>,</span>
+<span id="cb2-10">            <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"confidence"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"confirmed"</span>,</span>
+<span id="cb2-11">            <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"source"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"user_turn_2"</span>,</span>
+<span id="cb2-12">        },</span>
+<span id="cb2-13">    },</span>
+<span id="cb2-14">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"open_questions"</span>: [],</span>
+<span id="cb2-15">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"workflow_phase"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"discovery"</span>,</span>
+<span id="cb2-16">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"ready_for_handoff"</span>: <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>,</span>
+<span id="cb2-17">}</span></code></pre></div></div>
+<p>On turn 9, the agent checks <code>state["facts"]["plan_tier"]</code> before asking another plan-tier question. The field already says <code>enterprise</code>, with <code>confidence = confirmed</code>, so the agent moves on. On turn 12, the handoff writer reads the same field and emits <code>plan_tier: enterprise</code> instead of <code>plan_tier: unknown</code>.</p>
+<p>Store information the system needs later in named fields, and update those fields when new evidence arrives. The schema depends on the agent, but the rule stays the same: operational facts should not live only inside raw text.</p>
+<p>State should stay focused. It does not need every utterance, retrieved passage, or intermediate model output. Those belong in raw history or trace. State should contain the information that changes future behavior: filled values, confidence, unresolved questions, workflow phase, proposed actions, and verification status.</p>
+</section>
+<section id="state-needs-belief-status" class="level2">
+<h2 class="anchored" data-anchor-id="state-needs-belief-status">State needs belief status</h2>
+<p>A weak state object stores only values:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">"root_cause"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"migration"</span></span></code></pre></div></div>
+<p>That field alone does not tell the system how safely it can rely on the value. A better state object stores belief status alongside the value:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">"root_cause"</span>: {</span>
+<span id="cb4-2">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"value"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"migration"</span>,</span>
+<span id="cb4-3">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"confidence"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"uncertain"</span>,</span>
+<span id="cb4-4">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"source"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"user_turn_5"</span>,</span>
+<span id="cb4-5">}</span></code></pre></div></div>
+<p>The confidence label tells the harness whether to use, verify, qualify, or block the field. A guessed root cause and a confirmed root cause should not drive the same behavior.</p>
+<p>Five labels cover many production cases:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Label</th>
+<th>Meaning</th>
+<th>Harness behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>confirmed</code></td>
+<td>Safe to rely on</td>
+<td>Use it, summarize it, or act on it if other gates pass</td>
+</tr>
+<tr class="even">
+<td><code>uncertain</code></td>
+<td>Plausible, but not safe yet</td>
+<td>Ask, verify, or avoid treating it as fact</td>
+</tr>
+<tr class="odd">
+<td><code>needs_verification</code></td>
+<td>Requires a specific check</td>
+<td>Run a lookup, validator, or read-after-write step</td>
+</tr>
+<tr class="even">
+<td><code>stale</code></td>
+<td>Was once true but may no longer be true</td>
+<td>Refresh before relying on it</td>
+</tr>
+<tr class="odd">
+<td><code>contradicted</code></td>
+<td>Conflicting evidence exists</td>
+<td>Preserve both sides and resolve before acting</td>
+</tr>
+</tbody>
+</table>
+<p>Contradictions need to remain visible. If the user first says, “We do not have internal logs for this system,” and later says, “The application logs show the migration completed successfully,” the updater should preserve both statements, mark the relevant field as <code>contradicted</code> or <code>needs_verification</code>, and leave the next step with a clear ambiguity to resolve.</p>
+<p>State should preserve ambiguity in a form the next decision can see.</p>
+</section>
+<section id="raw-history-state-and-trace-serve-different-jobs" class="level2">
+<h2 class="anchored" data-anchor-id="raw-history-state-and-trace-serve-different-jobs">Raw history, state, and trace serve different jobs</h2>
+<p>Raw history, state, and trace overlap, but each one has a different job.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Artifact</th>
+<th>Job</th>
+<th>Intake example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Raw history</td>
+<td>Preserves the original material</td>
+<td>The user said, “We’re on the enterprise plan…”</td>
+</tr>
+<tr class="even">
+<td>State</td>
+<td>Stores the current working memory</td>
+<td><code>plan_tier = enterprise</code>, <code>confidence = confirmed</code></td>
+</tr>
+<tr class="odd">
+<td>Trace</td>
+<td>Records what happened during the run</td>
+<td>Turn 2 updated <code>plan_tier</code>; turn 9 skipped a redundant question; turn 12 produced the handoff</td>
+</tr>
+</tbody>
+</table>
+<p>Raw history preserves nuance, tone, and provenance. Trace explains how the system behaved. State guides the next decision. If a fact affects what the system asks, writes, summarizes, verifies, or hands off, it belongs in state.</p>
+</section>
+<section id="different-agents-need-different-state-schemas" class="level2">
+<h2 class="anchored" data-anchor-id="different-agents-need-different-state-schemas">Different agents need different state schemas</h2>
+<p>State should match the decisions the agent has to make.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Agent type</th>
+<th>State needs to record</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Intake agent</td>
+<td>Confirmed facts, uncertain facts, open questions, handoff readiness</td>
+</tr>
+<tr class="even">
+<td>Scheduling assistant</td>
+<td>Candidate events, selected target, proposed change, approval, verification status</td>
+</tr>
+<tr class="odd">
+<td>Docs Q&amp;A agent</td>
+<td>Retrieved refs, grounded claims, evidence mapping, validation status</td>
+</tr>
+</tbody>
+</table>
+<p>A scheduling assistant must know whether it has selected the right calendar event before it can reschedule anything. A docs Q&amp;A agent must know whether each claim is supported by retrieved evidence before it can answer. An intake agent must know whether it has enough confirmed information to produce a useful handoff.</p>
+<p>State holds the information the next decision needs.</p>
+</section>
+<section id="state-should-answer-four-questions" class="level2">
+<h2 class="anchored" data-anchor-id="state-should-answer-four-questions">State should answer four questions</h2>
+<p>A useful state object answers four questions at each step:</p>
+<ol type="1">
+<li>What do we currently believe?</li>
+<li>How sure are we?</li>
+<li>What remains unclear?</li>
+<li>What stage of the workflow are we in?</li>
+</ol>
+<p>These questions expose whether state is usable. Without those fields, the model has to reconstruct the situation from raw history. It may treat guesses as facts, skip required questions, or advance the workflow too early.</p>
+<p>State gives the model and runtime stable fields to read. The model uses state to decide what to say next. The runtime uses state to decide what is allowed next.</p>
+</section>
+<section id="state-changes-as-the-workflow-runs" class="level2">
+<h2 class="anchored" data-anchor-id="state-changes-as-the-workflow-runs">State changes as the workflow runs</h2>
+<p>State is maintained throughout the workflow. Each meaningful step reads from it, updates it, and leaves the system in a clearer position than before.</p>
+<p>A typical loop looks like this:</p>
+<ol type="1">
+<li><strong>Understand.</strong> Read the current state and the new input. Update facts when the input is clear. Mark uncertainty when it is not.</li>
+<li><strong>Decide.</strong> Choose the next action: ask a clarifying question, call a tool, draft a summary, produce a handoff, or refuse.</li>
+<li><strong>Execute.</strong> Take the action. If a tool is called, capture its inputs and outputs. If a write happens, record the attempt.</li>
+<li><strong>Verify.</strong> Check whether the action did what it was supposed to do. Update state with what is now known.</li>
+</ol>
+<div id="fig-state-loop" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A four-step loop drawn around a central state store. The steps run in sequence, with the Understand step shown reading from the central state and the Verify step shown writing back to it, so state persists across iterations. A label notes that the steps may be conversation turns, workflow phases, or pipeline stages, while state remains the through-line connecting them.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-state-loop-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/the-agent-harness/03-state-not-transcript/state_loop.png" class="img-fluid figure-img" alt="A four-step loop drawn around a central state store. The steps run in sequence, with the Understand step shown reading from the central state and the Verify step shown writing back to it, so state persists across iterations. A label notes that the steps may be conversation turns, workflow phases, or pipeline stages, while state remains the through-line connecting them.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-state-loop-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: The four-step loop operates on state. Every Understand step reads from state; every Verify step writes back to it. State is the system’s through-line across steps, whether the steps are conversation turns, workflow phases, or pipeline stages.
+</figcaption>
+</figure>
+</div>
+<p>The loop appears in different forms across agents. A scheduling assistant may run it across target selection, approval, execution, and verification. The names change, but the pattern stays the same: read state, choose the next move, execute it, and update state based on what happened.</p>
+<p>Verification keeps state honest. After a write, the system should check the external source of truth before treating state as updated. For example, after rescheduling a meeting, it should confirm that the calendar shows the new time.</p>
+</section>
+<section id="gates-read-state" class="level2">
+<h2 class="anchored" data-anchor-id="gates-read-state">Gates read state</h2>
+<p>Gates enforce policies by inspecting state. A handoff gate can block missing fields, uncertain facts, or unresolved questions only if state records them explicitly.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> action <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"produce_handoff"</span>:</span>
+<span id="cb5-2">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">assert</span> state[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"facts"</span>][<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"plan_tier"</span>][<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"confidence"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"confirmed"</span></span>
+<span id="cb5-3">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">assert</span> state[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"facts"</span>][<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"affected_feature"</span>][<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"confidence"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"confirmed"</span></span>
+<span id="cb5-4">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">assert</span> state[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"ready_for_handoff"</span>] <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">is</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span></code></pre></div></div>
+<p>Prompts suggest behavior. Runtime checks enforce it.</p>
+</section>
+<section id="common-mistakes" class="level2">
+<h2 class="anchored" data-anchor-id="common-mistakes">Common mistakes</h2>
+<p>State usually fails in predictable ways:</p>
+<ul>
+<li><strong>No operational state:</strong> raw history becomes state, and the model has to reconstruct the situation every step.</li>
+<li><strong>Too much state:</strong> every utterance, passage, draft, and tool output gets persisted, making state as noisy as the transcript.</li>
+<li><strong>No confidence labels:</strong> <code>"root_cause": "migration"</code> looks settled even if the user only guessed it.</li>
+<li><strong>Silent contradiction handling:</strong> conflicting evidence gets overwritten instead of staying visible until the system resolves it.</li>
+<li><strong>State drift:</strong> failed writes, stale retrieved passages, and user corrections do not update the stored belief.</li>
+</ul>
+<p>Use a simple test when deciding what belongs in state: will the system behave worse later if this information only lives in raw history or trace? Put it in state only when the answer is yes.</p>
+</section>
+<section id="state-is-the-systems-memory" class="level2">
+<h2 class="anchored" data-anchor-id="state-is-the-systems-memory">State is the system’s memory</h2>
+<p>The transcript records what was said. State records what the system can rely on.</p>
+<p>The intake agent needed to store two confirmed facts: the user was on the enterprise plan, and the dashboard was the affected feature. Once those facts became state, later steps could use them. The agent could avoid a redundant question, produce a better handoff, and expose unresolved fields before claiming the workflow was ready.</p>
+<p>State gives gates, tools, verification steps, and traces concrete fields to read and update. Runtime control reads state before acting. Gates and tool contracts decide what the system is allowed to do with that memory.</p>
+
+
+</section>
+
+ ]]></description>
+  <category>The agent harness</category>
+  <guid>https://yeesengchan.com/posts/series/the-agent-harness/03-state-not-transcript/</guid>
+  <pubDate>Tue, 28 Apr 2026 00:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>The harness is the product</title>
+  <dc:creator>Yee Seng Chan</dc:creator>
+  <link>https://yeesengchan.com/posts/series/the-agent-harness/02-harness-is-the-product/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+The agent harness
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-demos-break/">Why AI agent demos break in production</a></li>
+<li><a href="../02-harness-is-the-product/">The harness is the product</a></li>
+<li><a href="../03-state-not-transcript/">State, not transcript, is agent memory</a></li>
+<li><a href="../04-prompts-gate/">Prompts guide. Gates enforce</a></li>
+<li><a href="../05-traces/">Traces are how agents get better</a></li>
+</ol>
+</div>
+<p>A stronger model does not automatically give you a reliable agent.</p>
+<p>The <a href="../../../../posts/series/the-agent-harness/01-demos-break/index.html">previous article</a> catalogued six ways agent demos break in production. The intake agent forgot a fact the user gave it on turn 2. The scheduling assistant double-booked a meeting after an ambiguous timeout. The docs Q&amp;A agent gave a confident, well-formed, wrong answer.</p>
+<p>The instinct after each failure is to reach for a stronger model. Sometimes that helps a little. More often, the failure returns in a slightly different shape because the system around the model has not changed. The useful reframe is simple:</p>
+<p><strong>Agent = model + harness</strong></p>
+<p>The model is the reasoning engine. The harness is the system the model lives inside. Models get swapped, cheaper, and faster. The harness carries the team’s accumulated understanding of how to make the agent reliable. For production agents, the harness is the product.</p>
+<section id="prompts-guide.-harnesses-constrain." class="level2">
+<h2 class="anchored" data-anchor-id="prompts-guide.-harnesses-constrain.">Prompts guide. Harnesses constrain.</h2>
+<p>A prompt tells the model what behavior you want. A harness decides what behavior the system permits.</p>
+<p>The difference is concrete:</p>
+<ul>
+<li><strong>Refunds:</strong> a prompt can say, “Do not issue refunds.” A harness can make the refund tool unavailable.</li>
+<li><strong>Scheduling:</strong> a prompt can say, “Ask for clarification if the target meeting is ambiguous.” A harness can reject <code>reschedule_event</code> unless state contains one confirmed event ID.</li>
+<li><strong>Docs Q&amp;A:</strong> a prompt can say, “Use only the retrieved documents.” A harness can require every final claim to map to a cited passage.</li>
+<li><strong>Retries:</strong> a prompt can say, “Be careful with retries.” A harness can enforce one write attempt, require an idempotency key, and route ambiguous timeouts to verification.</li>
+</ul>
+<p>The prompt shapes one model call. The harness controls the workflow around that call. It makes some failures impossible to commit and makes the rest easier to detect.</p>
+<p>That is the shift from prompt engineering to harness engineering.</p>
+</section>
+<section id="scope-is-the-first-harness-decision" class="level2">
+<h2 class="anchored" data-anchor-id="scope-is-the-first-harness-decision">Scope is the first harness decision</h2>
+<p>Before designing the harness, define the agent’s job. Scope answers three questions:</p>
+<ol type="1">
+<li>What exact job does this agent do?</li>
+<li>What artifact or outcome should exist when it succeeds?</li>
+<li>What is it explicitly not allowed to do?</li>
+</ol>
+<p>For the intake agent, a scoped version reads:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1">A discovery-stage intake agent that conducts an initial conversation with a user reporting a support issue and produces a structured handoff for a human support agent. It may ask clarifying questions, retrieve approved account information, and summarize confirmed facts and open questions. It may not commit to remediation, issue credits or refunds, change account state, or attempt to resolve the issue itself.</span></code></pre></div></div>
+</section>
+<section id="the-harness-has-four-jobs" class="level2">
+<h2 class="anchored" data-anchor-id="the-harness-has-four-jobs">The harness has four jobs</h2>
+<div id="fig-harness-jobs" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A two-by-two grid of four numbered cards describing the harness's four jobs. Card 1, Decide what the model sees: build the right context, not a pile of everything. Mechanisms: state, context assembly. Card 2, Limit what the model can do: approve actions before they run. Mechanisms: workflow phases, tool contracts, gates, approval packets, permissions. Card 3, Check what actually happened: verify the world, not just the tool's success. Mechanisms: state readback, grounding checks, safe fallbacks. Card 4, Keep a record: failures should leave evidence. Mechanisms: traces, versions, decisions, tool inputs and outputs, verification results, regression cases.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-harness-jobs-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/the-agent-harness/02-harness-is-the-product/harness_four_jobs.png" class="img-fluid figure-img" alt="A two-by-two grid of four numbered cards describing the harness's four jobs. Card 1, Decide what the model sees: build the right context, not a pile of everything. Mechanisms: state, context assembly. Card 2, Limit what the model can do: approve actions before they run. Mechanisms: workflow phases, tool contracts, gates, approval packets, permissions. Card 3, Check what actually happened: verify the world, not just the tool's success. Mechanisms: state readback, grounding checks, safe fallbacks. Card 4, Keep a record: failures should leave evidence. Mechanisms: traces, versions, decisions, tool inputs and outputs, verification results, regression cases.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-harness-jobs-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: The harness has four jobs: decide what the model sees, limit what the model can do, check what actually happened, and keep a record.
+</figcaption>
+</figure>
+</div>
+<p>Once scope is clear, the harness has four jobs:</p>
+<ul>
+<li><strong>Shape the input:</strong> decide what the model sees at each step. The model should receive the relevant state, retrieved evidence, available tools, and local instruction, not a pile of every transcript turn and document.</li>
+<li><strong>Bound the action:</strong> decide what the model is allowed to do. The model can propose an action, but workflow phases, tool contracts, gates, approval packets, and permissions decide whether it runs.</li>
+<li><strong>Verify the outcome:</strong> check what actually happened. A tool returning <code>success</code> does not prove the world is correct. A rescheduled meeting needs calendar readback. A grounded answer needs claim-to-evidence checks.</li>
+<li><strong>Preserve the evidence:</strong> record enough information to debug and improve the system. Useful traces include input, state, action, tool inputs and outputs, verification results, state after, and version information.</li>
+</ul>
+<p>A reliable agent takes bounded actions, fails safely when it cannot proceed, leaves enough evidence to debug the run, and becomes harder to break after each incident.</p>
+</section>
+<section id="prompt-context-and-harness-engineering" class="level2">
+<h2 class="anchored" data-anchor-id="prompt-context-and-harness-engineering">Prompt, context, and harness engineering</h2>
+<p>Prompt, context, and harness engineering solve different problems.</p>
+<div id="fig-nested-levels" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three concentric nested boxes or rings showing levels of engineering. The innermost level is prompt engineering, enclosed by a larger level for context engineering, enclosed by the outermost level for the harness. The nesting shows each level containing the one inside it: a good harness contains good context engineering, which contains good prompts.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-nested-levels-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/the-agent-harness/02-harness-is-the-product/nested.png" class="img-fluid figure-img" alt="Three concentric nested boxes or rings showing levels of engineering. The innermost level is prompt engineering, enclosed by a larger level for context engineering, enclosed by the outermost level for the harness. The nesting shows each level containing the one inside it: a good harness contains good context engineering, which contains good prompts.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-nested-levels-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Three nested levels of engineering. Each level encompasses the previous. A good harness contains good context engineering, which contains good prompts.
+</figcaption>
+</figure>
+</div>
+<ul>
+<li><strong>Prompt engineering:</strong> writes the instructions for one model call: wording, structure, examples, and output format.</li>
+<li><strong>Context engineering:</strong> decides what enters the model context at each step: system instructions, relevant state, retrieved passages, memory, available tools, and local task framing.</li>
+<li><strong>Harness engineering:</strong> controls the application around the model: when context is assembled, which tools are available, which actions are allowed, how writes are verified, how state persists, how failures recover, how traces are written, and how regression cases catch old failures.</li>
+</ul>
+<p>Putting the failure at the right level saves wasted iteration. A bad instruction may need a prompt change. Missing evidence may need context changes. Unsafe actions, duplicate writes, missing state, weak verification, and thin traces need harness changes.</p>
+</section>
+<section id="this-is-not-a-call-for-overengineering" class="level2">
+<h2 class="anchored" data-anchor-id="this-is-not-a-call-for-overengineering">This is not a call for overengineering</h2>
+<p>A harness matters, but teams can build too much harness too early. The minimum useful harness depends on the agent’s scope.</p>
+<ul>
+<li><strong>Intake agent:</strong> clear scope, structured state with confidence labels, a few workflow phases, no write tools, a basic handoff artifact, step traces, and a small regression set.</li>
+<li><strong>Scheduling assistant:</strong> target identification, narrow write tools with idempotency, one-attempt write policy, read-after-write verification, and traces of tool inputs and outputs.</li>
+<li><strong>Docs Q&amp;A agent:</strong> retrieval provenance, claim-to-evidence mapping, a “no supported answer” behavior for thin evidence, auth-aware retrieval, and traceable citations.</li>
+</ul>
+<p>Build the harness around the risks created by the job. An intake agent without write authority does not need the same side-effect controls as a scheduling assistant. A docs Q&amp;A agent does need evidence mapping because its main risk is confident unsupported synthesis.</p>
+</section>
+<section id="which-parts-of-the-harness-age" class="level2">
+<h2 class="anchored" data-anchor-id="which-parts-of-the-harness-age">Which parts of the harness age?</h2>
+<p>Some harness pieces get lighter as models improve. Tool-selection scaffolding matters less when models choose tools reliably. Format validators matter less when structured output becomes dependable. Long prompt chains matter less when models handle more reasoning in one call. These pieces compensate for model limitations, so stronger models reduce their importance.</p>
+<p>Other harness pieces remain necessary because they control product risk. A smarter model still cannot unsend a calendar invite, undo a payment, or reconstruct last month’s behavior without traces. It still needs runtime boundaries around tools, writes, permissions, and user-visible actions.</p>
+<p>The pieces that age are scaffolding around weak model behavior. The pieces that stay are tied to reliability: state, tool contracts, gates, verification, recovery, traces, and tests.</p>
+
+
+</section>
+
+ ]]></description>
+  <category>The agent harness</category>
+  <guid>https://yeesengchan.com/posts/series/the-agent-harness/02-harness-is-the-product/</guid>
+  <pubDate>Thu, 23 Apr 2026 00:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>Why AI agent demos break in production</title>
+  <dc:creator>Yee Seng Chan</dc:creator>
+  <link>https://yeesengchan.com/posts/series/the-agent-harness/01-demos-break/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+The agent harness
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-demos-break/">Why AI agent demos break in production</a></li>
+<li><a href="../02-harness-is-the-product/">The harness is the product</a></li>
+<li><a href="../03-state-not-transcript/">State, not transcript, is agent memory</a></li>
+<li><a href="../04-prompts-gate/">Prompts guide. Gates enforce</a></li>
+<li><a href="../05-traces/">Traces are how agents get better</a></li>
+</ol>
+</div>
+<p>Most <a href="../../../../posts/series/what-an-agent-actually-is/index.html">AI agent</a> demos fail in boring ways.</p>
+<p>The agent forgets something the user said five turns ago. It treats a guess as a fact. It calls the wrong tool because the tool name sounded close enough. It returns a polished answer only loosely connected to the evidence. It retries a calendar write after a timeout and books the same meeting twice. Then, when someone asks what happened, the logs say:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1">tool_call: retrieval, status: success</span></code></pre></div></div>
+<p>Reliability becomes concrete after something breaks. The team needs to know why the agent believed a claim, why it called a tool, why it skipped a clarifying question, why it retried a write, and why the run cannot be reconstructed.</p>
+<p>The usual instinct is to blame the model. A stronger model may help, but many agent failures come from the system around the model: state, workflow, tool contracts, gates, retry policy, retrieval design, traces, and evaluation.</p>
+<p>The diagnostic question is simple: what failed, and where should control have lived?</p>
+<p>That question starts harness engineering. This series is about building agent systems that survive real users, real tools, real ambiguity, and real debugging.</p>
+<section id="three-small-agents" class="level2">
+<h2 class="anchored" data-anchor-id="three-small-agents">Three small agents</h2>
+<p>This series uses three running examples.</p>
+<ul>
+<li><strong>Customer support intake agent:</strong> holds a conversation with a user, gathers the issue, identifies what is known and uncertain, and produces a structured handoff for a human. It does not solve the issue or write to external systems.</li>
+<li><strong>Scheduling assistant:</strong> books, reschedules, and cancels meetings. It uses tools that change the world.</li>
+<li><strong>Internal docs Q&amp;A agent:</strong> answers questions over company documentation. It retrieves passages and synthesizes a short response.</li>
+</ul>
+<p>Six failure shapes show up across these agents.</p>
+</section>
+<section id="failure-1-the-agent-bluffs-when-it-should-pause" class="level2">
+<h2 class="anchored" data-anchor-id="failure-1-the-agent-bluffs-when-it-should-pause">Failure 1: The agent bluffs when it should pause</h2>
+<p>A user opens the intake conversation: “We’re having issues with the new dashboard, and I think it’s related to the migration we did last month, but I’m not totally sure.”</p>
+<p>A weak agent starts triaging the migration. It asks about migration steps, surfaces likely root causes, and drafts a handoff that pins the issue to the migration.</p>
+<p>The user never confirmed the migration as the cause. The agent treated a hedge as a fact.</p>
+<p>A reliable agent should record the uncertainty and ask a clarifying question before building on the claim: “Has the migration been confirmed as the cause, or is that still a guess?”</p>
+<p>The system needs a field for uncertainty:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1">state[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"root_cause"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> {</span>
+<span id="cb2-2">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"value"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"migration"</span>,</span>
+<span id="cb2-3">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"confidence"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"uncertain"</span>,</span>
+<span id="cb2-4">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"source"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"user_hedged_statement"</span>,</span>
+<span id="cb2-5">}</span></code></pre></div></div>
+<p>It also needs behavior tied to that label. If the next step depends on a fact labeled <code>uncertain</code>, the workflow should route to clarification instead of action.</p>
+<ul>
+<li><strong>Visible failure:</strong> the agent jumped to conclusions.</li>
+<li><strong>Deeper failure:</strong> the system had no mechanism for treating uncertainty differently from certainty.</li>
+</ul>
+</section>
+<section id="failure-2-the-agent-forgets-what-already-happened" class="level2">
+<h2 class="anchored" data-anchor-id="failure-2-the-agent-forgets-what-already-happened">Failure 2: The agent forgets what already happened</h2>
+<p>In the same intake conversation, the user says on turn 2: “We’re on the enterprise plan, and the dashboard is the only feature we use.” On turn 9, the agent asks: “Just to confirm, are you on the standard or enterprise plan?” On turn 12, the handoff record lists the plan as <code>unknown</code>.</p>
+<p>The system failed because it never stored the plan tier in state. It stuffed the transcript back into context every turn and relied on the model to keep the right facts active.</p>
+<p>The fix is to store confirmed facts once:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1">state[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"customer"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> {</span>
+<span id="cb3-2">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"plan_tier"</span>: {</span>
+<span id="cb3-3">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"value"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"enterprise"</span>,</span>
+<span id="cb3-4">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"confidence"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"confirmed"</span>,</span>
+<span id="cb3-5">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"source_turn"</span>: <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>,</span>
+<span id="cb3-6">    },</span>
+<span id="cb3-7">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"primary_feature"</span>: {</span>
+<span id="cb3-8">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"value"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"dashboard"</span>,</span>
+<span id="cb3-9">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"confidence"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"confirmed"</span>,</span>
+<span id="cb3-10">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"source_turn"</span>: <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>,</span>
+<span id="cb3-11">    },</span>
+<span id="cb3-12">}</span></code></pre></div></div>
+<p>Now the agent reads <code>plan_tier = enterprise</code> instead of rediscovering it from the transcript. The transcript records what the user said. State records what the system can rely on. <a href="../../../../posts/series/the-agent-harness/03-state-not-transcript/index.html">State, not transcript, is agent memory</a> goes deeper into that distinction.</p>
+<ul>
+<li><strong>Visible failure:</strong> the model forgot.</li>
+<li><strong>Deeper failure:</strong> the system treated the conversation transcript as memory.</li>
+</ul>
+</section>
+<section id="failure-3-the-agent-takes-the-wrong-action" class="level2">
+<h2 class="anchored" data-anchor-id="failure-3-the-agent-takes-the-wrong-action">Failure 3: The agent takes the wrong action</h2>
+<p>The scheduling assistant has these tools:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1">list_calendar_events()</span>
+<span id="cb4-2">find_event_by_description()</span>
+<span id="cb4-3">reschedule_event()</span>
+<span id="cb4-4">cancel_event()</span></code></pre></div></div>
+<p>The user says: “Move my Tuesday review with Priya to Thursday.”</p>
+<p>A weak agent calls <code>cancel_event</code> and creates a fresh booking. Or it calls <code>reschedule_event</code> with a fuzzy description, and the API matches the wrong event.</p>
+<p>The safe sequence is explicit: find the event, disambiguate if multiple events match, then reschedule a specific event ID. The model should not invent that sequence from scratch every time.</p>
+<p>The harness should make the wrong action hard to take. It can require an identified event ID before <code>reschedule_event</code>, require user confirmation when multiple events match, and block destructive actions unless the workflow phase allows them.</p>
+<ul>
+<li><strong>Visible failure:</strong> the agent picked the wrong tool.</li>
+<li><strong>Deeper failure:</strong> the system relied on the model to invent a safe tool sequence instead of encoding the sequence in the harness.</li>
+</ul>
+</section>
+<section id="failure-4-the-agent-sounds-grounded-but-it-is-not" class="level2">
+<h2 class="anchored" data-anchor-id="failure-4-the-agent-sounds-grounded-but-it-is-not">Failure 4: The agent sounds grounded, but it is not</h2>
+<p>The docs Q&amp;A agent receives this question: “What is our policy on customer data retention for trial accounts?”</p>
+<p>It retrieves five passages and returns a confident answer saying 30 days. The corpus says 90 days. The right passage was in the retrieved set, but synthesis leaned on the wrong evidence.</p>
+<p>A reliable retrieval agent should track supported claims explicitly. The system needs to know which claim came from which passage, and whether that passage addresses the question being asked.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1">supported_claims <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> [</span>
+<span id="cb5-2">    {</span>
+<span id="cb5-3">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"claim"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Trial account data is retained for 90 days after trial expiry."</span>,</span>
+<span id="cb5-4">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"evidence_refs"</span>: [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"policy_42:trial_accounts"</span>],</span>
+<span id="cb5-5">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"confidence"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"confirmed"</span>,</span>
+<span id="cb5-6">    }</span>
+<span id="cb5-7">]</span></code></pre></div></div>
+<p>Synthesis should write from supported claims, not from a raw pile of passages.</p>
+<ul>
+<li><strong>Visible failure:</strong> the agent gave a wrong answer.</li>
+<li><strong>Deeper failure:</strong> the system never tracked which claims were supported by which evidence.</li>
+</ul>
+<p>Groundedness is a system property. Polished prose does not make an answer grounded.</p>
+</section>
+<section id="failure-5-the-agent-repeats-a-side-effect" class="level2">
+<h2 class="anchored" data-anchor-id="failure-5-the-agent-repeats-a-side-effect">Failure 5: The agent repeats a side effect</h2>
+<p>The scheduling assistant calls:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1">reschedule_event(</span>
+<span id="cb6-2">    event_id<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"evt_482"</span>,</span>
+<span id="cb6-3">    new_time<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"2026-05-12T14:00"</span>,</span>
+<span id="cb6-4">)</span></code></pre></div></div>
+<p>The API takes thirty seconds and returns a timeout. The agent cannot tell whether the write succeeded, so it retries. Now Priya receives two confusing calendar updates.</p>
+<p>Writes need different retry semantics from reads. Every write should carry an idempotency key:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1">payload <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> {</span>
+<span id="cb7-2">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"event_id"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"evt_482"</span>,</span>
+<span id="cb7-3">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"new_time"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"2026-05-12T14:00"</span>,</span>
+<span id="cb7-4">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"idempotency_key"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"run_847_step_3"</span>,</span>
+<span id="cb7-5">}</span></code></pre></div></div>
+<p>After an ambiguous timeout, the agent should check the calendar before retrying. Verify first, retry second.</p>
+<ul>
+<li><strong>Visible failure:</strong> the meeting update happened twice.</li>
+<li><strong>Deeper failure:</strong> the system treated reads and writes as equivalent tool calls.</li>
+</ul>
+</section>
+<section id="failure-6-nobody-can-debug-it" class="level2">
+<h2 class="anchored" data-anchor-id="failure-6-nobody-can-debug-it">Failure 6: Nobody can debug it</h2>
+<p>A user reports that the docs Q&amp;A agent gave a wrong answer about retention policy yesterday. The logs contain the user’s question, the agent’s response, and this line:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1">tool_call: retrieval, status: success</span></code></pre></div></div>
+<p>That log cannot localize the failure. It does not show which passages were retrieved, which were ranked highest, what prompt version was deployed, what state the system had, or which answer claims came from which passage.</p>
+<p>A useful trace records enough to debug the run: input, relevant state, action chosen, tool inputs and outputs, verification result, state after, prompt version, tool version, and model version. Without that trace, the team cannot tell whether the failure came from retrieval, synthesis, prompting, model behavior, or a recent deployment.</p>
+<ul>
+<li><strong>Visible failure:</strong> the team cannot debug the answer.</li>
+<li><strong>Deeper failure:</strong> the system logged steps instead of recording decisions.</li>
+</ul>
+<p><a href="../../../../posts/series/the-agent-harness/05-traces/index.html">Traces are how agents get better</a> goes deeper into useful traces.</p>
+</section>
+<section id="the-pattern-behind-the-failures" class="level2">
+<h2 class="anchored" data-anchor-id="the-pattern-behind-the-failures">The pattern behind the failures</h2>
+<p>Each failure asks the model to carry control that should live in the harness.</p>
+<p>The harness decides what the model sees, what actions are allowed, what gets verified, and what is preserved for debugging and improvement. The model still matters, but reliability depends on the control surfaces around it.</p>
+<div id="fig-failure-shapes" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A mapping diagram with six agent failure shapes listed on one side and the control surfaces in the surrounding system that should have caught them on the other, with lines connecting each failure to its responsible surface. Every line lands on a system-level control rather than on the model itself, visually making the point that these failures are fixed in the harness around the model, not in the model.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-failure-shapes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/the-agent-harness/01-demos-break/failure_shapes.png" class="img-fluid figure-img" alt="A mapping diagram with six agent failure shapes listed on one side and the control surfaces in the surrounding system that should have caught them on the other, with lines connecting each failure to its responsible surface. Every line lands on a system-level control rather than on the model itself, visually making the point that these failures are fixed in the harness around the model, not in the model.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-failure-shapes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Six failure shapes mapped to the control surfaces that should have caught them. The model is not the right place to fix any of these. The system around the model is.
+</figcaption>
+</figure>
+</div>
+<p>The control surfaces are concrete:</p>
+<ul>
+<li><strong>State:</strong> stores facts, uncertainty, workflow phase, and pending actions.</li>
+<li><strong>Workflow logic:</strong> determines which step can happen next.</li>
+<li><strong>Tool contracts:</strong> define safe inputs, outputs, side effects, and retry behavior.</li>
+<li><strong>Gates and validators:</strong> block unsafe or unsupported actions.</li>
+<li><strong>Retrieval and evidence mapping:</strong> connect answers to supporting sources.</li>
+<li><strong>Traces:</strong> preserve enough information to debug and harden the system.</li>
+<li><strong>Regression tests:</strong> keep known failures from returning.</li>
+</ul>
+<p>The next four articles go deeper on the most important parts:</p>
+<ul>
+<li><a href="../../../../posts/series/the-agent-harness/02-harness-is-the-product/index.html">The harness is the product</a>: why an agent is the model plus the harness around it.</li>
+<li><a href="../../../../posts/series/the-agent-harness/03-state-not-transcript/index.html">State, not transcript, is agent memory</a>: how state gives the system memory it can read and update.</li>
+<li><a href="../../../../posts/series/the-agent-harness/04-prompts-gate/index.html">Prompts guide. Gates enforce</a>: how gates and tools limit actions, execute them safely, and verify outcomes.</li>
+<li><a href="../../../../posts/series/the-agent-harness/05-traces/index.html">Traces are how agents get better</a>: how traces support debugging, regression tests, and the hardening loop.</li>
+</ul>
+</section>
+<section id="common-mistakes" class="level2">
+<h2 class="anchored" data-anchor-id="common-mistakes">Common mistakes</h2>
+<p>Teams usually get agent reliability wrong in predictable ways:</p>
+<ul>
+<li><strong>Model-only diagnosis:</strong> when the agent fails, the team swaps in a stronger model instead of fixing the missing control surface.</li>
+<li><strong>Demo-as-evidence thinking:</strong> a demo shows that a path can work, not that the system survives messy users, ambiguous inputs, tool errors, or repeated runs.</li>
+<li><strong>Prompt-only boundaries:</strong> a system prompt that says “do not do XYZ” is guidance, not enforcement. Real boundaries live in gates, validators, permissions, and tool contracts.</li>
+<li><strong>Step logging:</strong> logs that say what happened do not explain why it happened. A useful trace records state, decisions, tool inputs, tool outputs, verification results, and version information.</li>
+<li><strong>Random-failure framing:</strong> most failures are recurring shapes. Once the category is visible, the team can engineer against it.</li>
+</ul>
+<p>Reliable agents do not come from prompts alone. They come from moving the right responsibilities into the harness: state, workflow, gates, tools, verification, traces, and tests.</p>
+
+
+</section>
+
+ ]]></description>
+  <category>The agent harness</category>
+  <guid>https://yeesengchan.com/posts/series/the-agent-harness/01-demos-break/</guid>
+  <pubDate>Sat, 18 Apr 2026 00:00:00 GMT</pubDate>
+</item>
 </channel>
 </rss>

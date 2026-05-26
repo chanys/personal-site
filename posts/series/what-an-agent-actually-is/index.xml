@@ -15,6 +15,917 @@
 <link>https://yeesengchan.com/posts/series/what-an-agent-actually-is/</link>
 </image>
 <generator>quarto-1.9.38</generator>
-<lastBuildDate>Tue, 26 May 2026 14:05:52 GMT</lastBuildDate>
+<lastBuildDate>Tue, 14 Apr 2026 00:00:00 GMT</lastBuildDate>
+<item>
+  <title>Behind the scenes of AI agent frameworks</title>
+  <dc:creator>Yee Seng Chan</dc:creator>
+  <link>https://yeesengchan.com/posts/series/what-an-agent-actually-is/02-agent-frameworks/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+What an agent actually is
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-what-is-an-agent/">What the heck is an AI agent?</a></li>
+<li><a href="../02-agent-frameworks/">Behind the scenes of AI agent frameworks</a></li>
+</ol>
+</div>
+<p><a href="../../../../posts/series/what-an-agent-actually-is/01-what-is-an-agent/index.html">The first article</a> treated “agent” as a region on a spectrum. This one goes inside one specific point on that spectrum, the loop-with-tools agent, and shows what’s actually happening when you call <code>Runner.run(agent, message)</code> or its equivalent.</p>
+<p>Frameworks like the OpenAI Agents SDK, LangChain, and LangGraph hide a lot of mechanics behind clean abstractions. That’s mostly a good thing. But when an agent misbehaves, calls the wrong tool, loops forever, returns garbage, the abstractions stop helping and the underlying mechanics start mattering. Debugging at that point requires distinguishing what the model does from what the API does from what your code does.</p>
+<section id="the-three-layers-model-api-your-code" class="level2">
+<h2 class="anchored" data-anchor-id="the-three-layers-model-api-your-code">The three layers: model, API, your code</h2>
+<p>Three layers do work in any agentic system:</p>
+<ul>
+<li>The <strong>model</strong> generates tokens. Given tool schemas in the prompt, those tokens include structured tool calls.</li>
+<li>The LLM <strong>API</strong> parses what the model generated, exposes it as a typed response, and labels why generation finished.</li>
+<li><strong>Your code</strong> (or the framework’s code on your behalf) maintains the conversation state, dispatches tool calls, and runs the loop.</li>
+</ul>
+<p>The rest of this article walks through one concrete loop end-to-end and names which layer does what at each step. Code is OpenAI-anchored; provider differences are discussed in a later section.</p>
+</section>
+<section id="what-a-framework-hides" class="level2">
+<h2 class="anchored" data-anchor-id="what-a-framework-hides">What a framework hides</h2>
+<p>An agent framework wraps four things for you:</p>
+<ul>
+<li><strong>Schema generation.</strong> Turns Python functions (type hints, Pydantic models, docstrings) into the JSON tool schemas the LLM API expects.</li>
+<li><strong>Message management.</strong> Maintains the conversation history, appending the model’s response and tool results in the right shape.</li>
+<li><strong>Tool dispatch.</strong> When the API returns tool calls, routes each call to the right Python function with the right arguments and captures the result.</li>
+<li><strong>Loop control.</strong> Calls the API, inspects the finish reason, decides whether to continue.</li>
+</ul>
+<p>The framework doesn’t change what the model or API do. It’s plumbing that you’d otherwise write yourself.</p>
+</section>
+<section id="a-tiny-framework-example" class="level2">
+<h2 class="anchored" data-anchor-id="a-tiny-framework-example">A tiny framework example</h2>
+<p>Here’s the OpenAI Agents SDK version of a small task: an agent that generates a few sales emails in different styles, picks the best, and sends it. Modest, but it exercises every mechanism the rest of this article explains.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> agents <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> Agent, Runner, function_tool</span>
+<span id="cb1-2"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> pydantic <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> BaseModel, Field</span>
+<span id="cb1-3"></span>
+<span id="cb1-4"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">class</span> GenerateEmailParams(BaseModel):</span>
+<span id="cb1-5">    style: <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">str</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> Field(description<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"'professional', 'engaging', or 'concise'"</span>)</span>
+<span id="cb1-6">    include_data: <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">bool</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> Field(default<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>, description<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Include statistics?"</span>)</span>
+<span id="cb1-7">    target_length: <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">str</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> Field(default<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"medium"</span>, description<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"'short', 'medium', or 'long'"</span>)</span>
+<span id="cb1-8"></span>
+<span id="cb1-9"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">@function_tool</span></span>
+<span id="cb1-10"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> generate_email(params: GenerateEmailParams) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-&gt;</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">str</span>:</span>
+<span id="cb1-11">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">"""Generate a sales email in the specified style."""</span></span>
+<span id="cb1-12">    ...</span>
+<span id="cb1-13"></span>
+<span id="cb1-14"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">@function_tool</span></span>
+<span id="cb1-15"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> send_email(body: <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">str</span>) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-&gt;</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">dict</span>:</span>
+<span id="cb1-16">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">"""Send an email to prospects."""</span></span>
+<span id="cb1-17">    ...</span>
+<span id="cb1-18"></span>
+<span id="cb1-19">sales_manager <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> Agent(</span>
+<span id="cb1-20">    name<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Sales Manager"</span>,</span>
+<span id="cb1-21">    instructions<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"""You are a sales manager. Your job:</span></span>
+<span id="cb1-22"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">1. Generate three sales emails using generate_email with different styles.</span></span>
+<span id="cb1-23"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">2. Evaluate which is best.</span></span>
+<span id="cb1-24"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">3. If none are good enough, generate better versions.</span></span>
+<span id="cb1-25"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">4. Once satisfied, send the best one with send_email."""</span>,</span>
+<span id="cb1-26">    tools<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>[generate_email, send_email],</span>
+<span id="cb1-27">)</span>
+<span id="cb1-28"></span>
+<span id="cb1-29">result <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">await</span> Runner.run(sales_manager, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Send a cold sales email"</span>)</span></code></pre></div></div>
+<p>About fifteen lines. The next section shows what those fifteen lines hide.</p>
+</section>
+<section id="the-same-loop-without-the-framework" class="level2">
+<h2 class="anchored" data-anchor-id="the-same-loop-without-the-framework">The same loop without the framework</h2>
+<p>Drop the framework and write the same task against the OpenAI API directly. This is partly an exercise in seeing what gets hidden, partly preparation for the moments when you need to reach into that hidden code.</p>
+<section id="send-tool-schemas" class="level3">
+<h3 class="anchored" data-anchor-id="send-tool-schemas">1. Send tool schemas</h3>
+<p>The model never sees your Python function. It sees a JSON schema in the <code>tools</code> parameter on the API request, with name, description, and parameters:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1">generate_email_schema <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> {</span>
+<span id="cb2-2">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"type"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"function"</span>,</span>
+<span id="cb2-3">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"function"</span>: {</span>
+<span id="cb2-4">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"name"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"generate_email"</span>,</span>
+<span id="cb2-5">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"description"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Generate a sales email in the specified style."</span>,</span>
+<span id="cb2-6">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"parameters"</span>: {</span>
+<span id="cb2-7">            <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"type"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"object"</span>,</span>
+<span id="cb2-8">            <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"properties"</span>: {</span>
+<span id="cb2-9">                <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"style"</span>: {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"type"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"string"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"description"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"'professional', 'engaging', or 'concise'"</span>},</span>
+<span id="cb2-10">                <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"include_data"</span>: {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"type"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"boolean"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"description"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Include statistics?"</span>},</span>
+<span id="cb2-11">                <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"target_length"</span>: {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"type"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"string"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"description"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"'short', 'medium', or 'long'"</span>},</span>
+<span id="cb2-12">            },</span>
+<span id="cb2-13">            <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"required"</span>: [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"style"</span>],</span>
+<span id="cb2-14">        },</span>
+<span id="cb2-15">    },</span>
+<span id="cb2-16">}</span></code></pre></div></div>
+<p>The framework’s <code>@function_tool</code> decorator generates this from the Pydantic model and the docstring at import time. Without the framework you write it by hand for every tool, and keep it in sync when the function signature changes.</p>
+<p>One thing worth knowing now, because it determines how well the agent works: <strong>the schema is part of the prompt the model sees during generation.</strong> Vague parameter descriptions weaken the agent more than people expect. Treat schemas with the same care you’d treat a system prompt.</p>
+<p>The schema can also constrain values, but only for constraints you actually put in. If <code>style</code> should only be one of three strings, use an enum:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Without enum: model can emit any string for "style"</span></span>
+<span id="cb3-2"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">"style"</span>: {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"type"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"string"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"description"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"'professional', 'engaging', or 'concise'"</span>}</span>
+<span id="cb3-3"></span>
+<span id="cb3-4"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># With enum: the API constrains the model to one of three values</span></span>
+<span id="cb3-5"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">"style"</span>: {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"type"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"string"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"enum"</span>: [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"professional"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"engaging"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"concise"</span>]}</span></code></pre></div></div>
+<p>The schema enforces what you specify. Anything beyond that (business rules, length limits, format checks) your code still has to validate after the call.</p>
+</section>
+<section id="how-tool-calls-actually-come-back" class="level3">
+<h3 class="anchored" data-anchor-id="how-tool-calls-actually-come-back">2. How tool calls actually come back</h3>
+<p>A persistent confusion: people think the model emits raw <code>&lt;tool_call&gt;</code> JSON tags as plain text, and the API parses that text post-hoc. That’s not what happens.</p>
+<p>When tool schemas are passed in the request, providers train the model to emit tool calls as structured output, not text the API has to fish through. The structure is surfaced in the response as a typed field (or list of typed blocks), separate from any text the model produced. An OpenAI response with a tool call looks like this:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb4-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb4-2">  <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"role"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"assistant"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb4-3">  <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"content"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">null</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb4-4">  <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"tool_calls"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">[</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb4-5">    <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"id"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"call_001"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb4-6">    <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"type"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"function"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb4-7">    <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"function"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb4-8">      <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"name"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"generate_email"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb4-9">      <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"arguments"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"{</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">style</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">: </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">professional</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">}"</span></span>
+<span id="cb4-10">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">}</span></span>
+<span id="cb4-11">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">}</span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">]</span></span>
+<span id="cb4-12"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">}</span></span></code></pre></div></div>
+<p>The model didn’t emit <code>&lt;tool_call&gt;...&lt;/tool_call&gt;</code> tags as plain text. It produced output that the API surfaces in a typed <code>tool_calls</code> field, with <code>content: null</code> because the model didn’t generate any text alongside.</p>
+</section>
+<section id="the-messages-array" class="level3">
+<h3 class="anchored" data-anchor-id="the-messages-array">3. The messages array</h3>
+<p>A conversation is a list of messages with roles. Four matter:</p>
+<ul>
+<li><code>system</code>: the instructions you set up the agent with.</li>
+<li><code>user</code>: what the user typed.</li>
+<li><code>assistant</code>: what the model generated. Either text content, structured tool calls, or both.</li>
+<li><code>tool</code>: the result of executing a tool call, tagged with the originating <code>tool_call_id</code>.</li>
+</ul>
+<p>Starting state for our task:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1">messages <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> [</span>
+<span id="cb5-2">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"role"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"system"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"content"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"You are a sales manager. ..."</span>},</span>
+<span id="cb5-3">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"role"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"user"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"content"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Send a cold sales email"</span>},</span>
+<span id="cb5-4">]</span></code></pre></div></div>
+<p>The framework constructs this from your <code>Agent(...)</code> and <code>Runner.run(...)</code> arguments. Without it, you build the array yourself and append to it on every iteration.</p>
+<p>In a manual loop, history is just a list you keep appending to. Frameworks can store that list for you between calls, and OpenAI’s Responses API can offload it to the server entirely via <code>previous_response_id</code> or a <code>conversation</code> ID, so your client doesn’t physically resend prior messages. Where the storage lives changes the bill but not the principle: the model’s next step is always conditioned on accumulated history, and that history grows unless you trim, summarize, or externalize it. The rest of this article stays in the manual mode, where the array is unambiguously your code’s job.</p>
+</section>
+<section id="the-finish-reason" class="level3">
+<h3 class="anchored" data-anchor-id="the-finish-reason">4. The finish reason</h3>
+<p>When the API returns a response, it includes a <code>finish_reason</code> field telling you why generation stopped. The four values that matter:</p>
+<ul>
+<li><code>stop</code>: the model finished naturally. Use the response and exit the loop.</li>
+<li><code>tool_calls</code>: the model emitted tool calls. Execute them, append results, continue.</li>
+<li><code>length</code>: generation hit the token limit. Response is truncated.</li>
+<li><code>content_filter</code>: the API’s safety filter intervened.</li>
+</ul>
+<p><code>finish_reason</code> is the API’s label for what just happened, not a decision the model made. The model emits tokens; the API examines what was emitted and applies the label. If the output ended with structured tool-call tokens, the API labels it <code>tool_calls</code>. If the budget was hit mid-generation, the API labels it <code>length</code>. Knowing which layer the signal comes from is the first move in debugging.</p>
+</section>
+<section id="the-loop-itself" class="level3">
+<h3 class="anchored" data-anchor-id="the-loop-itself">5. The loop itself</h3>
+<p>The loop is short:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">while</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>:</span>
+<span id="cb6-2">    response <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> client.chat.completions.create(</span>
+<span id="cb6-3">        model<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"gpt-5.4-mini"</span>,</span>
+<span id="cb6-4">        messages<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>messages,</span>
+<span id="cb6-5">        tools<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>[generate_email_schema, send_email_schema],</span>
+<span id="cb6-6">    )</span>
+<span id="cb6-7">    msg <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> response.choices[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>].message</span>
+<span id="cb6-8">    messages.append(msg)</span>
+<span id="cb6-9"></span>
+<span id="cb6-10">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> response.choices[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>].finish_reason <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"stop"</span>:</span>
+<span id="cb6-11">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> msg.content</span>
+<span id="cb6-12"></span>
+<span id="cb6-13">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">for</span> call <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> msg.tool_calls <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">or</span> []:</span>
+<span id="cb6-14">        name <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> call.function.name</span>
+<span id="cb6-15">        args <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> json.loads(call.function.arguments)</span>
+<span id="cb6-16">        result <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> dispatch_tool(name, args)</span>
+<span id="cb6-17">        messages.append({</span>
+<span id="cb6-18">            <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"role"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"tool"</span>,</span>
+<span id="cb6-19">            <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"tool_call_id"</span>: call.<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">id</span>,</span>
+<span id="cb6-20">            <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"content"</span>: result <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">isinstance</span>(result, <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">str</span>) <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">else</span> json.dumps(result),</span>
+<span id="cb6-21">        })</span></code></pre></div></div>
+<p>That is the loop. Frameworks add tracing, retries, sessions, handoffs, max-turn limits, and nicer tool registration on top. The core mechanics are: call model, inspect tool calls, run tools, append results, repeat.</p>
+<div id="fig-agentic-loop" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A diagram of one iteration of an agentic loop across three layers. The layers each perform part of the work, and a messages array is shown crossing the boundary between them on every iteration: passed in, added to, and passed back. An annotation notes that in a manual implementation the messages array lives in the application code and is re-sent in full on each loop rather than being held by the framework.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-agentic-loop-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/what-an-agent-actually-is/02-agent-frameworks/agent_loop.png" class="img-fluid figure-img" alt="A diagram of one iteration of an agentic loop across three layers. The layers each perform part of the work, and a messages array is shown crossing the boundary between them on every iteration: passed in, added to, and passed back. An annotation notes that in a manual implementation the messages array lives in the application code and is re-sent in full on each loop rather than being held by the framework.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-agentic-loop-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: One iteration of the agentic loop. Three layers do work; the messages array crosses the boundary between them on every iteration. In a manual implementation, the array lives in your code and re-sends in full each loop.
+</figcaption>
+</figure>
+</div>
+</section>
+</section>
+<section id="tracing-one-run" class="level2">
+<h2 class="anchored" data-anchor-id="tracing-one-run">Tracing one run</h2>
+<p>Here’s what actually happens when the agent runs the sales-email task.</p>
+<p><strong>Loop 1.</strong> The messages array contains just the system instructions and the user query. The model reads its instructions, sees that it has <code>generate_email</code> and <code>send_email</code> available, and emits structured output describing three parallel tool calls, one per style. The API parses those tokens into a <code>tool_calls</code> field and sets <code>finish_reason="tool_calls"</code>. The assistant message looks like this:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1">{</span>
+<span id="cb7-2">  <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"role"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"assistant"</span>,</span>
+<span id="cb7-3">  <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"content"</span>: null,</span>
+<span id="cb7-4">  <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"tool_calls"</span>: [</span>
+<span id="cb7-5">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"id"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"call_001"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"type"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"function"</span>,</span>
+<span id="cb7-6">     <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"function"</span>: {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"name"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"generate_email"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"arguments"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"{</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">style</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">: </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">professional</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">}"</span>}},</span>
+<span id="cb7-7">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"id"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"call_002"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"type"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"function"</span>,</span>
+<span id="cb7-8">     <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"function"</span>: {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"name"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"generate_email"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"arguments"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"{</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">style</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">: </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">engaging</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">}"</span>}},</span>
+<span id="cb7-9">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"id"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"call_003"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"type"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"function"</span>,</span>
+<span id="cb7-10">     <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"function"</span>: {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"name"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"generate_email"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"arguments"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"{</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">style</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">: </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">concise</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">}"</span>}}</span>
+<span id="cb7-11">  ]</span>
+<span id="cb7-12">}</span></code></pre></div></div>
+<p>Your code appends that to the messages array, dispatches each tool call to <code>generate_email</code>, captures the results, and appends a <code>tool</code> message for each, tagged with the originating <code>tool_call_id</code>:</p>
+<pre><code>{"role": "tool", "tool_call_id": "call_001", "content": "Subject: Streamlining your Q4 operations\n\nDear..."}</code></pre>
+<p>The messages array now has six entries: <code>system</code>, <code>user</code>, <code>assistant</code> (with three tool calls), <code>tool</code>, <code>tool</code>, <code>tool</code>.</p>
+<p><strong>Loop 2.</strong> Second API call. The model is now seeing the system prompt, the user query, the three tool calls it made, and the three emails the tools produced. It evaluates them, the professional one is generic, the engaging one too casual, the concise one lacks credibility, and emits two new <code>generate_email</code> calls with <code>include_data=true</code> and adjusted lengths. The model didn’t “remember” anything between loops; models are stateless. The continuity is your code’s responsibility, sitting in the messages array that gets re-sent each iteration.</p>
+<p><strong>Loop 3.</strong> Your code dispatches the two retries. By now the array contains ten entries and five emails worth of text. Every loop iteration re-sends the entire array, so by Loop 3 you’re paying input tokens on the system prompt, the user query, three full email texts from Loop 1, two more from Loop 2, and the assistant messages tying them together. Server-managed state via <code>previous_response_id</code> avoids the physical re-upload, but the conceptual cost is the same: the model attends to all accumulated history on every step, and the token bill reflects that. This is one of the main reasons production agents trim, summarize, or compress their context as it grows. The framework hides the loop but it doesn’t hide the bill.</p>
+<p><strong>Loops 4-5.</strong> The pattern repeats. The model sees the five emails, picks the strongest, and emits a single <code>send_email</code> call. Your code dispatches it. The next API call has nothing left to do; the model generates a brief confirmation in plain text, no tool calls, and the API sets <code>finish_reason="stop"</code>. Your code returns the assistant message and exits.</p>
+<p>Five loops, multiple API round trips, tool executions, one cold sales email sent. The framework’s <code>Runner.run()</code> collapses all of that into one line.</p>
+</section>
+<section id="provider-shapes-differ-but-the-loop-is-the-same" class="level2">
+<h2 class="anchored" data-anchor-id="provider-shapes-differ-but-the-loop-is-the-same">Provider shapes differ, but the loop is the same</h2>
+<p>The article so far has used OpenAI. Other providers expose tool calls in different response shapes, but the idea is the same: the model chooses a tool name and arguments, and the API returns that choice in structured fields rather than as ordinary prose.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># OpenAI: tool_calls list on the message</span></span>
+<span id="cb9-2">message.tool_calls[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>].function.name</span>
+<span id="cb9-3">message.tool_calls[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>].function.arguments    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># JSON string</span></span>
+<span id="cb9-4"></span>
+<span id="cb9-5"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Anthropic: content blocks with type "tool_use"</span></span>
+<span id="cb9-6">block <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> message.content[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>]</span>
+<span id="cb9-7">block.<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">type</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"tool_use"</span></span>
+<span id="cb9-8">block.name</span>
+<span id="cb9-9">block.<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">input</span>                                  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># dict</span></span>
+<span id="cb9-10"></span>
+<span id="cb9-11"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Gemini: parts inside the candidate's content</span></span>
+<span id="cb9-12">part <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> response.candidates[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>].content.parts[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>]</span>
+<span id="cb9-13">part.function_call.name</span>
+<span id="cb9-14">part.function_call.args                      <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># dict</span></span></code></pre></div></div>
+<p>The field names differ, but your job is the same: read the tool name and arguments, execute the corresponding function, append the result, and call the model again. The three-layer model (model emits, API parses, your code dispatches) holds across all three providers.</p>
+</section>
+<section id="debug-by-asking-which-layer-failed" class="level2">
+<h2 class="anchored" data-anchor-id="debug-by-asking-which-layer-failed">Debug by asking which layer failed</h2>
+<p>When something goes wrong, the symptom often surfaces in the framework layer (an exception, a malformed response, a stuck loop), but the cause may be in any of the three. The fastest path back to working is asking which layer did something other than what you expected.</p>
+<ul>
+<li><strong>Did the model choose the wrong tool or wrong arguments?</strong> That’s a model failure. The framework reports it but doesn’t cause it. Fix: improve the system prompt, sharpen the schema descriptions, add an enum where you assumed strings would be free-form.</li>
+<li><strong>Did the API parse and return the tool call correctly?</strong> Almost always yes for tool-call shape, since structured output is constrained at the API boundary. But <code>finish_reason</code> values come from the API and tell you why generation stopped (<code>length</code>, <code>content_filter</code>, etc.), not what the model decided.</li>
+<li><strong>Did your code dispatch the tool, append the result, and continue the loop correctly?</strong> This is where most bugs in a manual implementation live, and where <a href="../../../../posts/series/the-agent-harness/05-traces/index.html">most bugs in a framework implementation are hidden behind abstractions you can’t see</a>. Drop down to the API call directly when in doubt; the framework can be a fog over what the model is actually emitting.</li>
+</ul>
+<p>The useful mental model is short: <strong>the model emits, the API parses, your code dispatches and loops.</strong> Frameworks are convenience layered over those three steps.</p>
+
+
+</section>
+
+ ]]></description>
+  <category>What an agent actually is</category>
+  <guid>https://yeesengchan.com/posts/series/what-an-agent-actually-is/02-agent-frameworks/</guid>
+  <pubDate>Tue, 14 Apr 2026 00:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>What the heck is an AI agent?</title>
+  <dc:creator>Yee Seng Chan</dc:creator>
+  <link>https://yeesengchan.com/posts/series/what-an-agent-actually-is/01-what-is-an-agent/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+What an agent actually is
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-what-is-an-agent/">What the heck is an AI agent?</a></li>
+<li><a href="../02-agent-frameworks/">Behind the scenes of AI agent frameworks</a></li>
+</ol>
+</div>
+<p>“Agent” has become the most overloaded word in AI engineering. Vendors apply it to everything from a single tool-use LLM call to systems that run autonomously for days. The definitions in serious use don’t agree with each other, and the disagreement isn’t going to resolve.</p>
+<p>The right move isn’t to pick a winner. It’s to refuse the question. Stop asking whether something is an agent. Ask how much autonomy it has, and whether that’s the right amount for the task.</p>
+<section id="stop-asking-for-one-definition" class="level2">
+<h2 class="anchored" data-anchor-id="stop-asking-for-one-definition">Stop asking for one definition</h2>
+<p>The definitions across the field vary, and the variation is real:</p>
+<ul>
+<li><p><strong>Anthropic</strong> <span class="citation" data-cites="anthropic_2024_agents">(Anthropic 2024)</span> draws a sharp architectural line: <em>workflows</em> are systems where LLMs and tools run through predefined code paths; <em>agents</em> are systems where the LLM dynamically directs its own process and tool use. Under that definition, many production “agents” are better described as workflows.</p></li>
+<li><p><strong>Chip Huyen</strong> <span class="citation" data-cites="huyen_2025_agents">(Huyen 2025)</span> uses the classical AI definition: an agent is anything that perceives its environment and acts on it. By that standard, ChatGPT is an agent, and so is a RAG system: its retrievers and SQL executor are the tools through which it perceives and acts on its environment.</p></li>
+<li><p><strong>Nathan Lambert</strong> <span class="citation" data-cites="lambert_2024">(Lambert 2024)</span> treats tool-use language models as the starting point of the agent spectrum, with complexity increasing from there.</p></li>
+<li><p><strong>Cameron Wolfe</strong> <span class="citation" data-cites="wolfe_2025">(Wolfe 2025)</span> builds the idea from first principles: standard LLMs, tool usage, decomposing problems, reasoning models, and more autonomous systems. He frames agents as lying on a spectrum of capabilities rather than drawing one hard threshold for what counts as a “real” agent.</p></li>
+<li><p><strong>McKinsey’s 2025 enterprise survey</strong> <span class="citation" data-cites="mckinsey_2025">(McKinsey &amp; Company 2025)</span> frames AI agents as systems based on foundation models that act in the real world and are capable of autonomously planning and executing multiple steps in a workflow. This is a more autonomy-heavy enterprise framing than Lambert’s tool-use baseline.</p></li>
+</ul>
+<p>These definitions do not fully agree. That is why the better question is not “is this an agent?” but “how much autonomy does it have, and is that the right amount for the task?”</p>
+</section>
+<section id="the-autonomy-spectrum" class="level2">
+<h2 class="anchored" data-anchor-id="the-autonomy-spectrum">The autonomy spectrum</h2>
+<p>The cleanest way to understand what an agent is is to start with what it isn’t, and add one capability at a time.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Stage</th>
+<th>What it adds</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Standard LLM</strong></td>
+<td>Text in, text out. Access to the world is limited to training data and the prompt.</td>
+</tr>
+<tr class="even">
+<td><strong>+ Tools</strong></td>
+<td>The model emits structured calls routed to external systems: search, databases, code execution, APIs.</td>
+</tr>
+<tr class="odd">
+<td><strong>+ Loop</strong></td>
+<td>Tool output feeds back into context, and the model decides what to do next. Control flow stops being linear.</td>
+</tr>
+<tr class="even">
+<td><strong>+ Reasoning</strong></td>
+<td>The model plans before acting, evaluates partial results, and revises when something fails.</td>
+</tr>
+<tr class="odd">
+<td><strong>+ Autonomy</strong></td>
+<td>The model decides when to stop. Open-ended tasks, no predefined path, runs that may last minutes or hours.</td>
+</tr>
+</tbody>
+</table>
+<p>A few of these stages deserve more than a row.</p>
+<p><strong>+ Tools</strong> is the first place the word “agent” gets applied, and where the definition fight starts. A model that emits one tool call and synthesizes the result is doing more than text generation, but calling it autonomous is a stretch. Wolfe calls this Level 1; Lambert calls it the entry point to the spectrum.</p>
+<p><strong>+ Loop</strong> is where “agentic” becomes a defensible label. The model can chain operations: search, read a result, refine the query, search again, synthesize. ReAct <span class="citation" data-cites="yao_etal_2023">(Yao et al. 2023)</span> formalized this early (alternating reasoning and action steps until the model decides it’s done) and it’s still the canonical pattern. The loop is also where <a href="../../../../posts/series/the-agent-harness/01-demos-break/index.html">things fail in interesting ways</a>: the model can loop without converging, hallucinate tool calls, or decide the task is done when it isn’t.</p>
+<p><strong>+ Autonomy</strong> is the regime Anthropic reserves the word “agent” for, and it’s where the failure modes get expensive.</p>
+<p>Each step adds capability and removes a constraint. Each one is also a deliberate engineering choice. More autonomy isn’t better; it’s different. A task that would be well served by a fixed workflow doesn’t improve when you add a planning loop, and a task that genuinely needs open-ended exploration isn’t solved by a single tool call.</p>
+<p>To make this concrete, take a customer-support refund task. A standard LLM can’t handle it at all. With no access to the order record, the best it can do is draft a generic reply that pretends to. With tools, it can look up the order and draft a real one. With a loop, it can ask for missing information and retry. With reasoning, it can handle edge cases: orders past the policy window, partial refunds, conflicts with prior tickets. With autonomy, it decides whether to issue the refund or escalate.</p>
+<div id="fig-agent-spectrum" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A horizontal spectrum diagram for the word agent. The left end is labeled with a single tool call, the simplest case. Moving right, the points increase in autonomy and scope through multi-step tool use and longer task loops. The right end is labeled with systems that run without human input for extended periods. The figure frames agent as this whole range rather than one fixed point on it.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-agent-spectrum-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/what-an-agent-actually-is/01-what-is-an-agent/agent_spectrum.png" class="img-fluid figure-img" alt="A horizontal spectrum diagram for the word agent. The left end is labeled with a single tool call, the simplest case. Moving right, the points increase in autonomy and scope through multi-step tool use and longer task loops. The right end is labeled with systems that run without human input for extended periods. The figure frames agent as this whole range rather than one fixed point on it.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-agent-spectrum-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: "Agent" does not pick out a single artifact; it picks out a range, running from a single tool call to systems that operate without human input for extended periods.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="what-agents-are-built-from" class="level2">
+<h2 class="anchored" data-anchor-id="what-agents-are-built-from">What agents are built from</h2>
+<p>Strip away the marketing and the architecture is consistent across the spectrum. Every agent, from a single tool-use call to a long-running autonomous system, is built from the same primitives:</p>
+<ul>
+<li><strong>Model.</strong> Decides what to do next.</li>
+<li><strong>Tools.</strong> Let the model act on the world.</li>
+<li><strong>Loop.</strong> Runs the model repeatedly, feeding outputs back as context.</li>
+<li><strong>Memory.</strong> What’s available across loop iterations and across sessions.</li>
+<li><strong>Control flow.</strong> Decides which path through the system gets taken; via explicit code, or implicit in the model’s reasoning.</li>
+</ul>
+<p>The proportions and complexity vary; the components don’t.</p>
+<p>This is also why agents aren’t a fundamentally new paradigm. A modern agent is a tool-use LLM in a loop with structured control flow, and each component has been around for years: Toolformer <span class="citation" data-cites="schick_etal_2023">(Schick et al. 2023)</span> for tool use, ReAct <span class="citation" data-cites="yao_etal_2023">(Yao et al. 2023)</span> for the reasoning-and-action loop, and the broader control-flow patterns Anthropic documented in late 2024. The novelty isn’t the architecture. It’s that the underlying language models are finally good enough at instruction-following, structured output, and reasoning that the architecture works in production.</p>
+<p>Frameworks like LangChain, LangGraph, and the OpenAI Agents SDK abstract these primitives into higher-level constructs. That’s often useful, as they handle schema generation, message management, tool dispatch, retry logic. But the abstraction has a cost. Anthropic’s recommendation is worth taking seriously: start with direct API calls so you understand the mechanics, then reach for frameworks once the cost of not using one is clear. The <a href="../../../../posts/series/what-an-agent-actually-is/02-agent-frameworks/index.html">next article</a> goes deep and looks at what tool calls look like at the token level, how the loop is implemented, and what frameworks save you versus what they hide.</p>
+</section>
+<section id="more-autonomy-is-not-always-better" class="level2">
+<h2 class="anchored" data-anchor-id="more-autonomy-is-not-always-better">More autonomy is not always better</h2>
+<p>If you read AI marketing in 2026, the implicit definition of an agent is the right end of the spectrum: a system that operates without human input, makes decisions, takes actions, plans across long horizons. That’s the picture. It’s also a small slice of what’s actually deployed.</p>
+<p>Anthropic’s engineering team has been direct about this. Their observation, after working with dozens of teams building production systems: the most successful implementations weren’t using complex frameworks or specialized libraries. They were building with simple, composable patterns. The systems delivering value in production are mostly workflows with LLM calls in them, not open-ended autonomous agents.</p>
+<p>Two systems I’ve built sit at different points on the spectrum. The clinical-documentation pipeline is a workflow: code routes a series of LLM calls that <a href="../../../../posts/series/research-foundations-of-modern-llms/05-information-extraction/index.html">extract problems, labs, and physical-exam findings into note sections</a>. The LLM is the labor; the control flow is fixed, and that’s what makes the system shippable. The deep research agent I built sits further right. Query formulation, how deeply to read each source, and when to stop are all the model’s calls, with a controller-enforced budget on top so the agency stays bounded.</p>
+<p>This isn’t a temporary state that resolves when the models get better. It reflects a permanent engineering reality: predictability is valuable. A workflow with fixed control flow is easier to debug, evaluate, and ship. An autonomous agent that decides its own path is harder on every axis. For most production tasks, the cost of that flexibility has to be balanced against its benefit. McKinsey’s 2025 survey found only about 10% of enterprises have agents running in production in even a single department, despite vendor messaging suggesting far wider adoption.</p>
+<p>So insisting that only the autonomous end of the spectrum counts as an agent is a category error. It defines the word by the marketing extreme rather than by what the systems actually do. The question that informs design decisions isn’t <em>is this an agent?</em> It’s <em>how much autonomy does this have, and is that the right amount for the task?</em></p>
+
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-anthropic_2024_agents" class="csl-entry">
+Anthropic. 2024. <em>Building Effective Agents</em>. <a href="https://www.anthropic.com/engineering/building-effective-agents" class="uri">Https://www.anthropic.com/engineering/building-effective-agents</a>.
+</div>
+<div id="ref-huyen_2025_agents" class="csl-entry">
+Huyen, Chip. 2025. <em>Agents</em>. <a href="https://huyenchip.com/2025/01/07/agents.html" class="uri">Https://huyenchip.com/2025/01/07/agents.html</a>.
+</div>
+<div id="ref-lambert_2024" class="csl-entry">
+Lambert, Nathan. 2024. <em>The AI Agent Spectrum</em>. <a href="https://www.interconnects.ai/p/the-ai-agent-spectrum" class="uri">Https://www.interconnects.ai/p/the-ai-agent-spectrum</a>.
+</div>
+<div id="ref-mckinsey_2025" class="csl-entry">
+McKinsey &amp; Company. 2025. <em>The State of AI in 2025: Agents, Innovation, and Transformation</em>.
+</div>
+<div id="ref-schick_etal_2023" class="csl-entry">
+Schick, Timo, Jane Dwivedi-Yu, Roberto Dessì, et al. 2023. <span>“Toolformer: Language Models Can Teach Themselves to Use Tools.”</span> <em>Advances in Neural Information Processing Systems (NeurIPS)</em>. <a href="https://arxiv.org/abs/2302.04761">https://arxiv.org/abs/2302.04761</a>.
+</div>
+<div id="ref-wolfe_2025" class="csl-entry">
+Wolfe, Cameron R. 2025. <em>AI Agents from First Principles</em>. <a href="https://cameronrwolfe.substack.com/p/ai-agents" class="uri">Https://cameronrwolfe.substack.com/p/ai-agents</a>.
+</div>
+<div id="ref-yao_etal_2023" class="csl-entry">
+Yao, Shunyu, Jeffrey Zhao, Dian Yu, et al. 2023. <span>“ReAct: Synergizing Reasoning and Acting in Language Models.”</span> <em>International Conference on Learning Representations (ICLR)</em>. <a href="https://arxiv.org/abs/2210.03629">https://arxiv.org/abs/2210.03629</a>.
+</div>
+</div></section></div> ]]></description>
+  <category>What an agent actually is</category>
+  <guid>https://yeesengchan.com/posts/series/what-an-agent-actually-is/01-what-is-an-agent/</guid>
+  <pubDate>Sat, 11 Apr 2026 00:00:00 GMT</pubDate>
+</item>
 </channel>
 </rss>

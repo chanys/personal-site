@@ -605,7 +605,7 @@ Figure&nbsp;2: Three modern IE patterns. They differ in where the LLM sits and w
 <ol type="1">
 <li><p><strong>Treating IE as deprecated.</strong> It isn’t. It’s everywhere: inside agents, RAG and knowledge graphs, structured data extraction, and so on. It’s just not explicitly labeled “IE”.</p></li>
 <li><p><strong>Skipping schema design.</strong> The schema is the architecture of the extraction layer. The single highest-leverage improvement to most LLM-extraction setups is tightening it.</p></li>
-<li><p><strong>Underweighting evaluation.</strong> Labeled data didn’t go away. It moved from training to eval. You can’t ship an IE workflow you haven’t measured, and measuring requires gold annotations. The eval set is the new annotation effort: smaller, but irreducible.</p></li>
+<li><p><strong>Underweighting evaluation.</strong> Labeled data didn’t go away. It moved from training to eval. <a href="../../../../posts/series/llm-evaluation-honestly/01-stop-vibe-checking/index.html">You can’t ship an IE workflow you haven’t measured</a>, and measuring requires gold annotations. The eval set is the new annotation effort: smaller, but irreducible.</p></li>
 <li><p><strong>Picking the wrong model for the operating constraints.</strong> Try the LLM first for new or ambiguous tasks. Train a specialist when cost, latency, scale, auditability, or span precision force it. Both reflexes (always train a specialist; always reach for the frontier LLM) are mistakes. The constraints decide, not the fashion.</p></li>
 <li><p><strong>Treating extraction as the product.</strong> In modern systems extraction is rarely the product. It’s the structured intermediate layer between raw text and downstream generation, retrieval, or action.</p></li>
 </ol>

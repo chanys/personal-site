@@ -15,6 +15,688 @@
 <link>https://yeesengchan.com/posts/series/llm-evaluation-honestly/</link>
 </image>
 <generator>quarto-1.9.38</generator>
-<lastBuildDate>Tue, 26 May 2026 14:05:59 GMT</lastBuildDate>
+<lastBuildDate>Tue, 26 May 2026 00:00:00 GMT</lastBuildDate>
+<item>
+  <title>Your LLM judge is a classifier</title>
+  <dc:creator>Yee Seng Chan</dc:creator>
+  <link>https://yeesengchan.com/posts/series/llm-evaluation-honestly/04-judge-is-classifier/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+LLM evaluation, honestly
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-stop-vibe-checking/">Stop vibe-checking your agent</a></li>
+<li><a href="../02-eval-dataset/">Read traces before you write the labeling guide</a></li>
+<li><a href="../03-judge-vs-code/">Don’t ask an LLM judge what code can check</a></li>
+<li><a href="../04-judge-is-classifier/">Your LLM judge is a classifier</a></li>
+<li><a href="../05-scores-are-samples/">Eval scores are samples, not truth</a></li>
+<li><a href="../06-rag-evaluation/">Your RAG score hides the diagnosis</a></li>
+<li><a href="../07-eval-drift/">Your eval system also drifts</a></li>
+</ol>
+</div>
+<p>An LLM judge that predicts PASS or FAIL is a classifier. Like any classifier, it has to be tested against human labels before its scores mean anything.</p>
+<p>This is the step teams often skip. They build a judge, spot-check a few outputs, decide the verdicts look reasonable, and start reporting a pass rate. The dashboard may say the judge passed 87% of traces, but that number is only useful if the judge itself is reliable.</p>
+<p>This article is about how to validate an LLM judge.</p>
+<p>The running example is a documentation Q&amp;A agent. The agent retrieves passages from internal docs and answers questions about a data-retention policy. For example, trial-account data is kept for 90 days, standard-account data for 30 days, and enterprise accounts under legal hold must be escalated.</p>
+<p>The judge’s job is to check whether the answer is faithful to the retrieved source. In plain English: did the answer say what the document actually supports? Or did it use the wrong policy, drop an important caveat, or make a claim the document does not justify?</p>
+<p>That is not something a simple regex can reliably check. It requires reading the question, the retrieved source, and the answer together. So it is a reasonable job for an LLM judge. The question is whether that judge is any good.</p>
+<section id="validate-against-human-labels" class="level2">
+<h2 class="anchored" data-anchor-id="validate-against-human-labels">Validate against human labels</h2>
+<p>Validating a judge means comparing its verdicts against human labels on examples the judge has not seen.</p>
+<p>The process is simple:</p>
+<ol type="1">
+<li>Start with traces that humans have labeled PASS or FAIL.</li>
+<li>Keep a held-out set that is not used in the judge prompt.</li>
+<li>Run the judge on that held-out set.</li>
+<li>Compare the judge’s verdicts with the human labels.</li>
+<li>Report the confusion matrix, precision, recall, and F1 for the class that matters.</li>
+</ol>
+<p>The held-out set is the key. If an example appears in the judge’s few-shot prompt or was used to develop the judge, it cannot also be used to validate the judge. The judge has already seen it.</p>
+</section>
+<section id="accuracy-hides-what-matters" class="level2">
+<h2 class="anchored" data-anchor-id="accuracy-hides-what-matters">Accuracy hides what matters</h2>
+<p>Suppose the faithfulness judge is tested on 100 human-labeled traces: 80 PASS and 20 FAIL.</p>
+<p>It <strong>agrees with human labels</strong> on 83 of 100 traces, so the headline looks good: <strong>83% accuracy</strong>.</p>
+<div id="fig-judge-confusion" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A two-by-two confusion matrix. Rows are what the judge says, pass or fail; columns are the human label, pass or fail. Judge pass and human pass is 77, correctly passed. Judge pass and human fail is 14, highlighted red, labelled missed failures. Judge fail and human pass is 3, false alarm. Judge fail and human fail is 6, caught 6 of 20. A metrics panel reads: 83% accuracy, looks fine; 30% recall on FAIL, misses 14 of 20; precision 67%, F1 41% on the FAIL class. Caption: a high headline accuracy can hide a judge that misses most of what it was built to catch.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-judge-confusion-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/llm-evaluation-honestly/04-judge-is-classifier/judge_confusion_matrix.png" class="img-fluid figure-img" alt="A two-by-two confusion matrix. Rows are what the judge says, pass or fail; columns are the human label, pass or fail. Judge pass and human pass is 77, correctly passed. Judge pass and human fail is 14, highlighted red, labelled missed failures. Judge fail and human pass is 3, false alarm. Judge fail and human fail is 6, caught 6 of 20. A metrics panel reads: 83% accuracy, looks fine; 30% recall on FAIL, misses 14 of 20; precision 67%, F1 41% on the FAIL class. Caption: a high headline accuracy can hide a judge that misses most of what it was built to catch.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-judge-confusion-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Accuracy hides what matters. On 100 human-labeled traces (80 pass, 20 fail), the faithfulness judge agrees with humans 83% of the time, which looks fine. The confusion matrix shows why it isn’t: the judge correctly passes 77 faithful answers and catches 6 failures, but waves through 14 of the 20 unfaithful ones. Recall on the FAIL class is only 30% (precision 67%, F1 41%).
+</figcaption>
+</figure>
+</div>
+<p>But the confusion matrix tells a different story:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th style="text-align: right;">Human PASS</th>
+<th style="text-align: right;">Human FAIL</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Judge PASS</td>
+<td style="text-align: right;">77</td>
+<td style="text-align: right;">14</td>
+</tr>
+<tr class="even">
+<td>Judge FAIL</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">6</td>
+</tr>
+</tbody>
+</table>
+<p>The judge correctly passes 77 of 80 faithful answers, but catches only 6 of 20 failures.</p>
+<pre class="text"><code>Accuracy              = (77 + 6) / 100        = 83%
+Precision (P) on FAIL = 6 / (6 + 3)           = 67%
+Recall (R) on FAIL    = 6 / (6 + 14)          = 30%
+F1 on FAIL            = (2 * P * R) / (P + R) = 41%</code></pre>
+<p>So the judge is not good enough for faithfulness evaluation. It misses most of the unfaithful answers.</p>
+</section>
+<section id="hold-out-a-real-test-set" class="level2">
+<h2 class="anchored" data-anchor-id="hold-out-a-real-test-set">Hold out a real test set</h2>
+<p>Do not validate a judge on examples that appear in its prompt or were used to tune it. Split your labeled traces into: <strong>few-shot examples</strong> that go inside the judge prompt, <strong>dev set</strong> for iterating on the judge, and <strong>held-out test set</strong> for final validation only.</p>
+<p>On the dev set, the most useful step is reading disagreements. For example:</p>
+<ul>
+<li><strong>User question:</strong> <em>“How long do trial-account records stay available?”</em></li>
+<li><strong>Retrieved context:</strong> standard accounts keep records for 30 days; trial accounts keep them for 90 days.</li>
+<li><strong>Agent answer:</strong> <em>“Records are retained for 30 days after closure.”</em></li>
+<li><strong>Judge verdict:</strong> PASS (found a matching sentence in the context).</li>
+<li><strong>Human label:</strong> FAIL (the answer used the wrong account type).</li>
+</ul>
+<p>That disagreement tells you what example to add: faithfulness requires support for the specific entity and condition in the user’s question, not just any matching sentence in the retrieved documents.</p>
+<p>Once the judge performs well on dev, run it once on the held-out test set and report the result.</p>
+</section>
+<section id="when-calibration-is-poor" class="level2">
+<h2 class="anchored" data-anchor-id="when-calibration-is-poor">When calibration is poor</h2>
+<p>Reading the disagreements usually reveals one of a few patterns:</p>
+<ul>
+<li><strong>Missing failure subtype.</strong> The judge catches outright hallucinations but misses subtle contradictions, dropped caveats, or unsupported generalizations.</li>
+<li><strong>Over-flagging.</strong> The judge calls everything FAIL when the agent paraphrases instead of quoting verbatim.</li>
+<li><strong>Unclear judging standard.</strong> The judge says some answers are unfaithful that the humans accept as fine.</li>
+<li><strong>Right for the wrong reason.</strong> The verdict is correct but the critique points at the wrong thing.</li>
+<li><strong>Too-small validation set.</strong> Wide error bars on metrics; unreliable conclusions (Eval scores are samples, not truth covers when this matters).</li>
+</ul>
+<p>The fix progression is <strong>examples → criterion → model</strong>.</p>
+<p>Examples almost always move first: if the judge is wrong on five cases of subtle contradiction, consider adding five contradiction <strong>examples</strong> to the few-shot block. If multiple disagreements trace to ambiguity in what counts as a failure rather than missing examples, the adjudicator sharpens the <strong>criterion</strong>. <strong>Model</strong> swaps come last. Most calibration problems live in the prompt, not the model, and switching models is expensive in cost, latency, and stability.</p>
+</section>
+<section id="revalidate-when-things-change" class="level2">
+<h2 class="anchored" data-anchor-id="revalidate-when-things-change">Revalidate when things change</h2>
+<p>The judge agrees with humans on the held-out set today. That doesn’t mean it will agree in six months. Foundation models update, the agent’s failure distribution shifts, and new failure types appear. Calibration is a snapshot: true at measurement time, increasingly stale afterward.</p>
+<p>Your eval system also drifts covers what to do about it: re-validate against fresh labels on a schedule and monitor agreement rates over time. Large drift in those agreement rates is usually a signal that the failure distribution itself has changed.</p>
+<p>Every deployed judge should carry a short record of what it was validated on: the domain, the trace types, the test-set size, the date, and what it’s allowed to be used for. Without that record, judges get re-used on data the original validation doesn’t cover, and the team trusts a number that no longer applies.</p>
+</section>
+<section id="the-judge-is-part-of-the-system" class="level2">
+<h2 class="anchored" data-anchor-id="the-judge-is-part-of-the-system">The judge is part of the system</h2>
+<p>An LLM judge is not an oracle. It is a model component that needs the same discipline as any other classifier: held-out labels, a confusion matrix, precision and recall on the class that matters, and periodic revalidation.</p>
+<p>Once the judge is validated, there is still one more question: how much should we trust movement in the score? A judge may report that v2 improved by two points, but that movement may be real or may be noise. The next article covers that next layer: uncertainty, sample size, and when an eval result is large enough to act on.</p>
+
+
+</section>
+
+ ]]></description>
+  <category>LLM evaluation, honestly</category>
+  <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/04-judge-is-classifier/</guid>
+  <pubDate>Tue, 26 May 2026 00:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>Don’t ask an LLM judge what code can check</title>
+  <dc:creator>Yee Seng Chan</dc:creator>
+  <link>https://yeesengchan.com/posts/series/llm-evaluation-honestly/03-judge-vs-code/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+LLM evaluation, honestly
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-stop-vibe-checking/">Stop vibe-checking your agent</a></li>
+<li><a href="../02-eval-dataset/">Read traces before you write the labeling guide</a></li>
+<li><a href="../03-judge-vs-code/">Don’t ask an LLM judge what code can check</a></li>
+<li><a href="../04-judge-is-classifier/">Your LLM judge is a classifier</a></li>
+<li><a href="../05-scores-are-samples/">Eval scores are samples, not truth</a></li>
+<li><a href="../06-rag-evaluation/">Your RAG score hides the diagnosis</a></li>
+<li><a href="../07-eval-drift/">Your eval system also drifts</a></li>
+</ol>
+</div>
+<p>Most bad LLM judges are doing a simpler evaluator’s job. They are asked whether JSON is valid. Whether a required field is present. Whether a tool was called. Whether a prohibited phrase appears in the final answer. Whether a handoff record contains an order ID.</p>
+<p>That is not judgment. That is checking.</p>
+<p>When a team asks an LLM judge to do what code could have checked, it gets the worst of both worlds: slower, noisier, more expensive, and harder to debug.</p>
+<p>LLM judges are useful when the evaluator needs to understand meaning in context. They are wasted when the failure has a structural shape. If the failure can be detected with code, use code. Save judges for failures that require understanding meaning.</p>
+<section id="start-with-the-failure-mode" class="level2">
+<h2 class="anchored" data-anchor-id="start-with-the-failure-mode">Start with the failure mode</h2>
+<p>The wrong question is <em>“Should we use an LLM judge here?”</em> The right question is <em>“What exactly are we trying to detect?”</em></p>
+<ul>
+<li><strong>Code check</strong> when the failure has a structural shape: a missing required field, an invalid category, a prohibited phrase in the response.</li>
+<li><strong>LLM judge</strong> when the failure requires reading language in context: tone mismatch, redundant clarifying questions, subtle policy violations.</li>
+</ul>
+</section>
+<section id="use-code-for-structural-failures" class="level2">
+<h2 class="anchored" data-anchor-id="use-code-for-structural-failures">Use code for structural failures</h2>
+<p>A code-based evaluator is a function. Take a trace, return a score with a reason.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> check_handoff_schema(trace) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-&gt;</span> Score:</span>
+<span id="cb1-2">    required <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"case_id"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"user_email"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"issue_category"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"summary"</span>}</span>
+<span id="cb1-3">    handoff <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> trace.outputs[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"handoff_record"</span>]</span>
+<span id="cb1-4">    missing <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> required <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span> handoff.keys()</span>
+<span id="cb1-5">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> missing:</span>
+<span id="cb1-6">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> Score(passed<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>, reason<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f"Missing fields: </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>missing<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span>)</span>
+<span id="cb1-7">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> Score(passed<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>, reason<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Handoff record well-formed"</span>)</span></code></pre></div></div>
+<p>Five lines. Runs in milliseconds. Deterministic: same input, same output, every time. Debuggable: when it fails, the reason tells you exactly what to look at. Free: no API calls, no token costs, no rate limits. Runs on every trace, on every CI build, on every production trace if you want.</p>
+<p>Code and judges aren’t always alternatives. <strong>Sometimes they’re layers.</strong> A regex check for refund-promise language catches explicit cases (<em>“Your refund has been approved”</em>); it misses subtler implications (<em>“We’ll make sure you get your money back”</em>). The fix isn’t to abandon the regex for a judge. Run the cheap regex on every trace; run a more expensive judge only when the trace involves a refund request and the regex didn’t fire. The principle: run cheap checks broadly, run judges where they add value.</p>
+</section>
+<section id="use-llm-judges-for-semantic-failures" class="level2">
+<h2 class="anchored" data-anchor-id="use-llm-judges-for-semantic-failures">Use LLM judges for semantic failures</h2>
+<p>Some failure modes don’t have a structural shape. For instance, the user is frustrated but the agent responds in an upbeat and causal manner.</p>
+<p>A judge worth trusting is binary (pass or fail, not 1-5) and grounded in labeled examples from the dataset <a href="../../../../posts/series/llm-evaluation-honestly/02-eval-dataset/index.html">the previous article</a> produced. <a href="../../../../posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.html">The next article</a> covers the prompt design and the calibration step: comparing the judge’s verdicts to human labels before treating its numbers as measurement. Until then, the discipline is simple: don’t deploy a judge whose agreement with humans you haven’t measured.</p>
+</section>
+<section id="keep-each-evaluator-narrow" class="level2">
+<h2 class="anchored" data-anchor-id="keep-each-evaluator-narrow">Keep each evaluator narrow</h2>
+<p>The mistake is building one big judge called <code>quality_judge_v3</code> and asking it to score everything: tone, helpfulness, schema validity, routing. That judge produces a number. It does not produce a diagnosis.</p>
+<p>It’s the same reason you don’t write a single function called <code>is_correct()</code> in production code. Composite signals are harder to act on, harder to debug, and harder to improve.</p>
+<p>Suppose the intake agent’s “overall quality” judge drops from 87% to 81% over a release. What changed? Tone got worse? Helpfulness got worse? Grounding got worse? Some combination? The composite verdict can’t tell you. You read failures by hand, you guess, and you propose a fix without knowing which dimension you’re targeting.</p>
+<p>Specialized evaluators fix this. The tone judge tracks tone. The redundant-question judge tracks redundancy. When tone scores drop and redundancy scores hold steady, you know what changed. When you fix the tone issue, the tone judge tells you whether the fix worked.</p>
+<div id="fig-composite-vs-narrow" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two contrasting cards. Left card, red border: composite judge quality_judge_v3, showing one big number 87 percent dropping to 81 percent, minus 6 points over one release, then the question what changed in large italic red, with a note that you have to read failures by hand and guess. Right card, green border: narrow evaluators, listing five dimensions with their before-and-after scores. Tone drops 87 to 60, marked with a red down arrow and minus 27. Redundancy 89 to 88, Schema 96 to 96, Routing 86 to 87, Escalation 80 to 80, all held steady. Verdict in green: tone regressed, fix tone. Caption: composite scores tell you something moved, narrow evaluators tell you what.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-composite-vs-narrow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/llm-evaluation-honestly/03-judge-vs-code/composite_vs_narrow.png" class="img-fluid figure-img" alt="Two contrasting cards. Left card, red border: composite judge quality_judge_v3, showing one big number 87 percent dropping to 81 percent, minus 6 points over one release, then the question what changed in large italic red, with a note that you have to read failures by hand and guess. Right card, green border: narrow evaluators, listing five dimensions with their before-and-after scores. Tone drops 87 to 60, marked with a red down arrow and minus 27. Redundancy 89 to 88, Schema 96 to 96, Routing 86 to 87, Escalation 80 to 80, all held steady. Verdict in green: tone regressed, fix tone. Caption: composite scores tell you something moved, narrow evaluators tell you what.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-composite-vs-narrow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: One number can’t tell you what broke. The composite quality_judge_v3 score drops from 87% to 81% over a release, which leaves you asking “what changed?” and reading failures by hand to guess. The narrow stack of evaluators, run on the same release, shows Tone dropping from 87 to 60 while Redundancy, Schema, Routing, and Escalation all held steady. Same release, same data; the diagnosis only exists in the narrow view.
+</figcaption>
+</figure>
+</div>
+<p>The cost is more API calls per trace, one per judge instead of one total. In practice this is cheap, because most evaluation runs sample only a fraction of production traffic. The per-trace cost matters less than signal quality.</p>
+<p>A reasonable evaluator stack for the intake agent might look like:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Evaluator</th>
+<th>Failure mode</th>
+<th>Mechanism</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>no_refund_promise</code></td>
+<td>Forbidden refund-approval language</td>
+<td>Code (regex)</td>
+</tr>
+<tr class="even">
+<td><code>handoff_schema</code></td>
+<td>Required handoff fields populated</td>
+<td>Code (schema check)</td>
+</tr>
+<tr class="odd">
+<td><code>order_id_confirmed</code></td>
+<td>Order ID confirmed before handoff</td>
+<td>Code (state predicate)</td>
+</tr>
+<tr class="even">
+<td><code>escalation_honored</code></td>
+<td>Escalation when user requests human</td>
+<td>Code (state predicate)</td>
+</tr>
+<tr class="odd">
+<td><code>tone_appropriate</code></td>
+<td>Tone matches user’s emotional register</td>
+<td>LLM judge</td>
+</tr>
+<tr class="even">
+<td><code>no_redundant_question</code></td>
+<td>Clarifying question wasn’t already answered</td>
+<td>LLM judge</td>
+</tr>
+<tr class="odd">
+<td><code>classification_correct</code></td>
+<td>Issue routed to the right category</td>
+<td>Reference-based check</td>
+</tr>
+</tbody>
+</table>
+<p>Seven evaluators, each answering one question. When the dashboard shows a regression, you can identify which question’s answer changed.</p>
+<p>One related discipline: when a regression case enters the suite, tag it by the layer where the failure originated, not the layer where it became visible. A malformed handoff at turn 5 caused by a classifier misread at turn 3 should be tagged as a classifier failure.</p>
+</section>
+<section id="code-first-judges-when-you-need-them" class="level2">
+<h2 class="anchored" data-anchor-id="code-first-judges-when-you-need-them">Code first, judges when you need them</h2>
+<p><a href="../../../../posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.html">Your LLM judge is a classifier</a> covers the next layer: making judges trustworthy when you do need them. A judge that produces verdicts in the right format isn’t the same as a judge that produces correct verdicts.</p>
+<p>The next time someone proposes a judge, first ask: <em>could code answer this?</em></p>
+
+
+</section>
+
+ ]]></description>
+  <category>LLM evaluation, honestly</category>
+  <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/03-judge-vs-code/</guid>
+  <pubDate>Fri, 22 May 2026 00:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>Read traces before you write the labeling guide</title>
+  <dc:creator>Yee Seng Chan</dc:creator>
+  <link>https://yeesengchan.com/posts/series/llm-evaluation-honestly/02-eval-dataset/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+LLM evaluation, honestly
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-stop-vibe-checking/">Stop vibe-checking your agent</a></li>
+<li><a href="../02-eval-dataset/">Read traces before you write the labeling guide</a></li>
+<li><a href="../03-judge-vs-code/">Don’t ask an LLM judge what code can check</a></li>
+<li><a href="../04-judge-is-classifier/">Your LLM judge is a classifier</a></li>
+<li><a href="../05-scores-are-samples/">Eval scores are samples, not truth</a></li>
+<li><a href="../06-rag-evaluation/">Your RAG score hides the diagnosis</a></li>
+<li><a href="../07-eval-drift/">Your eval system also drifts</a></li>
+</ol>
+</div>
+<p>The eval loop from <a href="../../../../posts/series/llm-evaluation-honestly/01-stop-vibe-checking/index.html">Stop vibe-checking your agent</a> is only as honest as the dataset underneath it. A dataset’s first job is to discover how the system fails.</p>
+<p>The running example continues from <a href="../../../../posts/series/the-agent-harness/index.html">the harness series</a>: a scheduling assistant that books, reschedules, and cancels meetings. A user writes: <em>“Move my meeting with Alex to next Thursday afternoon if he has time.”</em> That one sentence assumes the assistant can guess which Alex, parse “next Thursday afternoon,” pick the right calendar, and not say “Done” before the write actually succeeds.</p>
+<section id="start-with-traces-not-imagined-categories" class="level2">
+<h2 class="anchored" data-anchor-id="start-with-traces-not-imagined-categories">Start with traces, not imagined categories</h2>
+<p>A common mistake is to start with abstract qualities like accurate, helpful, concise, safe, professional. They describe how the team imagines quality before seeing how the system actually fails.</p>
+<p>For a scheduling assistant, the real failures are more specific: choosing the wrong Alex, writing to the wrong calendar, confirming before the calendar API succeeds, losing information from earlier turns, or mishandling a forwarded email thread. These failures are concrete enough to test and fix, and they only emerge when humans read real traces.</p>
+<p>So start with traces: label what happened, write short critiques, and let the failure modes emerge from the examples. When labeling reveals an obvious bug, fix it instead of building a judge to detect it.</p>
+</section>
+<section id="keep-labels-consistent" class="level2">
+<h2 class="anchored" data-anchor-id="keep-labels-consistent">Keep labels consistent</h2>
+<p>Reviewers will disagree on edge cases. Designate one <strong>adjudicator</strong> to own the labeling guide, make the call on contested cases, and update examples as the standard becomes clearer.</p>
+<p>For domain-heavy products, the adjudicator should be whoever is closest to the product’s real standard of correctness, not whoever happens to be available. In a healthcare project I led, anchoring medical-billing-level labels to a domain expert’s judgment rather than engineers’ guesses gave the dataset real ground truth.</p>
+<p>Keep the labels themselves simple: <strong>pass or fail</strong>. Likert scales feel more nuanced but are harder to act on and invite false precision. The nuance lives in the critique.</p>
+</section>
+<section id="design-for-coverage-and-difficulty" class="level2">
+<h2 class="anchored" data-anchor-id="design-for-coverage-and-difficulty">Design for coverage and difficulty</h2>
+<p>Once labels are consistent, the next question is whether the dataset is representative.</p>
+<div id="fig-coverage-difficulty" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two cards. Left, COVERAGE, what situations the set must contain: Main tasks, book reschedule cancel; Common ambiguity, which Alex vague time forwarded thread; High-risk failures, wrong calendar premature confirm permission error; key chip, set target counts per slice, decide before collecting. Right, DIFFICULTY, how hard each case is: Easy guards against regressions; Medium shows if it's improving; Hard the frontier; Safety must refuse or escalate; key chip, keep a visible mix, too easy saturates too hard hides progress. Footer: raw production clusters in easy plus main-task, design the rest in deliberately.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-coverage-difficulty-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/llm-evaluation-honestly/02-eval-dataset/coverage_difficulty.png" class="img-fluid figure-img" alt="Two cards. Left, COVERAGE, what situations the set must contain: Main tasks, book reschedule cancel; Common ambiguity, which Alex vague time forwarded thread; High-risk failures, wrong calendar premature confirm permission error; key chip, set target counts per slice, decide before collecting. Right, DIFFICULTY, how hard each case is: Easy guards against regressions; Medium shows if it's improving; Hard the frontier; Safety must refuse or escalate; key chip, keep a visible mix, too easy saturates too hard hides progress. Footer: raw production clusters in easy plus main-task, design the rest in deliberately.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-coverage-difficulty-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Design the dataset on two axes. Coverage is what situations the set must contain: main tasks (book, reschedule, cancel), common ambiguity (which Alex, vague time, forwarded thread), and high-risk failures (wrong calendar, premature confirm, permission error); set target counts per slice and decide before collecting. Difficulty is how hard each case is: easy guards against regressions, medium shows whether it is improving, hard is the frontier, safety must refuse or escalate; keep a visible mix. Raw production clusters in the easy, main-task corner, so the rest has to be designed in deliberately.
+</figcaption>
+</figure>
+</div>
+<p>A raw production sample usually overrepresents easy traffic. For a scheduling assistant, that means lots of simple booking requests and too few high-risk cases: ambiguous attendees, wrong-calendar writes, permission errors, forwarded email threads, time-zone mistakes.</p>
+<p>Design the dataset intentionally:</p>
+<ul>
+<li><strong>Main tasks:</strong> booking, rescheduling, cancellation.</li>
+<li><strong>Common ambiguity:</strong> unclear attendee, unclear event, vague time phrase, forwarded email thread.</li>
+<li><strong>High-risk failures:</strong> wrong calendar, premature confirmation, missing conflict check, permission error.</li>
+</ul>
+<p>Set target counts for the slices that matter most (30 ambiguous-attendee cases, 25 wrong-calendar cases). The numbers are illustrative; the point is deciding the targets before collecting.</p>
+<p>For rare but important slices, do a cheap pre-filtering pass before full labeling. If wrong-calendar writes or permission errors are rare in raw traffic, find the candidate traces first, then label those carefully. In a clinical-note project I led, sections like allergies and labs appeared sparsely across clinician-patient transcripts; a quick yes/no pass identified which transcripts contained them.</p>
+<p>Balance difficulty too:</p>
+<ul>
+<li><strong>Easy cases:</strong> the system should already pass these. They protect against regressions.</li>
+<li><strong>Medium cases:</strong> the system is mixed. These show whether the product is improving.</li>
+<li><strong>Hard cases:</strong> the system often fails. These show the frontier.</li>
+<li><strong>Safety cases:</strong> the system must refuse, escalate, or avoid forbidden behavior.</li>
+</ul>
+<p>Too easy and the dataset saturates; too hard and it doesn’t show progress. Aim for a visible mix so the team can tell what actually improved.</p>
+<p>Eval scores are samples, not truth returns to sample size and uncertainty. If a slice matters, include it deliberately and track it separately.</p>
+</section>
+<section id="when-you-dont-have-production-data" class="level2">
+<h2 class="anchored" data-anchor-id="when-you-dont-have-production-data">When you don’t have production data</h2>
+<p>Before launch, the dataset has to come from somewhere other than production. The key rule: generate inputs, not outputs. Let the real system produce the responses, and label the resulting traces like any other trace.</p>
+<p>Two sources work well in combination.</p>
+<p><strong>Persona-based generation.</strong> Define three to five user personas that match the product (for the scheduling assistant: a time-zone-confused product manager, an executive with overlapping calendars, an IC handling forwarded meeting threads). For each persona, generate eight to twelve plausible queries.</p>
+<p><strong>Expert elicitation.</strong> Sit with someone who has done this product’s work before: a customer success lead, a power user from a prior product, a domain expert. Ask: <em>“What is the worst question someone could ask this?”</em> and <em>“Where do you expect this to fail?”</em> The answers encode failure intuition the team doesn’t yet have from data, including the high-risk cases the coverage section calls out.</p>
+</section>
+<section id="the-dataset-is-the-products-memory" class="level2">
+<h2 class="anchored" data-anchor-id="the-dataset-is-the-products-memory">The dataset is the product’s memory</h2>
+<p>An eval dataset is the product’s memory of what has gone wrong, what the team decided “good” means, and what must not break again.</p>
+<p>That memory has to keep growing. The first version will be incomplete; failure modes will get sharper as production reveals new ones; the adjudicator will tighten the examples annotation guide as the team’s standard becomes clearer. The danger is pretending the dataset doesn’t need to evolve.</p>
+
+
+</section>
+
+ ]]></description>
+  <category>LLM evaluation, honestly</category>
+  <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/02-eval-dataset/</guid>
+  <pubDate>Tue, 19 May 2026 00:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>Stop vibe-checking your agent</title>
+  <dc:creator>Yee Seng Chan</dc:creator>
+  <link>https://yeesengchan.com/posts/series/llm-evaluation-honestly/01-stop-vibe-checking/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+LLM evaluation, honestly
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-stop-vibe-checking/">Stop vibe-checking your agent</a></li>
+<li><a href="../02-eval-dataset/">Read traces before you write the labeling guide</a></li>
+<li><a href="../03-judge-vs-code/">Don’t ask an LLM judge what code can check</a></li>
+<li><a href="../04-judge-is-classifier/">Your LLM judge is a classifier</a></li>
+<li><a href="../05-scores-are-samples/">Eval scores are samples, not truth</a></li>
+<li><a href="../06-rag-evaluation/">Your RAG score hides the diagnosis</a></li>
+<li><a href="../07-eval-drift/">Your eval system also drifts</a></li>
+</ol>
+</div>
+<p>Some teams evaluate by feel: read a few runs after a prompt change, form an impression, ship. It works until something changes: a prompt update seems better but nobody can prove it, or a refactor might break something nobody can name.</p>
+<p>The first useful eval system replaces feel with a loop: <a href="../../../../posts/series/the-agent-harness/05-traces/index.html">traces</a>, labels, failure modes, checks and judges, regression cases, and a regular review that feeds new failures back in.</p>
+<p>This series is about evaluating LLM agents: turning the observable behavior the <a href="../../../../posts/series/the-agent-harness/index.html">harness</a> captures into evidence.</p>
+<p>The running example: a customer support intake agent that classifies issues, asks clarifying questions, captures relevant facts, and produces a handoff record for a human. No refunds, no side-effecting tools.</p>
+<section id="what-eval-is-for" class="level2">
+<h2 class="anchored" data-anchor-id="what-eval-is-for">What eval is for</h2>
+<p>A score is useful only if it changes what the team does next. Eval supports different decisions at different stages: during development, whether a new prompt is better; before merge, whether old failures came back; in production, whether new failure patterns are emerging.</p>
+<p>The operational test for any metric: <em>When this number moves, what decision changes?</em> If the answer is merge, hold, investigate, roll back, or add a regression case, the metric is useful. If the answer is “nothing,” it does not belong on the dashboard.</p>
+</section>
+<section id="the-minimum-viable-eval-loop" class="level2">
+<h2 class="anchored" data-anchor-id="the-minimum-viable-eval-loop">The minimum viable eval loop</h2>
+<p>A useful eval system starts with traces and ends with decisions. The first version needs six pieces: traces, labels, failure modes, checks and judges, regression cases, and a regular review.</p>
+<div id="fig-eval-loop" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A closed six-stage cycle. Stage 1 Traces, more than the final answer. Stage 2 Labels, pass or fail plus a short critique. Stage 3 Failure modes, patterns across many labels. Stage 4 Checks and judges, code checks plus LLM judges. Stage 5 Regression cases, real failures frozen as tests. Stage 6 Review and decide, merge, hold, or roll back. An arrow flows clockwise through all six, and a highlighted return edge from Review and decide back to Traces is labelled new production failures re-enter, closing the loop. Caption: start small, use real failures, make every new failure feed back into the loop.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-eval-loop-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/llm-evaluation-honestly/01-stop-vibe-checking/eval_mvp_loop.png" class="img-fluid figure-img" alt="A closed six-stage cycle. Stage 1 Traces, more than the final answer. Stage 2 Labels, pass or fail plus a short critique. Stage 3 Failure modes, patterns across many labels. Stage 4 Checks and judges, code checks plus LLM judges. Stage 5 Regression cases, real failures frozen as tests. Stage 6 Review and decide, merge, hold, or roll back. An arrow flows clockwise through all six, and a highlighted return edge from Review and decide back to Traces is labelled new production failures re-enter, closing the loop. Caption: start small, use real failures, make every new failure feed back into the loop.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-eval-loop-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: The minimum viable eval loop. Traces become labels, labels reveal failure modes, failure modes become checks and judges, checks and judges produce regression cases, and a regular review turns recent failures into decisions. The loop only works if it closes: new production failures re-enter as traces and regression cases rather than disappearing into Slack.
+</figcaption>
+</figure>
+</div>
+<section id="traces" class="level3">
+<h3 class="anchored" data-anchor-id="traces">1. Traces</h3>
+<p>A trace records one agent run: state, retrieved context, actions, tool calls, verification, and the final state it saved. It shows how the agent got there, not just where it ended up.</p>
+<p>An agent’s final message often hides the real failure. The intake agent might say: <em>“Thanks, I captured your request and will route it to our support team for review.”</em> The trace may show that it classified the issue as “billing” instead of “refund,” failed to copy the order ID into the handoff, and marked the user’s frustration as “low” despite the message <em>“I’ve asked about this three times already.”</em></p>
+<p>Reading only the final answer misses the first bad move. A malformed handoff at turn five may trace back to a misclassification at turn three.</p>
+<div id="fig-first-bad-move" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two panels. Top, what a final-answer check sees: the agent message, quote, Thanks, I captured your request and will route it to the support team, unquote, with a green PASS badge. Bottom, what the trace shows: four turn cards. Turns 1 to 2, issue captured, ok. Turn 3, classified billing, marked wrong with should be refund, tagged FIRST BAD MOVE. Turn 4, frustration set to low, marked wrong, user said asked three times. Turn 5, handoff written, marked wrong, order ID dropped. An arrow runs from Turn 5 back to Turn 3 labelled traces back to. Caption: eval that reads only the final answer misses the first bad move.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-first-bad-move-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/llm-evaluation-honestly/01-stop-vibe-checking/trace_first_bad_move.png" class="img-fluid figure-img" alt="Two panels. Top, what a final-answer check sees: the agent message, quote, Thanks, I captured your request and will route it to the support team, unquote, with a green PASS badge. Bottom, what the trace shows: four turn cards. Turns 1 to 2, issue captured, ok. Turn 3, classified billing, marked wrong with should be refund, tagged FIRST BAD MOVE. Turn 4, frustration set to low, marked wrong, user said asked three times. Turn 5, handoff written, marked wrong, order ID dropped. An arrow runs from Turn 5 back to Turn 3 labelled traces back to. Caption: eval that reads only the final answer misses the first bad move.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-first-bad-move-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: The final answer hides the first bad move. A final-answer check sees only the agent’s closing message, which reads fine and would pass. The trace shows the run was already broken: at turn 3 the issue was misclassified as billing instead of refund (the first bad move), which propagated to a mismarked frustration level at turn 4 and a handoff with the order ID dropped at turn 5. The turn-5 failure traces back to the turn-3 misclassification.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="labels" class="level3">
+<h3 class="anchored" data-anchor-id="labels">2. Labels</h3>
+<p>A label is a human judgment attached to a trace: pass or fail, plus a short critique. For example: <em>“Failed: agent routed the case as billing instead of refund at turn three; downstream handoff omitted refund-request status.”</em> That critique tells the team what failed, where, and what to watch for. A score of 3 out of 5 does not.</p>
+</section>
+<section id="failure-modes" class="level3">
+<h3 class="anchored" data-anchor-id="failure-modes">3. Failure modes</h3>
+<p>After reading thirty or forty labeled traces, <strong>failure modes</strong> emerge: refund language the agent should not have used, redundant clarifying questions, dropped order IDs, missing handoff fields. Without them, every problem collapses into “the prompt is bad.”</p>
+<p><a href="../../../../posts/series/llm-evaluation-honestly/02-eval-dataset/index.html">A later article</a> goes deeper on building this dataset: which traces to sample, how to label them, and how failure modes emerge from reading real runs.</p>
+</section>
+<section id="checks-and-judges" class="level3">
+<h3 class="anchored" data-anchor-id="checks-and-judges">4. Checks and judges</h3>
+<p>Each important failure mode should become either a check or a judge.</p>
+<ul>
+<li><strong>A check</strong> is a function that examines a trace and returns pass or fail without an LLM call. Use checks for structural failures: refund language appears, a required field is missing, the handoff schema is invalid, or the order ID was dropped.</li>
+<li><strong>A judge</strong> is a separate LLM that examines a trace and returns a verdict on something a function cannot reliably decide. Use judges for semantic failures: the clarifying question was redundant, the tone was wrong, or the agent answered the wrong question.</li>
+</ul>
+<div id="fig-check-or-judge" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two cards. Left, CHECK: a function, no LLM call; use for structural failures; examples refund language present, required field missing, order ID dropped; cheap and deterministic, run it on every change. Right, JUDGE: a separate LLM call; use for semantic failures; examples redundant clarifying question, wrong tone, answered the wrong question; needs calibration against human labels. Footer rule: structural goes to a check, semantic goes to a judge; if code can decide it, don't ask an LLM.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-check-or-judge-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/llm-evaluation-honestly/01-stop-vibe-checking/check_or_judge.png" class="img-fluid figure-img" alt="Two cards. Left, CHECK: a function, no LLM call; use for structural failures; examples refund language present, required field missing, order ID dropped; cheap and deterministic, run it on every change. Right, JUDGE: a separate LLM call; use for semantic failures; examples redundant clarifying question, wrong tone, answered the wrong question; needs calibration against human labels. Footer rule: structural goes to a check, semantic goes to a judge; if code can decide it, don't ask an LLM.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-check-or-judge-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: Check or judge? A check is a deterministic function with no LLM call, used for structural failures (refund language present, required field missing, order ID dropped); it is cheap and should run on every change. A judge is a separate LLM call, used for semantic failures (redundant clarifying question, wrong tone, answered the wrong question); it needs calibration against human labels before it can be trusted.
+</figcaption>
+</figure>
+</div>
+<p>For example, “the agent must never promise a refund” should be a code check:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> evaluate_no_refund_promise(trace) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-&gt;</span> Score:</span>
+<span id="cb1-2">    response <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> trace.outputs.get(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"agent_response"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">""</span>)</span>
+<span id="cb1-3">    matches <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> find_matches(response, REFUND_PROMISE_PATTERNS)</span>
+<span id="cb1-4"></span>
+<span id="cb1-5">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> matches:</span>
+<span id="cb1-6">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> Score(</span>
+<span id="cb1-7">            passed<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>,</span>
+<span id="cb1-8">            reason<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f"Refund-promise language: </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>matches<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span>,</span>
+<span id="cb1-9">        )</span>
+<span id="cb1-10"></span>
+<span id="cb1-11">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> Score(passed<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>, reason<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"No refund-promise language"</span>)</span></code></pre></div></div>
+<p>Checks are cheap and deterministic. Run them on every important change.</p>
+<p>Judges need <strong>calibration</strong>: run the judge on traces humans have already labeled, then look at where it agrees, where it misses failures humans caught, and where it flags cases humans considered acceptable. Calibration tells you whether the judge is reliable enough to support the decision you want it to support.</p>
+<p><a href="../../../../posts/series/llm-evaluation-honestly/03-judge-vs-code/index.html">Don’t ask an LLM judge what code can check</a> focuses on when a failure should become a code check versus an LLM judge. <a href="../../../../posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.html">Your LLM judge is a classifier</a> goes deeper on judge calibration.</p>
+</section>
+<section id="regression-cases" class="level3">
+<h3 class="anchored" data-anchor-id="regression-cases">5. Regression cases</h3>
+<p>A regression case is a real failure saved so future versions have to pass it.</p>
+<p>If the intake agent once promised a refund, dropped an order ID, or asked for information the user already provided, that trace becomes a fixed case in the regression suite. Ten or fifteen real failures are enough to make the system harder to break in the same way twice.</p>
+<p>Run the regression suite before important merges. If the new version fails cases the old version passed, the team should understand why before shipping.</p>
+<p>Eval scores are samples, not truth covers what changes once raw pass rates are no longer enough and you need to think about uncertainty, sample size, and meaningful differences between versions.</p>
+</section>
+<section id="review-and-decisions" class="level3">
+<h3 class="anchored" data-anchor-id="review-and-decisions">6. Review and decisions</h3>
+<p>The loop only matters if it changes what the team does. A failed check blocks a merge, a spike in redundant-question failures triggers investigation, a new production failure becomes a regression case, a judge disagreement becomes a calibration example.</p>
+<p>Pull a small sample of recent failures regularly, read them end-to-end, and ask whether they reveal a pattern the current dataset misses. The habit is simple: new failures feed back into the eval loop instead of disappearing into Slack.</p>
+<p>Your eval system also drifts returns to this production loop: how new failures from real usage become new eval cases, alerts, and hardening work.</p>
+</section>
+<section id="a-concrete-first-version" class="level3">
+<h3 class="anchored" data-anchor-id="a-concrete-first-version">A concrete first version</h3>
+<p>The first version for the intake agent might look like this:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Piece</th>
+<th>First version</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Traces</td>
+<td>~50 intake traces, synthetic if pre-launch or sampled from production once traffic exists</td>
+</tr>
+<tr class="even">
+<td>Labels</td>
+<td>Pass/fail plus short critiques explaining the first bad move</td>
+</tr>
+<tr class="odd">
+<td>Failure modes</td>
+<td>Recurring patterns of mistakes (e.g.&nbsp;“promises refunds”, “drops order IDs”)</td>
+</tr>
+<tr class="even">
+<td>Checks and judges</td>
+<td>Code checks for the structural ones; one calibrated judge for redundant clarifying questions</td>
+</tr>
+<tr class="odd">
+<td>Regression cases</td>
+<td>10–15 real historical failures fixed as test cases</td>
+</tr>
+<tr class="even">
+<td>Review</td>
+<td>Regular review of recent failures and judge disagreements</td>
+</tr>
+</tbody>
+</table>
+<p>The numbers are illustrative. The shape matters: start small, use real failures, make every new failure feed back into the loop.</p>
+</section>
+</section>
+<section id="the-smallest-useful-promise" class="level2">
+<h2 class="anchored" data-anchor-id="the-smallest-useful-promise">The smallest useful promise</h2>
+<p>Having a minimal eval loop in place is enough to change how the team builds. “Does v2 feel better?” becomes “Which failure modes improved, which regressed, and do we trust the measurement?” Eval stops being a side research exercise and becomes part of the engineering loop.</p>
+<p><strong>The harness made the agent’s behavior observable, the eval system turns that behavior into evidence, and the hardening loop turns evidence into a system harder to break.</strong></p>
+<p>The <a href="../../../../posts/series/llm-evaluation-honestly/02-eval-dataset/index.html">next article</a> goes one layer deeper: the eval dataset.</p>
+
+
+</section>
+
+ ]]></description>
+  <category>LLM evaluation, honestly</category>
+  <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/01-stop-vibe-checking/</guid>
+  <pubDate>Fri, 15 May 2026 00:00:00 GMT</pubDate>
+</item>
 </channel>
 </rss>

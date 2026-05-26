@@ -2,6 +2,17 @@
   {
     "listing": "/writing.html",
     "items": [
+      "/posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.html",
+      "/posts/series/llm-evaluation-honestly/03-judge-vs-code/index.html",
+      "/posts/series/llm-evaluation-honestly/02-eval-dataset/index.html",
+      "/posts/series/llm-evaluation-honestly/01-stop-vibe-checking/index.html",
+      "/posts/series/the-agent-harness/05-traces/index.html",
+      "/posts/series/the-agent-harness/04-prompts-gate/index.html",
+      "/posts/series/the-agent-harness/03-state-not-transcript/index.html",
+      "/posts/series/the-agent-harness/02-harness-is-the-product/index.html",
+      "/posts/series/the-agent-harness/01-demos-break/index.html",
+      "/posts/series/what-an-agent-actually-is/02-agent-frameworks/index.html",
+      "/posts/series/what-an-agent-actually-is/01-what-is-an-agent/index.html",
       "/posts/series/research-foundations-of-modern-llms/05-information-extraction/index.html",
       "/posts/series/research-foundations-of-modern-llms/04-fine-tuning-stack/index.html",
       "/posts/series/research-foundations-of-modern-llms/03-retrieval/index.html",
@@ -30,11 +41,19 @@
   },
   {
     "listing": "/posts/series/llm-evaluation-honestly/index.html",
-    "items": []
+    "items": [
+      "/posts/series/llm-evaluation-honestly/01-stop-vibe-checking/index.html",
+      "/posts/series/llm-evaluation-honestly/02-eval-dataset/index.html",
+      "/posts/series/llm-evaluation-honestly/03-judge-vs-code/index.html",
+      "/posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.html"
+    ]
   },
   {
     "listing": "/posts/series/what-an-agent-actually-is/index.html",
-    "items": []
+    "items": [
+      "/posts/series/what-an-agent-actually-is/01-what-is-an-agent/index.html",
+      "/posts/series/what-an-agent-actually-is/02-agent-frameworks/index.html"
+    ]
   },
   {
     "listing": "/posts/series/research-foundations-of-modern-llms/index.html",
@@ -48,7 +67,13 @@
   },
   {
     "listing": "/posts/series/the-agent-harness/index.html",
-    "items": []
+    "items": [
+      "/posts/series/the-agent-harness/01-demos-break/index.html",
+      "/posts/series/the-agent-harness/02-harness-is-the-product/index.html",
+      "/posts/series/the-agent-harness/03-state-not-transcript/index.html",
+      "/posts/series/the-agent-harness/04-prompts-gate/index.html",
+      "/posts/series/the-agent-harness/05-traces/index.html"
+    ]
   },
   {
     "listing": "/series.html",

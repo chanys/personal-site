@@ -1,2 +1,1179 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"></html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Yee Seng Chan">
+<meta name="description" content="The model emits, the API parses, your code dispatches and loops.">
+
+<title>Behind the scenes of AI agent frameworks – Yee Seng Chan</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<link href="../../../../favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap-7b53549d121f5930ef88eb09dda4672c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-3874333d9529686a5a4437217f193688.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-7b53549d121f5930ef88eb09dda4672c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+
+
+<link rel="stylesheet" href="../../../../styles.css">
+<meta property="og:title" content="Behind the scenes of AI agent frameworks – Yee Seng Chan">
+<meta property="og:description" content="The model emits, the API parses, your code dispatches and loops.">
+<meta property="og:image" content="https://yeesengchan.com/posts/series/what-an-agent-actually-is/02-agent-frameworks/agent_loop.png">
+<meta property="og:site_name" content="Yee Seng Chan">
+<meta property="og:image:alt" content="A diagram of one iteration of an agentic loop across three layers. The layers each perform part of the work, and a messages array is shown crossing the boundary between them on every iteration: passed in, added to, and passed back. An annotation notes that in a manual implementation the messages array lives in the application code and is re-sent in full on each loop rather than being held by the framework.">
+<meta property="og:image:height" content="1226">
+<meta property="og:image:width" content="1920">
+<meta name="twitter:title" content="Behind the scenes of AI agent frameworks – Yee Seng Chan">
+<meta name="twitter:description" content="The model emits, the API parses, your code dispatches and loops.">
+<meta name="twitter:image" content="https://yeesengchan.com/posts/series/what-an-agent-actually-is/02-agent-frameworks/agent_loop.png">
+<meta name="twitter:image:alt" content="A diagram of one iteration of an agentic loop across three layers. The layers each perform part of the work, and a messages array is shown crossing the boundary between them on every iteration: passed in, added to, and passed back. An annotation notes that in a manual implementation the messages array lives in the application code and is re-sent in full on each loop rather than being held by the framework.">
+<meta name="twitter:image-height" content="1226">
+<meta name="twitter:image-width" content="1920">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">Yee Seng Chan</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../writing.html"> 
+<span class="menu-text">Writing</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../series.html"> 
+<span class="menu-text">Series</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../projects.html"> 
+<span class="menu-text">Projects</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../../writing.xml"> <i class="bi bi-rss" role="img" aria-label="RSS feed">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/chanys"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://linkedin.com/in/yeesengchan"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:chanys.nlp@gmail.com"> <i class="bi bi-envelope" role="img" aria-label="Email">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Contents</h2>
+   
+  <ul class="collapse">
+  <li><a href="#the-three-layers-model-api-your-code" id="toc-the-three-layers-model-api-your-code" class="nav-link active" data-scroll-target="#the-three-layers-model-api-your-code">The three layers: model, API, your code</a></li>
+  <li><a href="#what-a-framework-hides" id="toc-what-a-framework-hides" class="nav-link" data-scroll-target="#what-a-framework-hides">What a framework hides</a></li>
+  <li><a href="#a-tiny-framework-example" id="toc-a-tiny-framework-example" class="nav-link" data-scroll-target="#a-tiny-framework-example">A tiny framework example</a></li>
+  <li><a href="#the-same-loop-without-the-framework" id="toc-the-same-loop-without-the-framework" class="nav-link" data-scroll-target="#the-same-loop-without-the-framework">The same loop without the framework</a></li>
+  <li><a href="#tracing-one-run" id="toc-tracing-one-run" class="nav-link" data-scroll-target="#tracing-one-run">Tracing one run</a></li>
+  <li><a href="#provider-shapes-differ-but-the-loop-is-the-same" id="toc-provider-shapes-differ-but-the-loop-is-the-same" class="nav-link" data-scroll-target="#provider-shapes-differ-but-the-loop-is-the-same">Provider shapes differ, but the loop is the same</a></li>
+  <li><a href="#debug-by-asking-which-layer-failed" id="toc-debug-by-asking-which-layer-failed" class="nav-link" data-scroll-target="#debug-by-asking-which-layer-failed">Debug by asking which layer failed</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Behind the scenes of AI agent frameworks</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">What an agent actually is</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    The model emits, the API parses, your code dispatches and loops.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Yee Seng Chan </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">2026 · April 14</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+What an agent actually is
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-what-is-an-agent/">What the heck is an AI agent?</a></li>
+<li><a href="../02-agent-frameworks/">Behind the scenes of AI agent frameworks</a></li>
+</ol>
+</div>
+<p><a href="../../../../posts/series/what-an-agent-actually-is/01-what-is-an-agent/index.html">The first article</a> treated “agent” as a region on a spectrum. This one goes inside one specific point on that spectrum, the loop-with-tools agent, and shows what’s actually happening when you call <code>Runner.run(agent, message)</code> or its equivalent.</p>
+<p>Frameworks like the OpenAI Agents SDK, LangChain, and LangGraph hide a lot of mechanics behind clean abstractions. That’s mostly a good thing. But when an agent misbehaves, calls the wrong tool, loops forever, returns garbage, the abstractions stop helping and the underlying mechanics start mattering. Debugging at that point requires distinguishing what the model does from what the API does from what your code does.</p>
+<section id="the-three-layers-model-api-your-code" class="level2">
+<h2 class="anchored" data-anchor-id="the-three-layers-model-api-your-code">The three layers: model, API, your code</h2>
+<p>Three layers do work in any agentic system:</p>
+<ul>
+<li>The <strong>model</strong> generates tokens. Given tool schemas in the prompt, those tokens include structured tool calls.</li>
+<li>The LLM <strong>API</strong> parses what the model generated, exposes it as a typed response, and labels why generation finished.</li>
+<li><strong>Your code</strong> (or the framework’s code on your behalf) maintains the conversation state, dispatches tool calls, and runs the loop.</li>
+</ul>
+<p>The rest of this article walks through one concrete loop end-to-end and names which layer does what at each step. Code is OpenAI-anchored; provider differences are discussed in a later section.</p>
+</section>
+<section id="what-a-framework-hides" class="level2">
+<h2 class="anchored" data-anchor-id="what-a-framework-hides">What a framework hides</h2>
+<p>An agent framework wraps four things for you:</p>
+<ul>
+<li><strong>Schema generation.</strong> Turns Python functions (type hints, Pydantic models, docstrings) into the JSON tool schemas the LLM API expects.</li>
+<li><strong>Message management.</strong> Maintains the conversation history, appending the model’s response and tool results in the right shape.</li>
+<li><strong>Tool dispatch.</strong> When the API returns tool calls, routes each call to the right Python function with the right arguments and captures the result.</li>
+<li><strong>Loop control.</strong> Calls the API, inspects the finish reason, decides whether to continue.</li>
+</ul>
+<p>The framework doesn’t change what the model or API do. It’s plumbing that you’d otherwise write yourself.</p>
+</section>
+<section id="a-tiny-framework-example" class="level2">
+<h2 class="anchored" data-anchor-id="a-tiny-framework-example">A tiny framework example</h2>
+<p>Here’s the OpenAI Agents SDK version of a small task: an agent that generates a few sales emails in different styles, picks the best, and sends it. Modest, but it exercises every mechanism the rest of this article explains.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> agents <span class="im">import</span> Agent, Runner, function_tool</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pydantic <span class="im">import</span> BaseModel, Field</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> GenerateEmailParams(BaseModel):</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    style: <span class="bu">str</span> <span class="op">=</span> Field(description<span class="op">=</span><span class="st">"'professional', 'engaging', or 'concise'"</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    include_data: <span class="bu">bool</span> <span class="op">=</span> Field(default<span class="op">=</span><span class="va">False</span>, description<span class="op">=</span><span class="st">"Include statistics?"</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    target_length: <span class="bu">str</span> <span class="op">=</span> Field(default<span class="op">=</span><span class="st">"medium"</span>, description<span class="op">=</span><span class="st">"'short', 'medium', or 'long'"</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="at">@function_tool</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> generate_email(params: GenerateEmailParams) <span class="op">-&gt;</span> <span class="bu">str</span>:</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Generate a sales email in the specified style."""</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="at">@function_tool</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> send_email(body: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="bu">dict</span>:</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Send an email to prospects."""</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>sales_manager <span class="op">=</span> Agent(</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">"Sales Manager"</span>,</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    instructions<span class="op">=</span><span class="st">"""You are a sales manager. Your job:</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="st">1. Generate three sales emails using generate_email with different styles.</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="st">2. Evaluate which is best.</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="st">3. If none are good enough, generate better versions.</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="st">4. Once satisfied, send the best one with send_email."""</span>,</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    tools<span class="op">=</span>[generate_email, send_email],</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> <span class="cf">await</span> Runner.run(sales_manager, <span class="st">"Send a cold sales email"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>About fifteen lines. The next section shows what those fifteen lines hide.</p>
+</section>
+<section id="the-same-loop-without-the-framework" class="level2">
+<h2 class="anchored" data-anchor-id="the-same-loop-without-the-framework">The same loop without the framework</h2>
+<p>Drop the framework and write the same task against the OpenAI API directly. This is partly an exercise in seeing what gets hidden, partly preparation for the moments when you need to reach into that hidden code.</p>
+<section id="send-tool-schemas" class="level3">
+<h3 class="anchored" data-anchor-id="send-tool-schemas">1. Send tool schemas</h3>
+<p>The model never sees your Python function. It sees a JSON schema in the <code>tools</code> parameter on the API request, with name, description, and parameters:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>generate_email_schema <span class="op">=</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"type"</span>: <span class="st">"function"</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"function"</span>: {</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">"name"</span>: <span class="st">"generate_email"</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"description"</span>: <span class="st">"Generate a sales email in the specified style."</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">"parameters"</span>: {</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>            <span class="st">"type"</span>: <span class="st">"object"</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>            <span class="st">"properties"</span>: {</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>                <span class="st">"style"</span>: {<span class="st">"type"</span>: <span class="st">"string"</span>, <span class="st">"description"</span>: <span class="st">"'professional', 'engaging', or 'concise'"</span>},</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>                <span class="st">"include_data"</span>: {<span class="st">"type"</span>: <span class="st">"boolean"</span>, <span class="st">"description"</span>: <span class="st">"Include statistics?"</span>},</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>                <span class="st">"target_length"</span>: {<span class="st">"type"</span>: <span class="st">"string"</span>, <span class="st">"description"</span>: <span class="st">"'short', 'medium', or 'long'"</span>},</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>            },</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>            <span class="st">"required"</span>: [<span class="st">"style"</span>],</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>        },</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The framework’s <code>@function_tool</code> decorator generates this from the Pydantic model and the docstring at import time. Without the framework you write it by hand for every tool, and keep it in sync when the function signature changes.</p>
+<p>One thing worth knowing now, because it determines how well the agent works: <strong>the schema is part of the prompt the model sees during generation.</strong> Vague parameter descriptions weaken the agent more than people expect. Treat schemas with the same care you’d treat a system prompt.</p>
+<p>The schema can also constrain values, but only for constraints you actually put in. If <code>style</code> should only be one of three strings, use an enum:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Without enum: model can emit any string for "style"</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">"style"</span>: {<span class="st">"type"</span>: <span class="st">"string"</span>, <span class="st">"description"</span>: <span class="st">"'professional', 'engaging', or 'concise'"</span>}</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># With enum: the API constrains the model to one of three values</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">"style"</span>: {<span class="st">"type"</span>: <span class="st">"string"</span>, <span class="st">"enum"</span>: [<span class="st">"professional"</span>, <span class="st">"engaging"</span>, <span class="st">"concise"</span>]}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The schema enforces what you specify. Anything beyond that (business rules, length limits, format checks) your code still has to validate after the call.</p>
+</section>
+<section id="how-tool-calls-actually-come-back" class="level3">
+<h3 class="anchored" data-anchor-id="how-tool-calls-actually-come-back">2. How tool calls actually come back</h3>
+<p>A persistent confusion: people think the model emits raw <code>&lt;tool_call&gt;</code> JSON tags as plain text, and the API parses that text post-hoc. That’s not what happens.</p>
+<p>When tool schemas are passed in the request, providers train the model to emit tool calls as structured output, not text the API has to fish through. The structure is surfaced in the response as a typed field (or list of typed blocks), separate from any text the model produced. An OpenAI response with a tool call looks like this:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"role"</span><span class="fu">:</span> <span class="st">"assistant"</span><span class="fu">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"content"</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"tool_calls"</span><span class="fu">:</span> <span class="ot">[</span><span class="fu">{</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"id"</span><span class="fu">:</span> <span class="st">"call_001"</span><span class="fu">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"type"</span><span class="fu">:</span> <span class="st">"function"</span><span class="fu">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"function"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"generate_email"</span><span class="fu">,</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"arguments"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">style</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">professional</span><span class="ch">\"</span><span class="st">}"</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span><span class="ot">]</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The model didn’t emit <code>&lt;tool_call&gt;...&lt;/tool_call&gt;</code> tags as plain text. It produced output that the API surfaces in a typed <code>tool_calls</code> field, with <code>content: null</code> because the model didn’t generate any text alongside.</p>
+</section>
+<section id="the-messages-array" class="level3">
+<h3 class="anchored" data-anchor-id="the-messages-array">3. The messages array</h3>
+<p>A conversation is a list of messages with roles. Four matter:</p>
+<ul>
+<li><code>system</code>: the instructions you set up the agent with.</li>
+<li><code>user</code>: what the user typed.</li>
+<li><code>assistant</code>: what the model generated. Either text content, structured tool calls, or both.</li>
+<li><code>tool</code>: the result of executing a tool call, tagged with the originating <code>tool_call_id</code>.</li>
+</ul>
+<p>Starting state for our task:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>messages <span class="op">=</span> [</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    {<span class="st">"role"</span>: <span class="st">"system"</span>, <span class="st">"content"</span>: <span class="st">"You are a sales manager. ..."</span>},</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    {<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: <span class="st">"Send a cold sales email"</span>},</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The framework constructs this from your <code>Agent(...)</code> and <code>Runner.run(...)</code> arguments. Without it, you build the array yourself and append to it on every iteration.</p>
+<p>In a manual loop, history is just a list you keep appending to. Frameworks can store that list for you between calls, and OpenAI’s Responses API can offload it to the server entirely via <code>previous_response_id</code> or a <code>conversation</code> ID, so your client doesn’t physically resend prior messages. Where the storage lives changes the bill but not the principle: the model’s next step is always conditioned on accumulated history, and that history grows unless you trim, summarize, or externalize it. The rest of this article stays in the manual mode, where the array is unambiguously your code’s job.</p>
+</section>
+<section id="the-finish-reason" class="level3">
+<h3 class="anchored" data-anchor-id="the-finish-reason">4. The finish reason</h3>
+<p>When the API returns a response, it includes a <code>finish_reason</code> field telling you why generation stopped. The four values that matter:</p>
+<ul>
+<li><code>stop</code>: the model finished naturally. Use the response and exit the loop.</li>
+<li><code>tool_calls</code>: the model emitted tool calls. Execute them, append results, continue.</li>
+<li><code>length</code>: generation hit the token limit. Response is truncated.</li>
+<li><code>content_filter</code>: the API’s safety filter intervened.</li>
+</ul>
+<p><code>finish_reason</code> is the API’s label for what just happened, not a decision the model made. The model emits tokens; the API examines what was emitted and applies the label. If the output ended with structured tool-call tokens, the API labels it <code>tool_calls</code>. If the budget was hit mid-generation, the API labels it <code>length</code>. Knowing which layer the signal comes from is the first move in debugging.</p>
+</section>
+<section id="the-loop-itself" class="level3">
+<h3 class="anchored" data-anchor-id="the-loop-itself">5. The loop itself</h3>
+<p>The loop is short:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    response <span class="op">=</span> client.chat.completions.create(</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>        model<span class="op">=</span><span class="st">"gpt-5.4-mini"</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        messages<span class="op">=</span>messages,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        tools<span class="op">=</span>[generate_email_schema, send_email_schema],</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    msg <span class="op">=</span> response.choices[<span class="dv">0</span>].message</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    messages.append(msg)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> response.choices[<span class="dv">0</span>].finish_reason <span class="op">==</span> <span class="st">"stop"</span>:</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> msg.content</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> call <span class="kw">in</span> msg.tool_calls <span class="kw">or</span> []:</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>        name <span class="op">=</span> call.function.name</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>        args <span class="op">=</span> json.loads(call.function.arguments)</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>        result <span class="op">=</span> dispatch_tool(name, args)</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>        messages.append({</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>            <span class="st">"role"</span>: <span class="st">"tool"</span>,</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>            <span class="st">"tool_call_id"</span>: call.<span class="bu">id</span>,</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>            <span class="st">"content"</span>: result <span class="cf">if</span> <span class="bu">isinstance</span>(result, <span class="bu">str</span>) <span class="cf">else</span> json.dumps(result),</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>        })</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>That is the loop. Frameworks add tracing, retries, sessions, handoffs, max-turn limits, and nicer tool registration on top. The core mechanics are: call model, inspect tool calls, run tools, append results, repeat.</p>
+<div id="fig-agentic-loop" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A diagram of one iteration of an agentic loop across three layers. The layers each perform part of the work, and a messages array is shown crossing the boundary between them on every iteration: passed in, added to, and passed back. An annotation notes that in a manual implementation the messages array lives in the application code and is re-sent in full on each loop rather than being held by the framework.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-agentic-loop-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="agent_loop.png" class="img-fluid figure-img" alt="A diagram of one iteration of an agentic loop across three layers. The layers each perform part of the work, and a messages array is shown crossing the boundary between them on every iteration: passed in, added to, and passed back. An annotation notes that in a manual implementation the messages array lives in the application code and is re-sent in full on each loop rather than being held by the framework.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-agentic-loop-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: One iteration of the agentic loop. Three layers do work; the messages array crosses the boundary between them on every iteration. In a manual implementation, the array lives in your code and re-sends in full each loop.
+</figcaption>
+</figure>
+</div>
+</section>
+</section>
+<section id="tracing-one-run" class="level2">
+<h2 class="anchored" data-anchor-id="tracing-one-run">Tracing one run</h2>
+<p>Here’s what actually happens when the agent runs the sales-email task.</p>
+<p><strong>Loop 1.</strong> The messages array contains just the system instructions and the user query. The model reads its instructions, sees that it has <code>generate_email</code> and <code>send_email</code> available, and emits structured output describing three parallel tool calls, one per style. The API parses those tokens into a <code>tool_calls</code> field and sets <code>finish_reason="tool_calls"</code>. The assistant message looks like this:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"role"</span>: <span class="st">"assistant"</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"content"</span>: null,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"tool_calls"</span>: [</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    {<span class="st">"id"</span>: <span class="st">"call_001"</span>, <span class="st">"type"</span>: <span class="st">"function"</span>,</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>     <span class="st">"function"</span>: {<span class="st">"name"</span>: <span class="st">"generate_email"</span>, <span class="st">"arguments"</span>: <span class="st">"{</span><span class="ch">\"</span><span class="st">style</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">professional</span><span class="ch">\"</span><span class="st">}"</span>}},</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    {<span class="st">"id"</span>: <span class="st">"call_002"</span>, <span class="st">"type"</span>: <span class="st">"function"</span>,</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>     <span class="st">"function"</span>: {<span class="st">"name"</span>: <span class="st">"generate_email"</span>, <span class="st">"arguments"</span>: <span class="st">"{</span><span class="ch">\"</span><span class="st">style</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">engaging</span><span class="ch">\"</span><span class="st">}"</span>}},</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    {<span class="st">"id"</span>: <span class="st">"call_003"</span>, <span class="st">"type"</span>: <span class="st">"function"</span>,</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>     <span class="st">"function"</span>: {<span class="st">"name"</span>: <span class="st">"generate_email"</span>, <span class="st">"arguments"</span>: <span class="st">"{</span><span class="ch">\"</span><span class="st">style</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">concise</span><span class="ch">\"</span><span class="st">}"</span>}}</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  ]</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Your code appends that to the messages array, dispatches each tool call to <code>generate_email</code>, captures the results, and appends a <code>tool</code> message for each, tagged with the originating <code>tool_call_id</code>:</p>
+<pre><code>{"role": "tool", "tool_call_id": "call_001", "content": "Subject: Streamlining your Q4 operations\n\nDear..."}</code></pre>
+<p>The messages array now has six entries: <code>system</code>, <code>user</code>, <code>assistant</code> (with three tool calls), <code>tool</code>, <code>tool</code>, <code>tool</code>.</p>
+<p><strong>Loop 2.</strong> Second API call. The model is now seeing the system prompt, the user query, the three tool calls it made, and the three emails the tools produced. It evaluates them, the professional one is generic, the engaging one too casual, the concise one lacks credibility, and emits two new <code>generate_email</code> calls with <code>include_data=true</code> and adjusted lengths. The model didn’t “remember” anything between loops; models are stateless. The continuity is your code’s responsibility, sitting in the messages array that gets re-sent each iteration.</p>
+<p><strong>Loop 3.</strong> Your code dispatches the two retries. By now the array contains ten entries and five emails worth of text. Every loop iteration re-sends the entire array, so by Loop 3 you’re paying input tokens on the system prompt, the user query, three full email texts from Loop 1, two more from Loop 2, and the assistant messages tying them together. Server-managed state via <code>previous_response_id</code> avoids the physical re-upload, but the conceptual cost is the same: the model attends to all accumulated history on every step, and the token bill reflects that. This is one of the main reasons production agents trim, summarize, or compress their context as it grows. The framework hides the loop but it doesn’t hide the bill.</p>
+<p><strong>Loops 4-5.</strong> The pattern repeats. The model sees the five emails, picks the strongest, and emits a single <code>send_email</code> call. Your code dispatches it. The next API call has nothing left to do; the model generates a brief confirmation in plain text, no tool calls, and the API sets <code>finish_reason="stop"</code>. Your code returns the assistant message and exits.</p>
+<p>Five loops, multiple API round trips, tool executions, one cold sales email sent. The framework’s <code>Runner.run()</code> collapses all of that into one line.</p>
+</section>
+<section id="provider-shapes-differ-but-the-loop-is-the-same" class="level2">
+<h2 class="anchored" data-anchor-id="provider-shapes-differ-but-the-loop-is-the-same">Provider shapes differ, but the loop is the same</h2>
+<p>The article so far has used OpenAI. Other providers expose tool calls in different response shapes, but the idea is the same: the model chooses a tool name and arguments, and the API returns that choice in structured fields rather than as ordinary prose.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># OpenAI: tool_calls list on the message</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>message.tool_calls[<span class="dv">0</span>].function.name</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>message.tool_calls[<span class="dv">0</span>].function.arguments    <span class="co"># JSON string</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Anthropic: content blocks with type "tool_use"</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>block <span class="op">=</span> message.content[<span class="dv">0</span>]</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>block.<span class="bu">type</span> <span class="op">==</span> <span class="st">"tool_use"</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>block.name</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>block.<span class="bu">input</span>                                  <span class="co"># dict</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Gemini: parts inside the candidate's content</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>part <span class="op">=</span> response.candidates[<span class="dv">0</span>].content.parts[<span class="dv">0</span>]</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>part.function_call.name</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>part.function_call.args                      <span class="co"># dict</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The field names differ, but your job is the same: read the tool name and arguments, execute the corresponding function, append the result, and call the model again. The three-layer model (model emits, API parses, your code dispatches) holds across all three providers.</p>
+</section>
+<section id="debug-by-asking-which-layer-failed" class="level2">
+<h2 class="anchored" data-anchor-id="debug-by-asking-which-layer-failed">Debug by asking which layer failed</h2>
+<p>When something goes wrong, the symptom often surfaces in the framework layer (an exception, a malformed response, a stuck loop), but the cause may be in any of the three. The fastest path back to working is asking which layer did something other than what you expected.</p>
+<ul>
+<li><strong>Did the model choose the wrong tool or wrong arguments?</strong> That’s a model failure. The framework reports it but doesn’t cause it. Fix: improve the system prompt, sharpen the schema descriptions, add an enum where you assumed strings would be free-form.</li>
+<li><strong>Did the API parse and return the tool call correctly?</strong> Almost always yes for tool-call shape, since structured output is constrained at the API boundary. But <code>finish_reason</code> values come from the API and tell you why generation stopped (<code>length</code>, <code>content_filter</code>, etc.), not what the model decided.</li>
+<li><strong>Did your code dispatch the tool, append the result, and continue the loop correctly?</strong> This is where most bugs in a manual implementation live, and where <a href="../../../../posts/series/the-agent-harness/05-traces/index.html">most bugs in a framework implementation are hidden behind abstractions you can’t see</a>. Drop down to the API call directly when in doubt; the framework can be a fog over what the model is actually emitting.</li>
+</ul>
+<p>The useful mental model is short: <strong>the model emits, the API parses, your code dispatches and loops.</strong> Frameworks are convenience layered over those three steps.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/yeesengchan\.com");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+© 2026 Yee Seng Chan
+</div>   
+    <div class="nav-footer-center">
+Built with <a href="https://quarto.org">Quarto</a>
+</div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/chanys">
+      <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://linkedin.com/in/yeesengchan">
+      <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="../../../../writing.xml">
+      <i class="bi bi-rss" role="img" aria-label="RSS feed">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+<script>
+(() => {
+  if (!document.querySelector('.series-nav')) return;
+  const toc = document.querySelector('nav#TOC[role="doc-toc"]');
+  if (!toc) return;
+  const links = [...toc.querySelectorAll('a[data-scroll-target]')];
+  if (!links.length) return;
+  const sections = links.map((link) => {
+    const target = link.getAttribute('data-scroll-target') || '';
+    return target.startsWith('#')
+      ? document.getElementById(decodeURI(target.slice(1)))
+      : null;
+  });
+  // Distance below viewport top at which a heading is treated as
+  // "the current section." Small, so the highlight matches what a
+  // reader perceives as the heading at the top of the page.
+  const ACTIVATION_OFFSET = 80;
+  const apply = () => {
+    let idx = 0;
+    const atBottom = window.innerHeight + window.pageYOffset
+      >= document.documentElement.scrollHeight - 2;
+    if (atBottom) {
+      idx = sections.length - 1;
+    } else {
+      for (let i = 0; i < sections.length; i++) {
+        const s = sections[i];
+        if (s && s.getBoundingClientRect().top <= ACTIVATION_OFFSET) idx = i;
+      }
+    }
+    for (let i = 0; i < links.length; i++) {
+      links[i].classList.toggle('active', i === idx);
+    }
+  };
+  // rAF ensures we run after Quarto's synchronous scroll handler
+  // so our active-class choice wins.
+  let pending = false;
+  const schedule = () => {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => { apply(); pending = false; });
+  };
+  schedule();
+  document.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule);
+  window.addEventListener('load', schedule);
+})();
+</script>
+
+
+
+
+</body></html>
