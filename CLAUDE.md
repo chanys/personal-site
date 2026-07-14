@@ -20,6 +20,19 @@ Always `quarto preview` (or `render`) after edits and read the console:
 Quarto warnings are signal, not noise. Do not hand-edit `_site/` or `.quarto/`
 (generated; git-ignored).
 
+Build gotchas (each bit us before):
+- SCSS/token changes need a **full** `quarto render`; `quarto render x.qmd`
+  reuses the cached theme CSS. A full render writes a **new hashed**
+  `bootstrap-*.min.css` — grep the file the page actually references, not a
+  stale hash, or you'll "verify" old output.
+- `_quarto.yml` changes (fonts, `filters`, `include-in-header`) need a preview
+  **restart**, not just a reload.
+- Theme default is deterministic: Quarto ignores OS `prefers-color-scheme` and
+  uses the saved `quarto-color-scheme` localStorage (`alternate` = dark) else
+  the first-listed theme (light).
+- A markdown image on its own line becomes a `<figure>`, and `fig-alt` renders
+  as a visible `<figcaption>`. For a chromeless image use raw `<img>` HTML.
+
 ## Two hard rules (these already broke the build once)
 
 1. **No `url(...)` in any CSS Quarto scans.** Quarto's dependency copier reads
@@ -44,11 +57,15 @@ Quarto warnings are signal, not noise. Do not hand-edit `_site/` or `.quarto/`
 ## File map
 
 ```
-_quarto.yml            nav, theme array, fonts (Google Fonts via header), footer
+_quarto.yml            nav, theme array, fonts + GoatCounter (via header),
+                       seo-meta.lua filter, footer
 theme.scss             light: Bootstrap literals + --fn-* light tokens
 theme-dark.scss        dark:  Bootstrap literals + --fn-* dark tokens
 fieldnotes-rules.scss  shared component rules (loaded after both themes)
 styles.css             tiny additive-only extras (focus ring, print)
+seo-meta.lua           per-page SEO filter: canonical, og:url/type, JSON-LD
+                       (Person+WebSite on home, BlogPosting on posts). Reads the
+                       ISO date from front matter (meta.date is pre-formatted).
 index.qmd              home (trestles "about" landing)
 writing.qmd            blog index (lists standalone posts + series landings)
 series.qmd             lists series only
@@ -93,16 +110,27 @@ Theme files are listed as arrays in `_quarto.yml`
 
 ## Design system (don't drift)
 
-Direction: **"Field Notes"** — editorial-technical, warm paper/ink, a single
-signal-vermilion accent used sparingly, serif system for long-form reading.
-The opposite of generic AI-template styling. Preserve this character; avoid
-adding gradients, drop shadows, rounded "card" UI, or extra accent colours.
+Direction: **"Ground Truth"** — an annotated-corpus / evaluation aesthetic for
+an information-extraction and LLM-reliability scientist. Cool near-white paper,
+crisp white content surfaces, a single ink-blue signal, serif reading body.
+Editorial-technical, not generic AI-template. Preserve this character; avoid
+gradients, drop shadows, rounded "card" UI, muddy/greige backgrounds, and extra
+accent colours (semantic data-viz colours inside figures are fine).
 
-- **Type:** Fraunces (display/headings/nameplate), Newsreader (body),
-  IBM Plex Mono (dates, code, metadata, nav). Loaded via Google Fonts in
-  `_quarto.yml` `include-in-header`. Don't swap fonts without reason.
+- **Signature:** the labeled **span-tag** (`.gt-span`, warm variant
+  `.gt-span.gt-b`, label from `data-tag`) — a phrase highlighted like an
+  annotation span. Lives on the home hero (`.gt-hero` in `index.qmd`). Use it
+  sparingly; it is the one memorable device.
+- **Type:** Bricolage Grotesque (display/headings/nameplate), Source Serif 4
+  (body + italic dek), IBM Plex Mono (dates, code, labels, nav). Loaded via
+  Google Fonts in `_quarto.yml` `include-in-header`. Don't swap without reason,
+  and avoid faces the impeccable hook flags as overused (e.g. Space Grotesk).
 - **Tokens** (`--fn-*`): `paper`, `paper-sink`, `card`, `ink`, `ink-soft`,
-  `hairline`, `accent`, `accent-deep`, `grain-opacity`, `navbar-bg`.
+  `hairline`, `accent` (ink-blue), `accent-deep`, `grain-opacity`, `navbar-bg`,
+  plus the span tones `span-a` / `span-a-tag` / `span-b` / `span-b-tag`.
+- Background is a clean near-white with grain a whisper (0.1), not textured
+  paper. Code blocks carry a mono language-header strip; the article meta is a
+  single condensed date line under the category pill.
 - Both light and dark must stay tuned. If you touch one, check the other in
   `quarto preview` (theme toggle, top-right).
 - Motion: one quiet staggered page-load reveal, gated on
