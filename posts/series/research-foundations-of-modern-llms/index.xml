@@ -14,8 +14,8 @@
 <title>Research foundations of modern LLMs — series</title>
 <link>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/</link>
 </image>
-<generator>quarto-1.9.38</generator>
-<lastBuildDate>Sun, 05 Apr 2026 00:00:00 GMT</lastBuildDate>
+<generator>quarto-1.9.37</generator>
+<lastBuildDate>Sun, 05 Apr 2026 04:00:00 GMT</lastBuildDate>
 <item>
   <title>Information extraction didn’t disappear. It moved inside the workflow.</title>
   <dc:creator>Yee Seng Chan</dc:creator>
@@ -310,7 +310,7 @@ Zhang, Zikun, Wei You, Tongtao Wu, Xiaolong Wang, Jianxin Li, and Min Zhang. 202
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/05-information-extraction/</guid>
-  <pubDate>Sun, 05 Apr 2026 00:00:00 GMT</pubDate>
+  <pubDate>Sun, 05 Apr 2026 04:00:00 GMT</pubDate>
 </item>
 <item>
   <title>The fine-tuning stack: one loss, different data</title>
@@ -469,7 +469,7 @@ Zhou, Chunting, Pengfei Liu, Puxin Xu, et al. 2023. <span>“LIMA: Less Is More 
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/04-fine-tuning-stack/</guid>
-  <pubDate>Tue, 31 Mar 2026 00:00:00 GMT</pubDate>
+  <pubDate>Tue, 31 Mar 2026 04:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Retrieval is older than RAG: from DPR to end-to-end</title>
@@ -659,7 +659,7 @@ Siriwardhana, Shamane, Rivindu Weerasekera, Elliott Wen, Tharindu Kaluarachchi, 
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/03-retrieval/</guid>
-  <pubDate>Fri, 27 Mar 2026 00:00:00 GMT</pubDate>
+  <pubDate>Fri, 27 Mar 2026 04:00:00 GMT</pubDate>
 </item>
 <item>
   <title>The encoder didn’t die. It became the embedding model</title>
@@ -800,7 +800,7 @@ Wang, Liang, Nan Yang, Xiaolong Huang, et al. 2022. <span>“Text Embeddings by 
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/02-encoder-embeddings/</guid>
-  <pubDate>Mon, 23 Mar 2026 00:00:00 GMT</pubDate>
+  <pubDate>Mon, 23 Mar 2026 04:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Pretraining objectives: why decoder-only won</title>
@@ -1011,7 +1011,7 @@ Tay, Yi, Mostafa Dehghani, Vinh Q. Tran, et al. 2023. <span>“UL2: Unifying Lan
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/</guid>
-  <pubDate>Wed, 18 Mar 2026 00:00:00 GMT</pubDate>
+  <pubDate>Wed, 18 Mar 2026 04:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
