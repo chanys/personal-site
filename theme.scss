@@ -7,9 +7,9 @@
 //  The design palette lives as CSS custom properties in the rules block.
 // ===========================================================================
 
-$font-family-sans-serif: "Newsreader", Iowan Old Style, Georgia, Cambria, "Times New Roman", serif;
+$font-family-sans-serif: "Source Serif 4", Iowan Old Style, Georgia, Cambria, "Times New Roman", serif;
 $font-family-monospace:  "IBM Plex Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace;
-$headings-font-family:   "Fraunces", Iowan Old Style, Georgia, serif;
+$headings-font-family:   "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
 
 $font-size-root:   18px;
 $font-size-base:   1rem;
@@ -18,48 +18,56 @@ $line-height-base: 1.72;
 $headings-font-weight: 600;
 $headings-line-height: 1.12;
 
-$body-bg:    #FBF6EC;
-$body-color: #1F1B16;
+$body-bg:    #FBFBF9;
+$body-color: #191C20;
 
-$link-color:        #C23A1B;
-$link-hover-color:  #9B2E14;
+$link-color:        #1F5C8B;
+$link-hover-color:  #123F5E;
 $link-decoration:   none;
 
-$border-color: #E4DBC8;
+$border-color: #E6E4DE;
 
-$code-color:             #9B2E14;
-$code-bg:                #F2EBDB;
-$code-block-bg:          #FAF4E6;
-$code-block-border-left: #C23A1B;
+$code-color:             #1F5C8B;
+$code-bg:                #F1F1ED;
+$code-block-bg:          #FFFFFF;
+$code-block-border-left: #1F5C8B;
 
 $border-radius:    2px;
 $border-radius-sm: 2px;
 $border-radius-lg: 3px;
 
-$navbar-bg: #FBF6EC;
-$navbar-fg: #1F1B16;
-$navbar-hl: #C23A1B;
+$navbar-bg: #FBFBF9;
+$navbar-fg: #191C20;
+$navbar-hl: #1F5C8B;
 
-$footer-bg: #FBF6EC;
-$footer-fg: #6E6557;
+$footer-bg: #FBFBF9;
+$footer-fg: #5B6169;
 
-$component-active-bg: #C23A1B;
+$component-active-bg: #1F5C8B;
 
 
 /*-- scss:rules --*/
 
 // Design tokens — light. (Dark theme redefines the same names.)
 :root {
-  --fn-paper:       #FBF6EC;
-  --fn-paper-sink:  #F2EBDB;
-  --fn-card:        #FAF4E6;
-  --fn-ink:         #1F1B16;
-  --fn-ink-soft:    #6E6557;
-  --fn-hairline:    #E4DBC8;
-  --fn-accent:      #C23A1B;
-  --fn-accent-deep: #9B2E14;
-  --fn-grain-opacity: 0.5;
-  --fn-navbar-bg:   rgba(251, 246, 236, 0.86);
+  --fn-paper:       #FBFBF9;
+  --fn-paper-sink:  #F1F1ED;
+  --fn-card:        #FFFFFF;
+  --fn-ink:         #191C20;
+  --fn-ink-soft:    #5B6169;
+  --fn-hairline:    #E6E4DE;
+  --fn-accent:      #1F5C8B;
+  --fn-accent-deep: #123F5E;
+  --fn-grain-opacity: 0.1;
+  --fn-navbar-bg:   rgba(251, 251, 249, 0.86);
+
+  // Ground Truth signature: two annotation "highlight" tones. Used ONLY on the
+  // span-tag motif (hero statement, occasional inline labels) so they never
+  // become generic accent colours. -a is the cool/entity tone, -b the warm one.
+  --fn-span-a:      #E7EDF2;
+  --fn-span-a-tag:  #2C6E9B;
+  --fn-span-b:      #F0E6DE;
+  --fn-span-b-tag:  #9A6A3C;
 }
 // Shared component rules live in fieldnotes-rules.scss (loaded next via the
 // theme array in _quarto.yml). They read the --fn-* tokens defined above.
