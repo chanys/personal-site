@@ -6,3 +6,5 @@
 **/*.quarto_ipynb
 
 .idea
+
+/.claude/settings.local.json
