@@ -3,7 +3,7 @@ title: "Your RAG score hides the diagnosis"
 description: "Score the pipeline, not the answer."
 date: 2026-06-01
 order: 6
-draft: true
+draft: false
 ---
 
 {{< include ../_series.qmd >}}

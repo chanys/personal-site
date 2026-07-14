@@ -3,7 +3,7 @@ title: "Eval scores are samples, not truth"
 description: "How to tell real eval gains from noise."
 date: 2026-05-29
 order: 5
-draft: true
+draft: false
 ---
 
 {{< include ../_series.qmd >}}

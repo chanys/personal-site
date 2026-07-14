@@ -3,7 +3,7 @@ title: "Your eval system also drifts"
 description: "Eval systems need maintenance too."
 date: 2026-06-05
 order: 7
-draft: true
+draft: false
 ---
 
 {{< include ../_series.qmd >}}
