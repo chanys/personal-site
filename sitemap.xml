@@ -2,146 +2,146 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://yeesengchan.com/index.html</loc>
-    <lastmod>2026-07-14T21:54:12.995Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.751Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/writing.html</loc>
-    <lastmod>2026-07-14T21:54:13.032Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.788Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/what-an-agent-actually-is/02-agent-frameworks/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.031Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.788Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.022Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.778Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.015Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.771Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/04-fine-tuning-stack/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.017Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.773Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/llm-evaluation-honestly/03-judge-vs-code/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.007Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.763Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/llm-evaluation-honestly/07-eval-drift/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.012Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.768Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/llm-evaluation-honestly/02-eval-dataset/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.006Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.762Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/llm-evaluation-honestly/05-scores-are-samples/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.009Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.765Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/the-agent-harness/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.029Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.786Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/the-agent-harness/03-state-not-transcript/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.026Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.782Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/the-agent-harness/05-traces/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.028Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.785Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/how-llms-learn-to-reason/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.002Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.758Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/how-llms-learn-to-reason/03-dpo/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.000Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.756Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/how-llms-learn-to-reason/00-reinforce-foundations/index.html</loc>
-    <lastmod>2026-07-14T21:54:12.996Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.752Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/how-llms-learn-to-reason/05-tool-use/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.002Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.758Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/series.html</loc>
-    <lastmod>2026-07-14T21:54:13.032Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.788Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/projects.html</loc>
-    <lastmod>2026-07-14T21:54:13.031Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.788Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/how-llms-learn-to-reason/00-reinforce-gradient/index.html</loc>
-    <lastmod>2026-07-14T21:54:12.997Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.753Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/how-llms-learn-to-reason/04-r1/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.001Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.757Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/how-llms-learn-to-reason/02-grpo/index.html</loc>
-    <lastmod>2026-07-14T21:54:12.999Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.755Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/how-llms-learn-to-reason/01-ppo/index.html</loc>
-    <lastmod>2026-07-14T21:54:12.997Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.753Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/the-agent-harness/04-prompts-gate/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.027Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.784Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/the-agent-harness/02-harness-is-the-product/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.025Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.780Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/the-agent-harness/01-demos-break/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.023Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.779Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.007Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.763Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/llm-evaluation-honestly/01-stop-vibe-checking/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.004Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.759Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/llm-evaluation-honestly/06-rag-evaluation/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.010Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.766Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/llm-evaluation-honestly/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.013Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.769Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/05-information-extraction/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.020Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.776Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/02-encoder-embeddings/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.017Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.772Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/03-retrieval/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.017Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.772Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/what-an-agent-actually-is/01-what-is-an-agent/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.031Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.787Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/posts/series/what-an-agent-actually-is/index.html</loc>
-    <lastmod>2026-07-14T21:54:13.031Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.788Z</lastmod>
   </url>
   <url>
     <loc>https://yeesengchan.com/about.html</loc>
-    <lastmod>2026-07-14T21:54:12.995Z</lastmod>
+    <lastmod>2026-07-14T22:37:22.751Z</lastmod>
   </url>
 </urlset>
