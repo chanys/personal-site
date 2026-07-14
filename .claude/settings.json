@@ -1,0 +1,43 @@
+{
+  "extraKnownMarketplaces": {
+    "impeccable": {
+      "source": {
+        "source": "github",
+        "repo": "pbakaus/impeccable"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "playwright@claude-plugins-official": true,
+    "impeccable@impeccable": true,
+    "github@claude-plugins-official": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(ps:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "mcp__plugin_github_github__get_me",
+      "mcp__plugin_github_github__list_pull_requests",
+      "mcp__plugin_github_github__create_pull_request"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Read(.env.local)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/secrets/**)",
+      "Read(**/*credential*)",
+      "Bash(rm -rf:*)",
+      "Bash(sudo:*)",
+      "Bash(git push --force:*)",
+      "Bash(git reset --hard:*)"
+    ]
+  }
+}
