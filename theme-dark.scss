@@ -7,9 +7,9 @@
 //  Shared component rules come from fieldnotes-rules.scss (theme array).
 // ===========================================================================
 
-$font-family-sans-serif: "Newsreader", Iowan Old Style, Georgia, Cambria, "Times New Roman", serif;
+$font-family-sans-serif: "Source Serif 4", Iowan Old Style, Georgia, Cambria, "Times New Roman", serif;
 $font-family-monospace:  "IBM Plex Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace;
-$headings-font-family:   "Fraunces", Iowan Old Style, Georgia, serif;
+$headings-font-family:   "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
 
 $font-size-root:   18px;
 $font-size-base:   1rem;
@@ -18,48 +18,55 @@ $line-height-base: 1.72;
 $headings-font-weight: 600;
 $headings-line-height: 1.12;
 
-$body-bg:    #17140F;
-$body-color: #EBE3D3;
+$body-bg:    #14171C;
+$body-color: #E8E9EC;
 
-$link-color:        #E2773F;
-$link-hover-color:  #F0915C;
+$link-color:        #6BA6D8;
+$link-hover-color:  #8FBFE6;
 $link-decoration:   none;
 
-$border-color: #322C22;
+$border-color: #2A2F37;
 
-$code-color:             #F0915C;
-$code-bg:                #211D16;
-$code-block-bg:          #1C1812;
-$code-block-border-left: #E2773F;
+$code-color:             #8FBFE6;
+$code-bg:                #1B1F26;
+$code-block-bg:          #1A1E24;
+$code-block-border-left: #6BA6D8;
 
 $border-radius:    2px;
 $border-radius-sm: 2px;
 $border-radius-lg: 3px;
 
-$navbar-bg: #17140F;
-$navbar-fg: #EBE3D3;
-$navbar-hl: #E2773F;
+$navbar-bg: #14171C;
+$navbar-fg: #E8E9EC;
+$navbar-hl: #6BA6D8;
 
-$footer-bg: #17140F;
-$footer-fg: #9A9080;
+$footer-bg: #14171C;
+$footer-fg: #979CA4;
 
-$component-active-bg: #E2773F;
+$component-active-bg: #6BA6D8;
 
 
 /*-- scss:rules --*/
 
 // Design tokens — dark. Same names the shared rules file consumes.
 :root {
-  --fn-paper:       #17140F;
-  --fn-paper-sink:  #211D16;
-  --fn-card:        #1C1812;
-  --fn-ink:         #EBE3D3;
-  --fn-ink-soft:    #9A9080;
-  --fn-hairline:    #322C22;
-  --fn-accent:      #E2773F;
-  --fn-accent-deep: #F0915C;
-  --fn-grain-opacity: 0.6;
-  --fn-navbar-bg:   rgba(23, 20, 15, 0.86);
+  --fn-paper:       #14171C;
+  --fn-paper-sink:  #1B1F26;
+  --fn-card:        #1A1E24;
+  --fn-ink:         #E8E9EC;
+  --fn-ink-soft:    #979CA4;
+  --fn-hairline:    #2A2F37;
+  --fn-accent:      #6BA6D8;
+  --fn-accent-deep: #8FBFE6;
+  --fn-grain-opacity: 0.18;
+  --fn-navbar-bg:   rgba(20, 23, 28, 0.86);
+
+  // Ground Truth signature tones — dark. Translucent fills so the highlight
+  // sits on the dark ground without punching a bright hole in the text.
+  --fn-span-a:      rgba(108, 166, 216, 0.16);
+  --fn-span-a-tag:  #7FB0DA;
+  --fn-span-b:      rgba(196, 150, 110, 0.16);
+  --fn-span-b-tag:  #C79E74;
 }
 // The grain overlay uses mix-blend-mode: multiply, which darkens on light but
 // would vanish on dark — switch it to screen so it reads on the dark ground.

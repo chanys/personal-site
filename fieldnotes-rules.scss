@@ -41,14 +41,14 @@ body.writing-index main.content { max-width: 1040px; margin-inline: auto; }
 // pages (page-layout: full to escape body-width, then cap here). On home the
 // `main.content` IS the right (.about-contents) column, so this caps that
 // column rather than a single-column page.
-body.home main.content { max-width: 1040px; margin-inline: 0; }
+body.home main.content { max-width: 46rem; margin-inline: auto; }
 #quarto-content { padding-top: 1.25rem; }
 
 // --- Headings -------------------------------------------------------------
 h1, h2, h3, h4, .quarto-title h1.title {
-  font-family: "Fraunces", Iowan Old Style, Georgia, serif;
-  font-variation-settings: "opsz" 80, "SOFT" 40, "WONK" 1;
-  letter-spacing: -0.012em;
+  font-family: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  font-variation-settings: "opsz" 48;
+  letter-spacing: -0.018em;
   color: var(--fn-ink);
 }
 h1, .quarto-title h1.title {
@@ -83,7 +83,8 @@ a {
 }
 a:hover { background-size: 0 1px; color: var(--fn-accent-deep); }
 .navbar a, .nav-link, .quarto-title-meta a, a.about-link,
-.series-nav a { background-image: none; }
+.series-nav a, .quarto-categories a, .quarto-post .listing-categories a,
+.gt-links a { background-image: none; }
 
 // --- Navbar ---------------------------------------------------------------
 .navbar {
@@ -94,8 +95,8 @@ a:hover { background-size: 0 1px; color: var(--fn-accent-deep); }
   background: var(--fn-navbar-bg) !important;
 }
 .navbar-brand {
-  font-family: "Fraunces", Georgia, serif;
-  font-variation-settings: "opsz" 60, "WONK" 1;
+  font-family: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  font-variation-settings: "opsz" 24;
   font-weight: 600;
   font-size: 1.15rem;
   letter-spacing: -0.01em;
@@ -119,7 +120,7 @@ a:hover { background-size: 0 1px; color: var(--fn-accent-deep); }
 #title-block-header {
   margin-bottom: 2.4rem;
   padding-bottom: 1.6rem;
-  border-bottom: 2px solid var(--fn-ink);
+  border-bottom: 1px solid var(--fn-hairline);
 }
 // On standard content pages, tighten the gap between the intro rule and the
 // first body block to match the section-divider rhythm above.
@@ -137,10 +138,11 @@ body.projects-page #title-block-header {
 }
 .quarto-title-block .description,
 .subtitle.lead {
-  font-family: "Fraunces", Georgia, serif;
+  font-family: "Source Serif 4", Iowan Old Style, Georgia, serif;
   font-style: italic;
   font-weight: 400;
-  font-size: 1.18rem;
+  font-size: 1.2rem;
+  line-height: 1.5;
   color: var(--fn-ink-soft);
   margin-top: 0.5rem;
 }
@@ -251,7 +253,7 @@ body.series-index .series-banner-meta {
   margin: 0.15rem 0 0.45rem;
 }
 body.series-index .series-banner-title {
-  font-family: "Fraunces", Georgia, serif;
+  font-family: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
   font-size: 1.7rem;
   font-weight: 600;
   line-height: 1.15;
@@ -290,7 +292,7 @@ body.series-index .series-banner-description {
 }
 .quarto-post .listing-title,
 .quarto-post h3.listing-title {
-  font-family: "Fraunces", Georgia, serif;
+  font-family: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
   font-size: 1.5rem;
   font-weight: 600;
   line-height: 1.15;
@@ -330,7 +332,7 @@ body.series-index .series-banner-description {
 .quarto-listing-category .category:hover,
 .quarto-listing-category .category.active { color: var(--fn-accent); }
 .quarto-listing-category-title {
-  font-family: "Fraunces", Georgia, serif;
+  font-family: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
   font-size: 0.95rem;
   text-transform: none;
   color: var(--fn-ink);
@@ -339,7 +341,7 @@ body.series-index .series-banner-description {
 // --- Series navigation box (included into series parts) -------------------
 .series-nav {
   border: 1px solid var(--fn-hairline);
-  border-left: 3px solid var(--fn-accent);
+  border-left: 1px solid var(--fn-hairline);
   border-radius: 3px;
   background: var(--fn-card);
   padding: 1.1rem 1.3rem 1.2rem;
@@ -354,7 +356,7 @@ body.series-index .series-banner-description {
   margin: 0 0 0.15rem;
 }
 .series-nav .series-name {
-  font-family: "Fraunces", Georgia, serif;
+  font-family: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
   font-size: 1.12rem;
   font-weight: 600;
   color: var(--fn-ink);
@@ -383,7 +385,7 @@ body.series-index .series-banner-description {
   color: var(--fn-ink-soft);
 }
 .series-nav ol li.current {
-  font-family: "Fraunces", Georgia, serif;
+  font-family: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
   font-weight: 600;
 }
 .series-nav ol li.current::before { color: var(--fn-accent); }
@@ -429,7 +431,7 @@ blockquote, .blockquote {
   padding: 0.1rem 0 0.1rem 1.4rem;
   margin: 1.8rem 0;
   color: var(--fn-ink-soft);
-  font-family: "Fraunces", Georgia, serif;
+  font-family: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
   font-style: italic;
   font-size: 1.12rem;
 }
@@ -441,14 +443,52 @@ code:not(.sourceCode):not(pre code) {
   font-size: 0.86em;
   color: var(--fn-accent-deep);
 }
-div.sourceCode, pre.sourceCode {
+// Border lives on the container; the pre carries the language header strip.
+// overflow:hidden clips the strip and code to the container's rounded corners.
+div.sourceCode {
+  position: relative;
   border: 1px solid var(--fn-hairline);
-  border-left: 3px solid var(--fn-accent);
   border-radius: 3px;
   background: var(--fn-card);
+  overflow: hidden;
+}
+pre.sourceCode {
+  position: relative;
+  border: none;
+  background: transparent;
+  border-radius: 0;
+  margin: 0;
+  padding-top: 2.55rem;
   font-size: 0.86rem;
   line-height: 1.6;
 }
+// Language header strip: a real label pulled from the sourceCode language class.
+pre.sourceCode::before {
+  content: "code";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1.95rem;
+  display: flex;
+  align-items: center;
+  padding: 0 0.85rem;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fn-ink-soft);
+  background: var(--fn-paper-sink);
+  border-bottom: 1px solid var(--fn-hairline);
+}
+pre.sourceCode.python::before   { content: "python"; }
+pre.sourceCode.markdown::before { content: "markdown"; }
+pre.sourceCode.json::before     { content: "json"; }
+pre.sourceCode.bash::before,
+pre.sourceCode.sh::before        { content: "shell"; }
+pre.sourceCode.yaml::before     { content: "yaml"; }
+// Copy button aligns into the header strip rather than floating over the code.
+div.sourceCode .code-copy-button { top: 0.2rem; right: 0.35rem; }
 hr { border: none; border-top: 1px solid var(--fn-hairline); margin: 3rem auto; width: 100%; }
 .content > hr::after {
   content: "\2767";
@@ -515,11 +555,11 @@ table tbody td { border-bottom: 1px solid var(--fn-hairline); }
 }
 .callout {
   border: 1px solid var(--fn-hairline);
-  border-left: 3px solid var(--fn-accent);
+  border-left: 1px solid var(--fn-hairline);
   border-radius: 3px;
   background: var(--fn-card);
 }
-.callout .callout-title { font-family: "Fraunces", Georgia, serif; font-weight: 600; }
+.callout .callout-title { font-family: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif; font-weight: 600; }
 
 // --- TOC ------------------------------------------------------------------
 #TOC, .toc-active #quarto-margin-sidebar {
@@ -527,7 +567,7 @@ table tbody td { border-bottom: 1px solid var(--fn-hairline); }
   font-size: 0.76rem;
 }
 #toc-title {
-  font-family: "Fraunces", Georgia, serif;
+  font-family: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
   font-size: 0.86rem;
   text-transform: none;
   color: var(--fn-ink);
@@ -572,4 +612,156 @@ table tbody td { border-bottom: 1px solid var(--fn-hairline); }
   #title-block-header { animation: fn-rise 0.6s ease both; }
   main.content > *:not(#title-block-header) { animation: fn-rise 0.6s ease both; animation-delay: 0.08s; }
   .quarto-post { animation: fn-rise 0.5s ease both; }
+}
+
+// ===========================================================================
+//  GROUND TRUTH — the signature: a labeled span-tag
+//  A key noun phrase treated like an annotated span in a labeling tool: a soft
+//  highlight fill plus a small superscript tag pulled from `data-tag`. This is
+//  the site's one memorable device. Use it sparingly (the hero statement, the
+//  odd inline label) so the two tones never degrade into generic accent fills.
+//  Two tones: .gt-span (cool / "entity") and .gt-span.gt-b (warm).
+// ===========================================================================
+.gt-span {
+  background: var(--fn-span-a);
+  color: var(--fn-ink);
+  padding: 0.04em 0.26em;
+  border-radius: 2px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.gt-span.gt-b { background: var(--fn-span-b); }
+.gt-span[data-tag]::after {
+  content: attr(data-tag);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.32em;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  vertical-align: super;
+  margin-left: 0.2em;
+  color: var(--fn-span-a-tag);
+}
+.gt-span.gt-b[data-tag]::after { color: var(--fn-span-b-tag); }
+
+// --- Home hero ------------------------------------------------------------
+// Text statement on the left carries the span-tags; the portrait is secondary
+// on the right. On narrow screens the portrait moves above the statement.
+// Home sets an empty document title, which Quarto still emits as an empty
+// title block (a stray 2px rule). Suppress the empty header; the hero is the
+// masthead. Targeting :empty is precise: real title blocks have children.
+#title-block-header:empty { display: none; }
+.gt-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2.5rem;
+  align-items: start;
+  margin: 0.5rem 0 2.75rem;
+}
+.gt-hero-body { min-width: 0; }
+.gt-eyebrow {
+  display: block;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--fn-ink-soft);
+  margin-bottom: 1.1rem;
+}
+.gt-hero h1 {
+  font-size: clamp(1.95rem, 4.4vw, 3rem);
+  // Highlighted lines need vertical air so the fills don't collide.
+  line-height: 1.34;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin: 0 0 1.4rem;
+  max-width: 20ch;
+}
+.gt-provenance {
+  display: block;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.76rem;
+  letter-spacing: 0.04em;
+  color: var(--fn-ink-soft);
+  border-top: 1px solid var(--fn-hairline);
+  padding-top: 0.85rem;
+}
+.gt-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 0 0 1.5rem;
+}
+.gt-links a {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  border: 1px solid var(--fn-hairline);
+  border-radius: 100px;
+  padding: 0.3rem 0.9rem;
+  color: var(--fn-ink);
+  background: none;
+  transition: border-color 0.16s ease, color 0.16s ease;
+}
+.gt-links a:hover { border-color: var(--fn-accent); color: var(--fn-accent); }
+.gt-portrait {
+  width: 9rem;
+  height: 9rem;
+  border-radius: 50%;
+  border: 1px solid var(--fn-hairline);
+  object-fit: cover;
+  margin: 0.2rem 0 0;
+}
+@media (max-width: 640px) {
+  .gt-hero { grid-template-columns: 1fr; gap: 1.5rem; }
+  .gt-portrait { width: 6.5rem; height: 6.5rem; order: -1; }
+}
+
+// ===========================================================================
+//  SLICK ARTICLE FURNITURE
+// ===========================================================================
+
+// --- Condensed article meta ------------------------------------------------
+// Quarto emits Author + Published as two label/value columns (a form). On the
+// author's own site the byline is redundant, so drop it and the "Published"
+// label, leaving a single quiet mono date line under the category pill.
+.quarto-title-meta { display: flex; flex-wrap: wrap; align-items: baseline; }
+.quarto-title-meta-heading { display: none; }
+.quarto-title-meta > div:first-child { display: none; } // Author column
+.quarto-title-meta-contents p { margin: 0; }
+
+// --- Code block filename header -------------------------------------------
+// When a code cell declares `filename=`, Quarto renders `.code-filename`.
+// Style it as a header bar seamlessly joined to the block below (a per-language
+// label would need the language in the markup; filename is what Quarto gives).
+.code-with-filename .code-filename {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--fn-ink-soft);
+  background: var(--fn-paper-sink);
+  border: 1px solid var(--fn-hairline);
+  border-bottom: none;
+  border-radius: 3px 3px 0 0;
+  padding: 0.45rem 0.85rem;
+  margin-bottom: 0;
+}
+.code-with-filename div.sourceCode {
+  margin-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+// --- Figure captions -------------------------------------------------------
+// Small centred mono, so image captions speak the same metadata vocabulary as
+// dates, tags, and nav.
+figure figcaption,
+.figure-caption,
+.quarto-figure figcaption {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  text-align: center;
+  color: var(--fn-ink-soft);
+  margin-top: 0.65rem;
 }

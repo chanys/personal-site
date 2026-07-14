@@ -1,30 +1,30 @@
 ---
-title: "Yee Seng Chan"
-pagetitle: "Yee Seng Chan | Applied AI"
+title: ""
+pagetitle: "Applied AI, LLM reliability & evaluation"
 description-meta: "Applied AI scientist working on information extraction, evaluation, and the reliability of LLM systems."
 page-layout: full
 format:
   html:
     body-classes: home
-about:
-  template: trestles
-  image: ys_profile.png
-  image-alt: "Portrait of Yee Seng Chan"
-  image-shape: round
-  image-width: 13rem
-  links:
-    - icon: github
-      text: GitHub
-      href: https://github.com/chanys
-    - icon: linkedin
-      text: LinkedIn
-      href: https://linkedin.com/in/yeesengchan
-    - icon: rss
-      text: Writing feed
-      href: writing.xml
 ---
 
-I work on reliable LLM systems: systems whose behavior can be measured, inspected, and improved.
+::: {.gt-hero}
+::: {.gt-hero-body}
+[Yee Seng Chan]{.gt-eyebrow}
+
+# I build [reliable LLM systems]{.gt-span data-tag="SYS"} whose behavior can be [measured]{.gt-span .gt-b data-tag="EVAL"}, inspected, and improved.
+
+::: {.gt-links}
+[GitHub](https://github.com/chanys) [LinkedIn](https://linkedin.com/in/yeesengchan) [Writing feed](writing.xml)
+:::
+
+[annotator: ys · corpus: applied nlp → llm systems]{.gt-provenance}
+:::
+
+```{=html}
+<img src="ys_profile.png" class="gt-portrait" alt="Portrait of Yee Seng Chan">
+```
+:::
 
 My background is a decade of NLP and information extraction, much of it deep-learning-based, judged by external evaluation, including work as a principal investigator on DARPA and IARPA programs at Raytheon BBN. The years since have been at AI startups, leading NLP and LLM work in production, most recently on LLM workflows for clinical documentation and structured extraction.
 
@@ -37,3 +37,4 @@ For my current positioning on LLM reliability and evaluation, read [The agent ha
 For the throughline from my earlier NLP work to current LLM workflows, read [Information extraction didn't disappear. It moved inside the workflow](posts/series/research-foundations-of-modern-llms/05-information-extraction/index.qmd).
 
 The rest is grouped by argument under [Series](series.qmd). There is also a [list of projects](projects.qmd) and [more about me](about.qmd).
+</content>

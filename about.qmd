@@ -1,7 +1,7 @@
 ---
 title: "About"
-description: ""
-pagetitle: "About | Yee Seng Chan"
+description: "A decade of NLP and information extraction judged by external evaluation, now applied to LLM evaluation and the reliability of production LLM systems."
+pagetitle: "About"
 toc: true
 toc-title: "On this page"
 ---

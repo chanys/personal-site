@@ -55,6 +55,11 @@ website:
 
 bibliography: references.bib
 
+# Per-page SEO: canonical URL, og:url/og:type, and JSON-LD structured data
+# (Person + WebSite on home, BlogPosting on posts). Not native to Quarto.
+filters:
+  - seo-meta.lua
+
 # GitHub-Markdown-style lists: a `-` or `*` line directly under a paragraph
 # starts a list with no blank line required. Avoids the over-large vertical
 # gap that a preceding blank line would otherwise inject before the list.
@@ -80,7 +85,12 @@ format:
       - text: |
           <link rel="preconnect" href="https://fonts.googleapis.com">
           <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-          <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+          <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+      - text: |
+          <!-- GoatCounter: privacy-friendly, cookieless analytics (no consent
+               banner needed). Dashboard: https://yeesengchan.goatcounter.com -->
+          <script data-goatcounter="https://yeesengchan.goatcounter.com/count"
+                  async src="//gc.zgo.at/count.js"></script>
     # On series-part pages, Quarto's vendored scroll-spy
     # (site_libs/quarto-html/quarto.js -> updateActiveLink) compares
     # window.pageYOffset against each section's offsetTop. offsetTop is
