@@ -46,9 +46,9 @@ ul.task-list li input[type="checkbox"] {
 <link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-7b53549d121f5930ef88eb09dda4672c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-3874333d9529686a5a4437217f193688.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-7b53549d121f5930ef88eb09dda4672c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-e8efa69393f3eecd887944755cf546dd.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-70ff4a802cd88924299c1cc1884d05e5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-e8efa69393f3eecd887944755cf546dd.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -498,7 +498,7 @@ F1 on FAIL            = (2 * P * R) / (P + R) = 41%</code></pre>
 <li><strong>Over-flagging.</strong> The judge calls everything FAIL when the agent paraphrases instead of quoting verbatim.</li>
 <li><strong>Unclear judging standard.</strong> The judge says some answers are unfaithful that the humans accept as fine.</li>
 <li><strong>Right for the wrong reason.</strong> The verdict is correct but the critique points at the wrong thing.</li>
-<li><strong>Too-small validation set.</strong> Wide error bars on metrics; unreliable conclusions (Eval scores are samples, not truth covers when this matters).</li>
+<li><strong>Too-small validation set.</strong> Wide error bars on metrics; unreliable conclusions (<a href="../../../../posts/series/llm-evaluation-honestly/05-scores-are-samples/index.html">Eval scores are samples, not truth</a> covers when this matters).</li>
 </ul>
 <p>The fix progression is <strong>examples → criterion → model</strong>.</p>
 <p>Examples almost always move first: if the judge is wrong on five cases of subtle contradiction, consider adding five contradiction <strong>examples</strong> to the few-shot block. If multiple disagreements trace to ambiguity in what counts as a failure rather than missing examples, the adjudicator sharpens the <strong>criterion</strong>. <strong>Model</strong> swaps come last. Most calibration problems live in the prompt, not the model, and switching models is expensive in cost, latency, and stability.</p>
@@ -506,13 +506,13 @@ F1 on FAIL            = (2 * P * R) / (P + R) = 41%</code></pre>
 <section id="revalidate-when-things-change" class="level2">
 <h2 class="anchored" data-anchor-id="revalidate-when-things-change">Revalidate when things change</h2>
 <p>The judge agrees with humans on the held-out set today. That doesn’t mean it will agree in six months. Foundation models update, the agent’s failure distribution shifts, and new failure types appear. Calibration is a snapshot: true at measurement time, increasingly stale afterward.</p>
-<p>Your eval system also drifts covers what to do about it: re-validate against fresh labels on a schedule and monitor agreement rates over time. Large drift in those agreement rates is usually a signal that the failure distribution itself has changed.</p>
+<p><a href="../../../../posts/series/llm-evaluation-honestly/07-eval-drift/index.html">Your eval system also drifts</a> covers what to do about it: re-validate against fresh labels on a schedule and monitor agreement rates over time. Large drift in those agreement rates is usually a signal that the failure distribution itself has changed.</p>
 <p>Every deployed judge should carry a short record of what it was validated on: the domain, the trace types, the test-set size, the date, and what it’s allowed to be used for. Without that record, judges get re-used on data the original validation doesn’t cover, and the team trusts a number that no longer applies.</p>
 </section>
 <section id="the-judge-is-part-of-the-system" class="level2">
 <h2 class="anchored" data-anchor-id="the-judge-is-part-of-the-system">The judge is part of the system</h2>
 <p>An LLM judge is not an oracle. It is a model component that needs the same discipline as any other classifier: held-out labels, a confusion matrix, precision and recall on the class that matters, and periodic revalidation.</p>
-<p>Once the judge is validated, there is still one more question: how much should we trust movement in the score? A judge may report that v2 improved by two points, but that movement may be real or may be noise. The next article covers that next layer: uncertainty, sample size, and when an eval result is large enough to act on.</p>
+<p>Once the judge is validated, there is still one more question: how much should we trust movement in the score? A judge may report that v2 improved by two points, but that movement may be real or may be noise. <a href="../../../../posts/series/llm-evaluation-honestly/05-scores-are-samples/index.html">The next article</a> covers that next layer: uncertainty, sample size, and when an eval result is large enough to act on.</p>
 
 
 </section>

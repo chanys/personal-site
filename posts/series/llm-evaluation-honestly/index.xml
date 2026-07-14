@@ -15,7 +15,470 @@
 <link>https://yeesengchan.com/posts/series/llm-evaluation-honestly/</link>
 </image>
 <generator>quarto-1.9.38</generator>
-<lastBuildDate>Tue, 26 May 2026 00:00:00 GMT</lastBuildDate>
+<lastBuildDate>Fri, 05 Jun 2026 00:00:00 GMT</lastBuildDate>
+<item>
+  <title>Your eval system also drifts</title>
+  <dc:creator>Yee Seng Chan</dc:creator>
+  <link>https://yeesengchan.com/posts/series/llm-evaluation-honestly/07-eval-drift/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+LLM evaluation, honestly
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-stop-vibe-checking/">Stop vibe-checking your agent</a></li>
+<li><a href="../02-eval-dataset/">Read traces before you write the labeling guide</a></li>
+<li><a href="../03-judge-vs-code/">Don’t ask an LLM judge what code can check</a></li>
+<li><a href="../04-judge-is-classifier/">Your LLM judge is a classifier</a></li>
+<li><a href="../05-scores-are-samples/">Eval scores are samples, not truth</a></li>
+<li><a href="../06-rag-evaluation/">Your RAG score hides the diagnosis</a></li>
+<li><a href="../07-eval-drift/">Your eval system also drifts</a></li>
+</ol>
+</div>
+<p>An eval system has to be maintained like the product it measures.</p>
+<p>The running example is the docs Q&amp;A agent from <a href="../../../../posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.html">the judge calibration</a> and <a href="../../../../posts/series/llm-evaluation-honestly/06-rag-evaluation/index.html">RAG evaluation</a> articles. It answers retention-policy questions. At launch, the eval stack looks solid: retrieval checks, faithfulness judges, answer relevance judges, and answerability tests.</p>
+<p>Six months later, the dashboard is still green. That only means the agent still passes the old eval.</p>
+<p>Suppose the retention policy changes. Trial accounts used to retain data for 90 days. Now they retain data for 120 days. The docs are updated, and the agent correctly answers “120 days.” The eval set still expects “90 days,” so the dashboard reports a regression.</p>
+<p>The agent did not regress. The eval system became stale.</p>
+<p>The fix is eval maintenance:</p>
+<ul>
+<li><strong>Update the active case:</strong> the current expected answer is now 120 days.</li>
+<li><strong>Version the old case:</strong> the 90-day case applies only to the previous policy.</li>
+<li><strong>Update judge examples:</strong> examples that assume 90 days should not teach the judge the old rule.</li>
+<li><strong>Add a new regression case:</strong> the 120-day case should gate future releases.</li>
+</ul>
+<p>The old case should not disappear. It may still matter for archived records or historical behavior. But it should not decide whether the current product is correct.</p>
+<section id="eval-cases-need-versioning" class="level2">
+<h2 class="anchored" data-anchor-id="eval-cases-need-versioning">Eval cases need versioning</h2>
+<p>A regression case carries assumptions about the product. Those assumptions need to be visible.</p>
+<p>Each case should record:</p>
+<ul>
+<li><strong>Policy version:</strong> which rule the case expects.</li>
+<li><strong>Document version:</strong> which source document supports the expected answer.</li>
+<li><strong>Added date:</strong> when the case entered the eval set.</li>
+<li><strong>Reason added:</strong> production incident, known failure mode, launch coverage, or regression.</li>
+<li><strong>Release-gating status:</strong> whether the case currently blocks a release.</li>
+</ul>
+<p>Without these fields, stale examples look authoritative.</p>
+</section>
+<section id="production-traces-keep-the-eval-current" class="level2">
+<h2 class="anchored" data-anchor-id="production-traces-keep-the-eval-current">Production traces keep the eval current</h2>
+<p>A locked eval set protects known failures. It does not discover new ones.</p>
+<p>Production traces show what users are asking now, what the agent is retrieving now, and which answers are failing now. Sample them regularly and feed the important cases back into the eval set.</p>
+<p>Use a small sampling plan:</p>
+<ul>
+<li><strong>Random samples:</strong> catch normal failures that have no obvious signal.</li>
+<li><strong>Important slices:</strong> preserve coverage of high-risk areas like retention, billing, security, or permissions.</li>
+<li><strong>Failure signals:</strong> review thumbs down, repeated queries, low retrieval scores, or missing citations.</li>
+<li><strong>Incidents:</strong> turn serious production failures into regression cases.</li>
+</ul>
+<p>User complaints are useful, but they are incomplete. Users often rephrase, fix the answer manually, ask someone else, or abandon the feature. Random and slice-based sampling catch quiet failures that complaints miss.</p>
+</section>
+<section id="judges-need-rechecking" class="level2">
+<h2 class="anchored" data-anchor-id="judges-need-rechecking">Judges need rechecking</h2>
+<p>A judge is valid only under the conditions where it was tested. Recheck judges when the conditions change:</p>
+<ul>
+<li><strong>Judge model changes:</strong> compare the new judge against human labels.</li>
+<li><strong>Knowledge base changes:</strong> re-run judge validation on current documents.</li>
+<li><strong>Correctness standard changes:</strong> update the labeling guide, judge prompt, and examples.</li>
+<li><strong>Traffic changes:</strong> test the judge on recent production traces.</li>
+</ul>
+<p>The recheck does not need to be huge. Sample recent traces, label them with the current standard, and compare the judge’s verdicts against the human labels. If agreement drops, update the judge before trusting its score.</p>
+</section>
+<section id="the-eval-system-is-part-of-the-product" class="level2">
+<h2 class="anchored" data-anchor-id="the-eval-system-is-part-of-the-product">The eval system is part of the product</h2>
+<p>A dashboard is useful only if the eval still matches the product.</p>
+<p>The eval system has to track current policies, current documents, current traffic, judge validity, and the team’s standard for correctness. Production traces become labels. Labels become failure modes. Failure modes become checks, judges, and regression cases. Incidents update the suite.</p>
+<p>Teams that treat eval as first-class code version, review, monitor, and maintain it. Teams that do not eventually read numbers they can no longer trust.</p>
+<p>The next time someone reports “the eval system says we’re at 87%,” ask: <em>when did we last check that the eval system is still telling the truth?</em></p>
+
+
+</section>
+
+ ]]></description>
+  <category>LLM evaluation, honestly</category>
+  <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/07-eval-drift/</guid>
+  <pubDate>Fri, 05 Jun 2026 00:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>Your RAG score hides the diagnosis</title>
+  <dc:creator>Yee Seng Chan</dc:creator>
+  <link>https://yeesengchan.com/posts/series/llm-evaluation-honestly/06-rag-evaluation/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+LLM evaluation, honestly
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-stop-vibe-checking/">Stop vibe-checking your agent</a></li>
+<li><a href="../02-eval-dataset/">Read traces before you write the labeling guide</a></li>
+<li><a href="../03-judge-vs-code/">Don’t ask an LLM judge what code can check</a></li>
+<li><a href="../04-judge-is-classifier/">Your LLM judge is a classifier</a></li>
+<li><a href="../05-scores-are-samples/">Eval scores are samples, not truth</a></li>
+<li><a href="../06-rag-evaluation/">Your RAG score hides the diagnosis</a></li>
+<li><a href="../07-eval-drift/">Your eval system also drifts</a></li>
+</ol>
+</div>
+<p>Most RAG dashboards score one thing: whether the answer was good. The same bad answer can come from retrieval (missed the right passage, returned too much noise) or from the generator (ignored the context, answered the wrong question, answered when it should have declined). A single quality score hides which.</p>
+<p>The running example is a documentation Q&amp;A agent for a data-retention policy: 90 days for trial accounts, 30 days for standard, escalation for enterprise accounts on legal hold.</p>
+<section id="capture-the-full-rag-trace" class="level2">
+<h2 class="anchored" data-anchor-id="capture-the-full-rag-trace">Capture the full RAG trace</h2>
+<p>A RAG eval needs the question, the retrieved context, and the final answer. Without the retrieved context, you can’t tell whether retrieval failed, the generator failed, or the system should have refused.</p>
+<p>The trace also needs enough metadata to reproduce the result against the same knowledge base: document and chunk IDs, retrieval scores, top-k settings, embedding model, reranker version, metadata filters, and the exact text passed to the generator. For agentic RAG, capture tool selection too; if the agent picked the wrong source, retrieval metrics inside the right index will look fine while the system still fails.</p>
+</section>
+<section id="five-questions-locate-the-failure" class="level2">
+<h2 class="anchored" data-anchor-id="five-questions-locate-the-failure">Five questions locate the failure</h2>
+<p>Comparing the question, context, and answer gives five diagnostic questions, each pointing to a different failure mode and a different fix.</p>
+<div id="fig-rag-diagnostic" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A diagnostic map. A pipeline strip: Question, then retrieval arrow, then Retrieved context, then generation arrow, then a red box quote 30 days unquote marked wrong. Below, two grouped columns. RETRIEVAL: Retrieval recall, needed passage missing, fix chunking, embeddings, reranker; Retrieval precision, right evidence buried in noise, fix ranking, top-k, filters. GENERATION: Grounding, ignored or overreached the context, fix generation prompt and grounding; Answer relevance, answered an adjacent question, fix conditioning and response style. A full-width amber card, Abstention, answered when it should have escalated, fix escalation and refusal rules. Footer: same surface failure, different root causes, different fixes.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-rag-diagnostic-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/llm-evaluation-honestly/06-rag-evaluation/rag_diagnostic_map.png" class="img-fluid figure-img" alt="A diagnostic map. A pipeline strip: Question, then retrieval arrow, then Retrieved context, then generation arrow, then a red box quote 30 days unquote marked wrong. Below, two grouped columns. RETRIEVAL: Retrieval recall, needed passage missing, fix chunking, embeddings, reranker; Retrieval precision, right evidence buried in noise, fix ranking, top-k, filters. GENERATION: Grounding, ignored or overreached the context, fix generation prompt and grounding; Answer relevance, answered an adjacent question, fix conditioning and response style. A full-width amber card, Abstention, answered when it should have escalated, fix escalation and refusal rules. Footer: same surface failure, different root causes, different fixes.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-rag-diagnostic-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: One bad answer, five different bugs. The same wrong answer (“30 days” to a trial-account question) can come from five places along the RAG pipeline, each with a different fix. Retrieval side: recall (needed passage missing, fix chunking, embeddings, reranker) and precision (right evidence buried in noise, fix ranking, top-k, filters). Generation side: grounding (ignored or overreached the context, fix the generation prompt) and answer relevance (answered an adjacent question, fix conditioning). Abstention, the most-skipped check, spans the whole pipeline: the system answered when it should have escalated.
+</figcaption>
+</figure>
+</div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Area</th>
+<th>Question</th>
+<th>Diagnoses</th>
+<th>Fix targets</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Retrieval recall</td>
+<td>Did we retrieve the needed evidence?</td>
+<td>Missing evidence</td>
+<td>Chunking, embeddings, query rewriting, reranker, metadata filters</td>
+</tr>
+<tr class="even">
+<td>Retrieval precision</td>
+<td>Did we retrieve mostly relevant context?</td>
+<td>Noisy context</td>
+<td>Ranking, top-k, filtering, duplicate or noisy chunks</td>
+</tr>
+<tr class="odd">
+<td>Grounding</td>
+<td>Is the answer supported by the retrieved context?</td>
+<td>Hallucination, overreach, or ignored evidence</td>
+<td>Generation prompt, grounding behavior, judge calibration</td>
+</tr>
+<tr class="even">
+<td>Answer relevance</td>
+<td>Did the answer address the user’s question?</td>
+<td>Generic or adjacent answer</td>
+<td>Prompting, question conditioning, response style</td>
+</tr>
+<tr class="odd">
+<td>Abstention</td>
+<td>Should the system have declined or escalated?</td>
+<td>Confident answer to an unanswerable question</td>
+<td>Out-of-scope examples, escalation rules, refusal behavior</td>
+</tr>
+</tbody>
+</table>
+<p>Retrieval comes first because the generator can’t use evidence it never sees. For the retention-policy agent, <em>“How long do trial-account records stay available?”</em> should retrieve the trial-account passage. If it doesn’t appear in the top-k, that’s a recall failure; the fix is <a href="../../../../posts/series/research-foundations-of-modern-llms/03-retrieval/index.html">better chunking, embeddings, query rewriting, or reranking</a>, not a better generation prompt. If the passage is present but a standard-account passage dominates and the answer says “30 days,” the failure is partly precision and partly grounding.</p>
+<p>For most documentation Q&amp;A systems, start with retrieval recall, grounding, answer relevance, and abstention. Add retrieval precision when noisy context becomes a visible problem. Keep the five separate; the metric that drops is the one that points to the next debugging step.</p>
+</section>
+<section id="dont-skip-abstention" class="level2">
+<h2 class="anchored" data-anchor-id="dont-skip-abstention">Don’t skip abstention</h2>
+<p>Abstention is the most commonly missing piece of a RAG eval, and the most damaging to skip. Most eval sets contain only questions the system should answer, which quietly rewards over-answering: the system is never tested on cases where the right move is to decline, ask for clarification, or escalate.</p>
+<p>For the retention-policy agent: <em>“How long are records retained for enterprise account ABC-2026-447 while it is on legal hold?”</em> Account-specific legal-hold questions require escalation, so the correct response is to escalate, not to answer.</p>
+<p>Include negative cases in the eval set deliberately: ambiguous questions, out-of-scope questions, escalation-required questions, and questions where the retrieved context is insufficient. Without them, the eval set teaches the system that confident answers are always rewarded.</p>
+</section>
+<section id="the-retrieval-environment-drifts-too" class="level2">
+<h2 class="anchored" data-anchor-id="the-retrieval-environment-drifts-too">The retrieval environment drifts too</h2>
+<p>RAG evaluation has one extra source of drift: the knowledge base changes. Documents get added, edited, deprecated. Chunking changes. Embedding models change. Rerankers change. The same question can retrieve different chunks next month even with no agent change.</p>
+<p>Every RAG result should be tied to the retrieval environment that produced it: the metadata captured in the trace. Without that record, a regression is hard to interpret: did the agent get worse, or did the index change underneath it?</p>
+</section>
+<section id="what-comes-next" class="level2">
+<h2 class="anchored" data-anchor-id="what-comes-next">What comes next</h2>
+<p>A composite RAG score is fine as a summary, but it can’t drive debugging. The next time someone reports <em>RAG quality is 84%</em>, ask: <em>which part is 84%, and what would we fix if it dropped?</em></p>
+<p><a href="../../../../posts/series/llm-evaluation-honestly/07-eval-drift/index.html">The next article</a> closes the series on the eval system itself: judges go stale, traffic shifts, documents change, and old eval cases stop representing the current product. The agent isn’t the only thing that drifts.</p>
+
+
+</section>
+
+ ]]></description>
+  <category>LLM evaluation, honestly</category>
+  <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/06-rag-evaluation/</guid>
+  <pubDate>Mon, 01 Jun 2026 00:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>Eval scores are samples, not truth</title>
+  <dc:creator>Yee Seng Chan</dc:creator>
+  <link>https://yeesengchan.com/posts/series/llm-evaluation-honestly/05-scores-are-samples/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+Part of a series
+</div>
+<div class="series-name">
+LLM evaluation, honestly
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-stop-vibe-checking/">Stop vibe-checking your agent</a></li>
+<li><a href="../02-eval-dataset/">Read traces before you write the labeling guide</a></li>
+<li><a href="../03-judge-vs-code/">Don’t ask an LLM judge what code can check</a></li>
+<li><a href="../04-judge-is-classifier/">Your LLM judge is a classifier</a></li>
+<li><a href="../05-scores-are-samples/">Eval scores are samples, not truth</a></li>
+<li><a href="../06-rag-evaluation/">Your RAG score hides the diagnosis</a></li>
+<li><a href="../07-eval-drift/">Your eval system also drifts</a></li>
+</ol>
+</div>
+<p>An eval score is a measurement from a sample, and samples are noisy. The dashboard reported 73% on Monday. By Friday it reported 75%. The team called it progress. But the eval set had 120 examples. The difference may just be noise.</p>
+<p>Three habits cover most of the eval-noise problem:</p>
+<ol type="1">
+<li>Compare versions on the same examples.</li>
+<li>Report uncertainty on the difference, not just the score.</li>
+<li>Check whether the result is large enough to act on.</li>
+</ol>
+<section id="compare-versions-on-the-same-examples" class="level2">
+<h2 class="anchored" data-anchor-id="compare-versions-on-the-same-examples">1. Compare versions on the same examples</h2>
+<p>When comparing two versions of a system, run them on the same eval set. If the samples differ, the result mixes two things: whether v8 is better, and whether v8 happened to get easier examples.</p>
+<p>Suppose both versions are run on 300 traces:</p>
+<ul>
+<li>v7 passes 213 traces: 71%</li>
+<li>v8 passes 228 traces: 76%</li>
+</ul>
+<p>The headline improvement is 5 percentage points. Before treating that as real progress, we need to ask how much uncertainty surrounds that estimate.</p>
+</section>
+<section id="report-the-ci-of-the-difference" class="level2">
+<h2 class="anchored" data-anchor-id="report-the-ci-of-the-difference">2. Report the CI of the difference</h2>
+<p>Because both versions ran on the same 300 traces, each trace falls into one of four outcomes:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Outcome</th>
+<th style="text-align: right;">Count</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Both pass</td>
+<td style="text-align: right;">198</td>
+</tr>
+<tr class="even">
+<td>Both fail</td>
+<td style="text-align: right;">57</td>
+</tr>
+<tr class="odd">
+<td>v8 fixes a v7 failure</td>
+<td style="text-align: right;">30</td>
+</tr>
+<tr class="even">
+<td>v8 breaks a v7 pass</td>
+<td style="text-align: right;">15</td>
+</tr>
+</tbody>
+</table>
+<p>The signal is in the disagreement rows. v8 fixes 30 cases and breaks 15, so the net gain is:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%0A%5Cfrac%7B30%20-%2015%7D%7B300%7D%20=%200.05%20=%205%5Ctext%7B%20percentage%20points%7D%0A"></p>
+<div id="fig-paired-outcome" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A split-flow. A box of 300 traces on the same eval set branches two ways. The upper, muted branch goes to Agreements, 255, made of 198 both pass and 57 both fail, which flows to a dashed box labelled cancel out, no signal, d equals 0. The lower, highlighted branch goes to Disagreements, 45, made of 30 fixed at plus 1 in green and 15 broke at minus 1 in red, which flows to a box reading net plus 15 traces equals plus 5 points. Caption: pairing on the same examples is why 255 traces drop out; the whole 5-point gain lives in 45.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-paired-outcome-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/llm-evaluation-honestly/05-scores-are-samples/paired_outcome_split.png" class="img-fluid figure-img" alt="A split-flow. A box of 300 traces on the same eval set branches two ways. The upper, muted branch goes to Agreements, 255, made of 198 both pass and 57 both fail, which flows to a dashed box labelled cancel out, no signal, d equals 0. The lower, highlighted branch goes to Disagreements, 45, made of 30 fixed at plus 1 in green and 15 broke at minus 1 in red, which flows to a box reading net plus 15 traces equals plus 5 points. Caption: pairing on the same examples is why 255 traces drop out; the whole 5-point gain lives in 45.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-paired-outcome-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: The signal is in the disagreements. Running v7 and v8 on the same 300 traces, 255 are agreements (198 both pass, 57 both fail); these cancel and carry no signal (d = 0). Only the 45 disagreements move the number: 30 cases v8 fixed (d = +1) and 15 it broke (d = −1), a net of +15 traces, which is the observed +5 points.
+</figcaption>
+</figure>
+</div>
+<p>But this 5-point gain is still an estimate from one eval sample. If we drew another 300 traces, the measured improvement might be 3.8 points, 6.1 points, or 4.4 points. The confidence interval tells us how noisy the estimate is.</p>
+<section id="step-1-define-the-trace-level-change" class="level3">
+<h3 class="anchored" data-anchor-id="step-1-define-the-trace-level-change">Step 1: Define the trace-level change</h3>
+<p>For each trace, define a before-and-after value <img src="https://latex.codecogs.com/png.latex?d">:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%0Ad%20=%0A%5Cbegin%7Bcases%7D%0A+1%20&amp;%20%5Ctext%7Bif%20v8%20fixes%20a%20v7%20failure%7D%20%5C%5C%0A-1%20&amp;%20%5Ctext%7Bif%20v8%20breaks%20a%20v7%20pass%7D%20%5C%5C%0A0%20&amp;%20%5Ctext%7Bif%20both%20versions%20agree%7D%0A%5Cend%7Bcases%7D%0A"></p>
+<p>In this example:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%0AP(d=+1)=%5Cfrac%7B30%7D%7B300%7D=0.10,%5Cquad%0AP(d=-1)=%5Cfrac%7B15%7D%7B300%7D=0.05,%5Cquad%0AP(d=0)=%5Cfrac%7B255%7D%7B300%7D=0.85%0A"></p>
+<p>The expected value of <img src="https://latex.codecogs.com/png.latex?d">, meaning the average trace-level change, is:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Baligned%7D%0AE%5Bd%5D%0A&amp;=%20P(d=1)(1)%20+%20P(d=-1)(-1)%20+%20P(d=0)(0)%20%5C%5C%0A&amp;=%20(0.10)(1)%20+%20(0.05)(-1)%20+%20(0.85)(0)%20%5C%5C%0A&amp;=%200.05%0A%5Cend%7Baligned%7D%0A"></p>
+<p>That matches the observed 5-point improvement.</p>
+</section>
+<section id="step-2-compute-the-standard-deviation" class="level3">
+<h3 class="anchored" data-anchor-id="step-2-compute-the-standard-deviation">Step 2: Compute the standard deviation</h3>
+<p>Standard deviation measures how spread out the trace-level changes are around their average.</p>
+<p>To get it, first compute the variance:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%0A%5Cmathrm%7BVar%7D(d)%20=%20E%5Bd%5E2%5D%20-%20E%5Bd%5D%5E2%0A"></p>
+<p>Compute <img src="https://latex.codecogs.com/png.latex?E%5Bd%5E2%5D">:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Baligned%7D%0AE%5Bd%5E2%5D%0A&amp;=%20%5Csum_x%20P(d=x)%20%5Ccdot%20x%5E2%20%5C%5C%0A&amp;=%20P(d=+1)(+1)%5E2%20+%20P(d=-1)(-1)%5E2%20+%20P(d=0)(0)%5E2%20%5C%5C%0A&amp;=%20(0.10)(1)%5E2%20+%20(0.05)(-1)%5E2%20+%20(0.85)(0)%5E2%20%5C%5C%0A&amp;=%200.15%0A%5Cend%7Baligned%7D%0A"></p>
+<p>Then:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Baligned%7D%0A%5Cmathrm%7BVar%7D(d)%0A&amp;=%20E%5Bd%5E2%5D%20-%20E%5Bd%5D%5E2%20%5C%5C%0A&amp;=%200.15%20-%20(0.05)%5E2%20%5C%5C%0A&amp;=%200.1475%0A%5Cend%7Baligned%7D%0A"></p>
+<p>Standard deviation is the square root of variance:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%0A%5Cmathrm%7BSD%7D%20=%20%5Csqrt%7B0.1475%7D%20%5Capprox%200.384%0A"></p>
+<p>So the individual trace-level changes have standard deviation about <img src="https://latex.codecogs.com/png.latex?0.384">.</p>
+</section>
+<section id="step-3-convert-standard-deviation-into-standard-error" class="level3">
+<h3 class="anchored" data-anchor-id="step-3-convert-standard-deviation-into-standard-error">Step 3: Convert standard deviation into standard error</h3>
+<p>The standard deviation tells us how much individual trace outcomes vary. The standard error tells us how much the average improvement would vary across repeated eval samples.</p>
+<p>A useful way to remember it:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%0A%5Cmathrm%7BSE%7D%20=%20%5Cfrac%7B%5Cmathrm%7BSD%7D%7D%7B%5Csqrt%7BN%7D%7D%0A"></p>
+<p>Here:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Baligned%7D%0A%5Cmathrm%7BSE%7D%0A&amp;=%20%5Cfrac%7B0.384%7D%7B%5Csqrt%7B300%7D%7D%20%5C%5C%0A&amp;%5Capprox%200.022%0A%5Cend%7Baligned%7D%0A"></p>
+<p>So the standard error is 2.2 percentage points.</p>
+</section>
+<section id="step-4-build-the-95-confidence-interval" class="level3">
+<h3 class="anchored" data-anchor-id="step-4-build-the-95-confidence-interval">Step 4: Build the 95% confidence interval</h3>
+<p>For a rough 95% confidence interval, use the estimate <img src="https://latex.codecogs.com/png.latex?%5Cpm%201.96"> standard errors:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Baligned%7D%0A%5Cmathrm%7BCI%7D%0A&amp;=%20%5Ctext%7Bimprovement%7D%20%5Cpm%201.96%20%5Ctimes%20%5Cmathrm%7BSE%7D%20%5C%5C%0A&amp;=%205.0%5C%25%20%5Cpm%201.96%20%5Ctimes%202.2%5C%25%20%5C%5C%0A&amp;=%205.0%5C%25%20%5Cpm%204.3%5C%25%20%5C%5C%0A&amp;%5Capprox%20%5B0.7%5C%25,%209.3%5C%25%5D%0A%5Cend%7Baligned%7D%0A"></p>
+<p>The interval excludes zero, but only barely. v8 is probably better than v7, but the estimate is not precise. The best estimate is a 5-point gain; the plausible range is roughly a 1-point to 9-point gain.</p>
+</section>
+<section id="compare-the-difference-not-overlapping-cis" class="level3">
+<h3 class="anchored" data-anchor-id="compare-the-difference-not-overlapping-cis">Compare the difference, not overlapping CIs</h3>
+<p>Do not decide whether v8 is better by checking whether the two individual confidence intervals overlap. For example:</p>
+<ul>
+<li>v7 pass rate: 71%, 95% CI [65.9%, 76.1%]</li>
+<li>v8 pass rate: 76%, 95% CI [71.2%, 80.8%]</li>
+</ul>
+<p>These intervals overlap, but that is not the right test.</p>
+<p>The right test is the confidence interval of the paired difference:</p>
+<ul>
+<li>v8 - v7 = +5 percentage points</li>
+<li>95% CI of the difference = [0.7%, 9.3%]</li>
+</ul>
+<p>This interval excludes zero, so the paired comparison says v8 is likely better.</p>
+<div id="fig-overlap-vs-difference" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two stacked panels. Top panel, red-bordered, the wrong test: a percentage axis with two interval bars, v7 at 71 percent spanning about 66 to 76, and v8 at 76 percent spanning about 71 to 81, with the overlapping region shaded and labelled overlap; verdict, reads as inconclusive. Bottom panel, green-bordered, the right test: an axis of difference in points with a dashed red line at zero, a single interval for v8 minus v7 centred at plus 5 points spanning roughly plus 0.6 to plus 9.4, entirely right of zero, labelled excludes 0; verdict, reads as v8 likely better. Caption: same comparison, two methods, trust the CI of the paired difference, not whether the individual CIs overlap.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-overlap-vs-difference-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/llm-evaluation-honestly/05-scores-are-samples/overlap_vs_difference_ci.png" class="img-fluid figure-img" alt="Two stacked panels. Top panel, red-bordered, the wrong test: a percentage axis with two interval bars, v7 at 71 percent spanning about 66 to 76, and v8 at 76 percent spanning about 71 to 81, with the overlapping region shaded and labelled overlap; verdict, reads as inconclusive. Bottom panel, green-bordered, the right test: an axis of difference in points with a dashed red line at zero, a single interval for v8 minus v7 centred at plus 5 points spanning roughly plus 0.6 to plus 9.4, entirely right of zero, labelled excludes 0; verdict, reads as v8 likely better. Caption: same comparison, two methods, trust the CI of the paired difference, not whether the individual CIs overlap.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-overlap-vs-difference-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Overlap is the wrong test. Top (the wrong test): v7’s pass-rate CI [65.9%, 76.1%] and v8’s [71.2%, 80.8%] visibly overlap, which naively reads as inconclusive. Bottom (the right test): the paired-difference CI, v8 minus v7 = +5 points with 95% CI [0.7%, 9.3%], sits entirely to the right of zero, so the paired comparison says v8 is likely better. Same data, opposite conclusions depending on the method.
+</figcaption>
+</figure>
+</div>
+<p>The paired comparison uses the trace-by-trace difference. Both versions were tested on the same examples, so the comparison removes a lot of noise from easy versus hard traces.</p>
+<p>So when comparing two versions, report the CI of the paired difference. Do not rely on whether the individual pass-rate CIs overlap.</p>
+</section>
+</section>
+<section id="know-what-this-eval-set-can-reliably-detect" class="level2">
+<h2 class="anchored" data-anchor-id="know-what-this-eval-set-can-reliably-detect">3. Know what this eval set can reliably detect</h2>
+<p>The confidence interval <img src="https://latex.codecogs.com/png.latex?%5Cmathrm%7BCI%7D"> tells us how uncertain this observed 5-point improvement is. The same standard error <img src="https://latex.codecogs.com/png.latex?%5Cmathrm%7BSE%7D"> also gives a rough planning number: how large an improvement this eval set can reliably detect.</p>
+<p>A common rule of thumb is:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%0A%5Ctext%7Bdetectable%20improvement%7D%20%5Capprox%202.8%20%5Ctimes%20%5Cmathrm%7BSE%7D%0A"></p>
+<p>The factor <img src="https://latex.codecogs.com/png.latex?2.8"> comes from two requirements:</p>
+<ul>
+<li>First, the observed improvement has to be large enough that the 95% confidence interval excludes zero. With a normal approximation, that means the improvement is about <img src="https://latex.codecogs.com/png.latex?1.96%20%5Ctimes%20%5Cmathrm%7BSE%7D"> away from zero.</li>
+<li>Second, we do not want an eval set that detects the improvement only when we get lucky with the sample. We want enough <strong>power</strong>. Power means: if the improvement is real, how often would this eval setup detect it?</li>
+</ul>
+<p>An eval with <strong>80% power</strong> means that if the true improvement is exactly the size we care about, then repeated evals of the same size would detect it about 80% of the time.</p>
+<p>To get 80% power, the true effect needs some extra margin beyond the 95% significance cutoff. Under the normal approximation, that extra margin is about <img src="https://latex.codecogs.com/png.latex?0.84%20%5Ctimes%20%5Cmathrm%7BSE%7D">.</p>
+<p>So the rough detectable improvement is:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Baligned%7D%0A%5Ctext%7Bdetectable%20improvement%7D%0A&amp;%5Capprox%20(1.96%20+%200.84)%20%5Ctimes%20%5Cmathrm%7BSE%7D%20%5C%5C%0A&amp;%5Capprox%202.8%20%5Ctimes%20%5Cmathrm%7BSE%7D%0A%5Cend%7Baligned%7D%0A"></p>
+<p>In plain English: the improvement should be large enough not merely to look significant in one lucky eval run, but to be detected reliably across repeated eval samples.</p>
+<p>In the example above:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Baligned%7D%0A%5Ctext%7Bdetectable%20improvement%7D%0A&amp;%5Capprox%202.8%20%5Ctimes%202.2%5C%25%20%5C%5C%0A&amp;%5Capprox%206.2%5C%25%0A%5Cend%7Baligned%7D%0A"></p>
+<p>So this 300-trace eval can reliably detect improvements around 6 percentage points under this disagreement pattern. The observed improvement is 5 points. v8 is probably better, but the evidence is borderline.</p>
+<p>For paired pass/fail evals with a disagreement pattern similar to this example, the rough detectable improvement is:</p>
+<ul>
+<li>100 traces: about 10 percentage points</li>
+<li>300 traces: about 6 percentage points</li>
+<li>1000 traces: about 3 percentage points</li>
+</ul>
+<div id="fig-detectable-vs-n" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A line chart. The x axis is eval-set size in traces from 0 to 1200; the y axis is detectable improvement in points from 0 to 16. A curve falls steeply then flattens, passing through marked points at 100 traces about 10 points, 300 traces about 6 points, and 1000 traces about 3 points. The region under the curve is shaded and labelled NOISE FLOOR, too small to reliably detect. A hollow marker at 300 traces and 5 points sits just below the curve, labelled observed +5 at 300, borderline. A box notes detectable is about 2.8 times SE, 1.96 significance plus 0.84 power. Caption: illustrative for this disagreement pattern, a +2-point gain on a small set is too small to trust.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-detectable-vs-n-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/llm-evaluation-honestly/05-scores-are-samples/detectable_vs_n.png" class="img-fluid figure-img" alt="A line chart. The x axis is eval-set size in traces from 0 to 1200; the y axis is detectable improvement in points from 0 to 16. A curve falls steeply then flattens, passing through marked points at 100 traces about 10 points, 300 traces about 6 points, and 1000 traces about 3 points. The region under the curve is shaded and labelled NOISE FLOOR, too small to reliably detect. A hollow marker at 300 traces and 5 points sits just below the curve, labelled observed +5 at 300, borderline. A box notes detectable is about 2.8 times SE, 1.96 significance plus 0.84 power. Caption: illustrative for this disagreement pattern, a +2-point gain on a small set is too small to trust.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-detectable-vs-n-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: Small eval sets can’t see small gains. The smallest improvement an eval set can reliably detect is roughly 2.8 × SE (1.96 for significance plus 0.84 for power). Since SE = SD/√N, the detectable threshold is proportional to 1/√N: about 10 points at 100 traces, 6 at 300, 3 at 1000, and you need 4× the traces to halve it. Anything below the curve is the noise floor; the observed +5-point gain at 300 traces sits just inside it, which is why the evidence is borderline.
+</figcaption>
+</figure>
+</div>
+<p>The exact numbers change with the disagreement rate, but the lesson is stable: small eval sets cannot reliably detect tiny improvements.</p>
+<p>If v8 improves by 2 points on a small eval set, the honest conclusion is usually not <em>“v8 is better.”</em> It is <em>“directionally positive, but too small to trust on this eval set.”</em></p>
+</section>
+<section id="the-same-paired-logic-works-for-scored-ratings" class="level2">
+<h2 class="anchored" data-anchor-id="the-same-paired-logic-works-for-scored-ratings">The same paired logic works for scored ratings</h2>
+<p>Not every eval is pass/fail. Sometimes humans score each output on a small scale, such as 1, 2, or 3.</p>
+<p>The same paired logic still applies. For each example, compute the score difference:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%0Ad_i%20=%20%5Ctext%7Bscore%7D_%7Bv8,i%7D%20-%20%5Ctext%7Bscore%7D_%7Bv7,i%7D%0A"></p>
+<p>Now the possible values are wider:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%0Ad_i%20%5Cin%20%5C%7B-2,%20-1,%200,%20+1,%20+2%5C%7D%0A"></p>
+<p>For example:</p>
+<ul>
+<li><img src="https://latex.codecogs.com/png.latex?1%20%5Crightarrow%203"> gives <img src="https://latex.codecogs.com/png.latex?d%20=%20+2"></li>
+<li><img src="https://latex.codecogs.com/png.latex?2%20%5Crightarrow%203"> gives <img src="https://latex.codecogs.com/png.latex?d%20=%20+1"></li>
+<li><img src="https://latex.codecogs.com/png.latex?2%20%5Crightarrow%202"> gives <img src="https://latex.codecogs.com/png.latex?d%20=%200"></li>
+<li><img src="https://latex.codecogs.com/png.latex?3%20%5Crightarrow%202"> gives <img src="https://latex.codecogs.com/png.latex?d%20=%20-1"></li>
+</ul>
+<p>Then compute the average difference and its confidence interval the same way:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%0A%5Cmathrm%7BSE%7D%20=%20%5Cfrac%7B%5Cmathrm%7BSD%7D(d)%7D%7B%5Csqrt%7BN%7D%7D%0A"></p>
+<p><img src="https://latex.codecogs.com/png.latex?%0A95%5C%25%5C,%5Cmathrm%7BCI%7D%20=%20%5Cbar%20d%20%5Cpm%201.96%20%5Ctimes%20%5Cmathrm%7BSE%7D%0A"></p>
+<p>So if v7 averages 2.1 and v8 averages 2.6 on the same 300 examples, the mean paired improvement is <img src="https://latex.codecogs.com/png.latex?+0.5"> points on the 1–3 scale. The confidence interval depends on how much the per-example differences vary.</p>
+</section>
+<section id="what-comes-next" class="level2">
+<h2 class="anchored" data-anchor-id="what-comes-next">What comes next</h2>
+<p>Three habits cover most of the eval-noise problem. Compare versions on the same eval set. Report the CI of the paired difference. Know your eval set’s noise floor before debating small movements.</p>
+<p>The next article <a href="../../../../posts/series/llm-evaluation-honestly/06-rag-evaluation/index.html">Your RAG score hides the diagnosis</a> takes this to RAG evaluation: did retrieval find the right passage, did generation stay faithful to it, did the answer address what the user actually asked, did the system recognize when to decline. Collapsing those into a single <em>“RAG quality”</em> score loses these distinctions.</p>
+<p>The next time someone celebrates a 2-point improvement, first ask: <em>what is the CI, and how big is your eval set?</em></p>
+
+
+</section>
+
+ ]]></description>
+  <category>LLM evaluation, honestly</category>
+  <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/05-scores-are-samples/</guid>
+  <pubDate>Fri, 29 May 2026 00:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Your LLM judge is a classifier</title>
   <dc:creator>Yee Seng Chan</dc:creator>
@@ -136,7 +599,7 @@ F1 on FAIL            = (2 * P * R) / (P + R) = 41%</code></pre>
 <li><strong>Over-flagging.</strong> The judge calls everything FAIL when the agent paraphrases instead of quoting verbatim.</li>
 <li><strong>Unclear judging standard.</strong> The judge says some answers are unfaithful that the humans accept as fine.</li>
 <li><strong>Right for the wrong reason.</strong> The verdict is correct but the critique points at the wrong thing.</li>
-<li><strong>Too-small validation set.</strong> Wide error bars on metrics; unreliable conclusions (Eval scores are samples, not truth covers when this matters).</li>
+<li><strong>Too-small validation set.</strong> Wide error bars on metrics; unreliable conclusions (<a href="../../../../posts/series/llm-evaluation-honestly/05-scores-are-samples/index.html">Eval scores are samples, not truth</a> covers when this matters).</li>
 </ul>
 <p>The fix progression is <strong>examples → criterion → model</strong>.</p>
 <p>Examples almost always move first: if the judge is wrong on five cases of subtle contradiction, consider adding five contradiction <strong>examples</strong> to the few-shot block. If multiple disagreements trace to ambiguity in what counts as a failure rather than missing examples, the adjudicator sharpens the <strong>criterion</strong>. <strong>Model</strong> swaps come last. Most calibration problems live in the prompt, not the model, and switching models is expensive in cost, latency, and stability.</p>
@@ -144,13 +607,13 @@ F1 on FAIL            = (2 * P * R) / (P + R) = 41%</code></pre>
 <section id="revalidate-when-things-change" class="level2">
 <h2 class="anchored" data-anchor-id="revalidate-when-things-change">Revalidate when things change</h2>
 <p>The judge agrees with humans on the held-out set today. That doesn’t mean it will agree in six months. Foundation models update, the agent’s failure distribution shifts, and new failure types appear. Calibration is a snapshot: true at measurement time, increasingly stale afterward.</p>
-<p>Your eval system also drifts covers what to do about it: re-validate against fresh labels on a schedule and monitor agreement rates over time. Large drift in those agreement rates is usually a signal that the failure distribution itself has changed.</p>
+<p><a href="../../../../posts/series/llm-evaluation-honestly/07-eval-drift/index.html">Your eval system also drifts</a> covers what to do about it: re-validate against fresh labels on a schedule and monitor agreement rates over time. Large drift in those agreement rates is usually a signal that the failure distribution itself has changed.</p>
 <p>Every deployed judge should carry a short record of what it was validated on: the domain, the trace types, the test-set size, the date, and what it’s allowed to be used for. Without that record, judges get re-used on data the original validation doesn’t cover, and the team trusts a number that no longer applies.</p>
 </section>
 <section id="the-judge-is-part-of-the-system" class="level2">
 <h2 class="anchored" data-anchor-id="the-judge-is-part-of-the-system">The judge is part of the system</h2>
 <p>An LLM judge is not an oracle. It is a model component that needs the same discipline as any other classifier: held-out labels, a confusion matrix, precision and recall on the class that matters, and periodic revalidation.</p>
-<p>Once the judge is validated, there is still one more question: how much should we trust movement in the score? A judge may report that v2 improved by two points, but that movement may be real or may be noise. The next article covers that next layer: uncertainty, sample size, and when an eval result is large enough to act on.</p>
+<p>Once the judge is validated, there is still one more question: how much should we trust movement in the score? A judge may report that v2 improved by two points, but that movement may be real or may be noise. <a href="../../../../posts/series/llm-evaluation-honestly/05-scores-are-samples/index.html">The next article</a> covers that next layer: uncertainty, sample size, and when an eval result is large enough to act on.</p>
 
 
 </section>
@@ -445,7 +908,7 @@ Figure&nbsp;1: Design the dataset on two axes. Coverage is what situations the s
 <li><strong>Safety cases:</strong> the system must refuse, escalate, or avoid forbidden behavior.</li>
 </ul>
 <p>Too easy and the dataset saturates; too hard and it doesn’t show progress. Aim for a visible mix so the team can tell what actually improved.</p>
-<p>Eval scores are samples, not truth returns to sample size and uncertainty. If a slice matters, include it deliberately and track it separately.</p>
+<p><a href="../../../../posts/series/llm-evaluation-honestly/05-scores-are-samples/index.html">Eval scores are samples, not truth</a> returns to sample size and uncertainty. If a slice matters, include it deliberately and track it separately.</p>
 </section>
 <section id="when-you-dont-have-production-data" class="level2">
 <h2 class="anchored" data-anchor-id="when-you-dont-have-production-data">When you don’t have production data</h2>
@@ -632,13 +1095,13 @@ font-style: inherit;">"No refund-promise language"</span>)</span></code></pre></
 <p>A regression case is a real failure saved so future versions have to pass it.</p>
 <p>If the intake agent once promised a refund, dropped an order ID, or asked for information the user already provided, that trace becomes a fixed case in the regression suite. Ten or fifteen real failures are enough to make the system harder to break in the same way twice.</p>
 <p>Run the regression suite before important merges. If the new version fails cases the old version passed, the team should understand why before shipping.</p>
-<p>Eval scores are samples, not truth covers what changes once raw pass rates are no longer enough and you need to think about uncertainty, sample size, and meaningful differences between versions.</p>
+<p><a href="../../../../posts/series/llm-evaluation-honestly/05-scores-are-samples/index.html">Eval scores are samples, not truth</a> covers what changes once raw pass rates are no longer enough and you need to think about uncertainty, sample size, and meaningful differences between versions.</p>
 </section>
 <section id="review-and-decisions" class="level3">
 <h3 class="anchored" data-anchor-id="review-and-decisions">6. Review and decisions</h3>
 <p>The loop only matters if it changes what the team does. A failed check blocks a merge, a spike in redundant-question failures triggers investigation, a new production failure becomes a regression case, a judge disagreement becomes a calibration example.</p>
 <p>Pull a small sample of recent failures regularly, read them end-to-end, and ask whether they reveal a pattern the current dataset misses. The habit is simple: new failures feed back into the eval loop instead of disappearing into Slack.</p>
-<p>Your eval system also drifts returns to this production loop: how new failures from real usage become new eval cases, alerts, and hardening work.</p>
+<p><a href="../../../../posts/series/llm-evaluation-honestly/07-eval-drift/index.html">Your eval system also drifts</a> returns to this production loop: how new failures from real usage become new eval cases, alerts, and hardening work.</p>
 </section>
 <section id="a-concrete-first-version" class="level3">
 <h3 class="anchored" data-anchor-id="a-concrete-first-version">A concrete first version</h3>

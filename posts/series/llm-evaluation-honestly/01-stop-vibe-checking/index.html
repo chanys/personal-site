@@ -81,9 +81,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-7b53549d121f5930ef88eb09dda4672c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-3874333d9529686a5a4437217f193688.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-7b53549d121f5930ef88eb09dda4672c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-e8efa69393f3eecd887944755cf546dd.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-70ff4a802cd88924299c1cc1884d05e5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-e8efa69393f3eecd887944755cf546dd.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -531,13 +531,13 @@ Figure&nbsp;3: Check or judge? A check is a deterministic function with no LLM c
 <p>A regression case is a real failure saved so future versions have to pass it.</p>
 <p>If the intake agent once promised a refund, dropped an order ID, or asked for information the user already provided, that trace becomes a fixed case in the regression suite. Ten or fifteen real failures are enough to make the system harder to break in the same way twice.</p>
 <p>Run the regression suite before important merges. If the new version fails cases the old version passed, the team should understand why before shipping.</p>
-<p>Eval scores are samples, not truth covers what changes once raw pass rates are no longer enough and you need to think about uncertainty, sample size, and meaningful differences between versions.</p>
+<p><a href="../../../../posts/series/llm-evaluation-honestly/05-scores-are-samples/index.html">Eval scores are samples, not truth</a> covers what changes once raw pass rates are no longer enough and you need to think about uncertainty, sample size, and meaningful differences between versions.</p>
 </section>
 <section id="review-and-decisions" class="level3">
 <h3 class="anchored" data-anchor-id="review-and-decisions">6. Review and decisions</h3>
 <p>The loop only matters if it changes what the team does. A failed check blocks a merge, a spike in redundant-question failures triggers investigation, a new production failure becomes a regression case, a judge disagreement becomes a calibration example.</p>
 <p>Pull a small sample of recent failures regularly, read them end-to-end, and ask whether they reveal a pattern the current dataset misses. The habit is simple: new failures feed back into the eval loop instead of disappearing into Slack.</p>
-<p>Your eval system also drifts returns to this production loop: how new failures from real usage become new eval cases, alerts, and hardening work.</p>
+<p><a href="../../../../posts/series/llm-evaluation-honestly/07-eval-drift/index.html">Your eval system also drifts</a> returns to this production loop: how new failures from real usage become new eval cases, alerts, and hardening work.</p>
 </section>
 <section id="a-concrete-first-version" class="level3">
 <h3 class="anchored" data-anchor-id="a-concrete-first-version">A concrete first version</h3>

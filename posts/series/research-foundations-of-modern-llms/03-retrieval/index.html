@@ -65,9 +65,9 @@ div.csl-indent {
 <link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-7b53549d121f5930ef88eb09dda4672c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-3874333d9529686a5a4437217f193688.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-7b53549d121f5930ef88eb09dda4672c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-e8efa69393f3eecd887944755cf546dd.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-70ff4a802cd88924299c1cc1884d05e5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-e8efa69393f3eecd887944755cf546dd.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -571,7 +571,7 @@ Figure&nbsp;2: The production RAG pipeline. Top: offline indexing. Bottom: onlin
 <ol type="1">
 <li><p><strong>Treating RAG as monolithic.</strong> RAG is a pipeline. Each stage (chunking, embedding, retrieval, reranking, prompt assembly, generation) has its own quality and latency tradeoffs. “Our RAG isn’t working” is rarely diagnosed by treating the system as a black box.</p></li>
 <li><p><strong>Vibes-only evaluation.</strong> <a href="../../../../posts/series/llm-evaluation-honestly/01-stop-vibe-checking/index.html">“It seems to work” is not evaluation</a>. At minimum: a labeled set of (query, relevant_chunk) pairs, <a href="https://chanys.github.io/ir-metrics/">retrieval metrics</a> on a held-out set, and end-to-end answer correctness. Without these, you don’t know whether the embedding model, the reranker, or the LLM is failing.</p></li>
-<li><p><strong>Not measuring retrieval recall before LLM accuracy.</strong> If the relevant chunks aren’t retrieved, no LLM can save you. Measure retrieval recall@k first, then end-to-end accuracy.</p></li>
+<li><p><strong>Not measuring retrieval recall before LLM accuracy.</strong> If the relevant chunks aren’t retrieved, no LLM can save you. Measure <a href="../../../../posts/series/llm-evaluation-honestly/06-rag-evaluation/index.html">retrieval recall@k</a> first, then end-to-end accuracy.</p></li>
 </ol>
 </section>
 <section id="closing" class="level2">

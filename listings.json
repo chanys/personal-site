@@ -2,6 +2,9 @@
   {
     "listing": "/writing.html",
     "items": [
+      "/posts/series/llm-evaluation-honestly/07-eval-drift/index.html",
+      "/posts/series/llm-evaluation-honestly/06-rag-evaluation/index.html",
+      "/posts/series/llm-evaluation-honestly/05-scores-are-samples/index.html",
       "/posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.html",
       "/posts/series/llm-evaluation-honestly/03-judge-vs-code/index.html",
       "/posts/series/llm-evaluation-honestly/02-eval-dataset/index.html",
@@ -28,34 +31,6 @@
     ]
   },
   {
-    "listing": "/posts/series/how-llms-learn-to-reason/index.html",
-    "items": [
-      "/posts/series/how-llms-learn-to-reason/00-reinforce-foundations/index.html",
-      "/posts/series/how-llms-learn-to-reason/00-reinforce-gradient/index.html",
-      "/posts/series/how-llms-learn-to-reason/01-ppo/index.html",
-      "/posts/series/how-llms-learn-to-reason/02-grpo/index.html",
-      "/posts/series/how-llms-learn-to-reason/03-dpo/index.html",
-      "/posts/series/how-llms-learn-to-reason/04-r1/index.html",
-      "/posts/series/how-llms-learn-to-reason/05-tool-use/index.html"
-    ]
-  },
-  {
-    "listing": "/posts/series/llm-evaluation-honestly/index.html",
-    "items": [
-      "/posts/series/llm-evaluation-honestly/01-stop-vibe-checking/index.html",
-      "/posts/series/llm-evaluation-honestly/02-eval-dataset/index.html",
-      "/posts/series/llm-evaluation-honestly/03-judge-vs-code/index.html",
-      "/posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.html"
-    ]
-  },
-  {
-    "listing": "/posts/series/what-an-agent-actually-is/index.html",
-    "items": [
-      "/posts/series/what-an-agent-actually-is/01-what-is-an-agent/index.html",
-      "/posts/series/what-an-agent-actually-is/02-agent-frameworks/index.html"
-    ]
-  },
-  {
     "listing": "/posts/series/research-foundations-of-modern-llms/index.html",
     "items": [
       "/posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/index.html",
@@ -76,6 +51,18 @@
     ]
   },
   {
+    "listing": "/posts/series/how-llms-learn-to-reason/index.html",
+    "items": [
+      "/posts/series/how-llms-learn-to-reason/00-reinforce-foundations/index.html",
+      "/posts/series/how-llms-learn-to-reason/00-reinforce-gradient/index.html",
+      "/posts/series/how-llms-learn-to-reason/01-ppo/index.html",
+      "/posts/series/how-llms-learn-to-reason/02-grpo/index.html",
+      "/posts/series/how-llms-learn-to-reason/03-dpo/index.html",
+      "/posts/series/how-llms-learn-to-reason/04-r1/index.html",
+      "/posts/series/how-llms-learn-to-reason/05-tool-use/index.html"
+    ]
+  },
+  {
     "listing": "/series.html",
     "items": [
       "/posts/series/how-llms-learn-to-reason/index.html",
@@ -83,6 +70,25 @@
       "/posts/series/what-an-agent-actually-is/index.html",
       "/posts/series/the-agent-harness/index.html",
       "/posts/series/llm-evaluation-honestly/index.html"
+    ]
+  },
+  {
+    "listing": "/posts/series/llm-evaluation-honestly/index.html",
+    "items": [
+      "/posts/series/llm-evaluation-honestly/01-stop-vibe-checking/index.html",
+      "/posts/series/llm-evaluation-honestly/02-eval-dataset/index.html",
+      "/posts/series/llm-evaluation-honestly/03-judge-vs-code/index.html",
+      "/posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.html",
+      "/posts/series/llm-evaluation-honestly/05-scores-are-samples/index.html",
+      "/posts/series/llm-evaluation-honestly/06-rag-evaluation/index.html",
+      "/posts/series/llm-evaluation-honestly/07-eval-drift/index.html"
+    ]
+  },
+  {
+    "listing": "/posts/series/what-an-agent-actually-is/index.html",
+    "items": [
+      "/posts/series/what-an-agent-actually-is/01-what-is-an-agent/index.html",
+      "/posts/series/what-an-agent-actually-is/02-agent-frameworks/index.html"
     ]
   }
 ]
