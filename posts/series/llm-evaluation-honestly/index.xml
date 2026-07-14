@@ -14,8 +14,8 @@
 <title>LLM evaluation, honestly — series</title>
 <link>https://yeesengchan.com/posts/series/llm-evaluation-honestly/</link>
 </image>
-<generator>quarto-1.9.37</generator>
-<lastBuildDate>Fri, 05 Jun 2026 04:00:00 GMT</lastBuildDate>
+<generator>quarto-1.9.38</generator>
+<lastBuildDate>Fri, 05 Jun 2026 00:00:00 GMT</lastBuildDate>
 <item>
   <title>Your eval system also drifts</title>
   <dc:creator>Yee Seng Chan</dc:creator>
@@ -115,7 +115,7 @@ LLM evaluation, honestly
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/07-eval-drift/</guid>
-  <pubDate>Fri, 05 Jun 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 05 Jun 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Your RAG score hides the diagnosis</title>
@@ -246,7 +246,7 @@ Figure&nbsp;1: One bad answer, five different bugs. The same wrong answer (“30
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/06-rag-evaluation/</guid>
-  <pubDate>Mon, 01 Jun 2026 04:00:00 GMT</pubDate>
+  <pubDate>Mon, 01 Jun 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Eval scores are samples, not truth</title>
@@ -477,7 +477,7 @@ Figure&nbsp;3: Small eval sets can’t see small gains. The smallest improvement
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/05-scores-are-samples/</guid>
-  <pubDate>Fri, 29 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 29 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Your LLM judge is a classifier</title>
@@ -621,7 +621,7 @@ F1 on FAIL            = (2 * P * R) / (P + R) = 41%</code></pre>
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/04-judge-is-classifier/</guid>
-  <pubDate>Tue, 26 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 26 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Don’t ask an LLM judge what code can check</title>
@@ -826,7 +826,7 @@ Figure&nbsp;1: One number can’t tell you what broke. The composite quality_jud
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/03-judge-vs-code/</guid>
-  <pubDate>Fri, 22 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 22 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Read traces before you write the labeling guide</title>
@@ -928,7 +928,7 @@ Figure&nbsp;1: Design the dataset on two axes. Coverage is what situations the s
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/02-eval-dataset/</guid>
-  <pubDate>Tue, 19 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 19 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Stop vibe-checking your agent</title>
@@ -1159,7 +1159,7 @@ font-style: inherit;">"No refund-promise language"</span>)</span></code></pre></
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/01-stop-vibe-checking/</guid>
-  <pubDate>Fri, 15 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 15 May 2026 00:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>

@@ -14,8 +14,8 @@
 <title>The agent harness — series</title>
 <link>https://yeesengchan.com/posts/series/the-agent-harness/</link>
 </image>
-<generator>quarto-1.9.37</generator>
-<lastBuildDate>Sun, 10 May 2026 04:00:00 GMT</lastBuildDate>
+<generator>quarto-1.9.38</generator>
+<lastBuildDate>Sun, 10 May 2026 00:00:00 GMT</lastBuildDate>
 <item>
   <title>Traces are how agents get better</title>
   <dc:creator>Yee Seng Chan</dc:creator>
@@ -428,7 +428,7 @@ Figure&nbsp;1: The hardening loop. A failure produces a trace; the trace identif
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/05-traces/</guid>
-  <pubDate>Sun, 10 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sun, 10 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Prompts guide. Gates enforce</title>
@@ -745,7 +745,7 @@ The harness verifies.</code></pre>
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/04-prompts-gate/</guid>
-  <pubDate>Fri, 01 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 01 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>State, not transcript, is agent memory</title>
@@ -1131,7 +1131,7 @@ font-style: inherit;">True</span></span></code></pre></div></div>
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/03-state-not-transcript/</guid>
-  <pubDate>Tue, 28 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 28 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>The harness is the product</title>
@@ -1259,7 +1259,7 @@ Figure&nbsp;2: Three nested levels of engineering. Each level encompasses the pr
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/02-harness-is-the-product/</guid>
-  <pubDate>Thu, 23 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Thu, 23 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Why AI agent demos break in production</title>
@@ -1554,7 +1554,7 @@ Figure&nbsp;1: Six failure shapes mapped to the control surfaces that should hav
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/01-demos-break/</guid>
-  <pubDate>Sat, 18 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sat, 18 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>

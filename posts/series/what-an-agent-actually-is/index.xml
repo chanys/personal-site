@@ -14,8 +14,8 @@
 <title>What an agent actually is — series</title>
 <link>https://yeesengchan.com/posts/series/what-an-agent-actually-is/</link>
 </image>
-<generator>quarto-1.9.37</generator>
-<lastBuildDate>Tue, 14 Apr 2026 04:00:00 GMT</lastBuildDate>
+<generator>quarto-1.9.38</generator>
+<lastBuildDate>Tue, 14 Apr 2026 00:00:00 GMT</lastBuildDate>
 <item>
   <title>Behind the scenes of AI agent frameworks</title>
   <dc:creator>Yee Seng Chan</dc:creator>
@@ -773,7 +773,7 @@ font-style: inherit;"># dict</span></span></code></pre></div></div>
  ]]></description>
   <category>What an agent actually is</category>
   <guid>https://yeesengchan.com/posts/series/what-an-agent-actually-is/02-agent-frameworks/</guid>
-  <pubDate>Tue, 14 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 14 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>What the heck is an AI agent?</title>
@@ -925,7 +925,7 @@ Yao, Shunyu, Jeffrey Zhao, Dian Yu, et al. 2023. <span>“ReAct: Synergizing Rea
 </div></section></div> ]]></description>
   <category>What an agent actually is</category>
   <guid>https://yeesengchan.com/posts/series/what-an-agent-actually-is/01-what-is-an-agent/</guid>
-  <pubDate>Sat, 11 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sat, 11 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>

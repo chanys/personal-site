@@ -9,8 +9,8 @@
 <link>https://yeesengchan.com/writing.html</link>
 <atom:link href="https://yeesengchan.com/writing.xml" rel="self" type="application/rss+xml"/>
 <description>Essays on how modern language models work, and on building and evaluating the systems around them.</description>
-<generator>quarto-1.9.37</generator>
-<lastBuildDate>Fri, 05 Jun 2026 04:00:00 GMT</lastBuildDate>
+<generator>quarto-1.9.38</generator>
+<lastBuildDate>Fri, 05 Jun 2026 00:00:00 GMT</lastBuildDate>
 <item>
   <title>Your eval system also drifts</title>
   <dc:creator>Yee Seng Chan</dc:creator>
@@ -110,7 +110,7 @@ LLM evaluation, honestly
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/07-eval-drift/</guid>
-  <pubDate>Fri, 05 Jun 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 05 Jun 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Your RAG score hides the diagnosis</title>
@@ -241,7 +241,7 @@ Figure&nbsp;1: One bad answer, five different bugs. The same wrong answer (“30
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/06-rag-evaluation/</guid>
-  <pubDate>Mon, 01 Jun 2026 04:00:00 GMT</pubDate>
+  <pubDate>Mon, 01 Jun 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Eval scores are samples, not truth</title>
@@ -472,7 +472,7 @@ Figure&nbsp;3: Small eval sets can’t see small gains. The smallest improvement
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/05-scores-are-samples/</guid>
-  <pubDate>Fri, 29 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 29 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Your LLM judge is a classifier</title>
@@ -616,7 +616,7 @@ F1 on FAIL            = (2 * P * R) / (P + R) = 41%</code></pre>
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/04-judge-is-classifier/</guid>
-  <pubDate>Tue, 26 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 26 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Don’t ask an LLM judge what code can check</title>
@@ -821,7 +821,7 @@ Figure&nbsp;1: One number can’t tell you what broke. The composite quality_jud
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/03-judge-vs-code/</guid>
-  <pubDate>Fri, 22 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 22 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Read traces before you write the labeling guide</title>
@@ -923,7 +923,7 @@ Figure&nbsp;1: Design the dataset on two axes. Coverage is what situations the s
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/02-eval-dataset/</guid>
-  <pubDate>Tue, 19 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 19 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Stop vibe-checking your agent</title>
@@ -1154,7 +1154,7 @@ font-style: inherit;">"No refund-promise language"</span>)</span></code></pre></
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/01-stop-vibe-checking/</guid>
-  <pubDate>Fri, 15 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 15 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Traces are how agents get better</title>
@@ -1568,7 +1568,7 @@ Figure&nbsp;1: The hardening loop. A failure produces a trace; the trace identif
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/05-traces/</guid>
-  <pubDate>Sun, 10 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sun, 10 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Prompts guide. Gates enforce</title>
@@ -1885,7 +1885,7 @@ The harness verifies.</code></pre>
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/04-prompts-gate/</guid>
-  <pubDate>Fri, 01 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 01 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>State, not transcript, is agent memory</title>
@@ -2271,7 +2271,7 @@ font-style: inherit;">True</span></span></code></pre></div></div>
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/03-state-not-transcript/</guid>
-  <pubDate>Tue, 28 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 28 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>The harness is the product</title>
@@ -2399,7 +2399,7 @@ Figure&nbsp;2: Three nested levels of engineering. Each level encompasses the pr
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/02-harness-is-the-product/</guid>
-  <pubDate>Thu, 23 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Thu, 23 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Why AI agent demos break in production</title>
@@ -2694,7 +2694,7 @@ Figure&nbsp;1: Six failure shapes mapped to the control surfaces that should hav
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/01-demos-break/</guid>
-  <pubDate>Sat, 18 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sat, 18 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Behind the scenes of AI agent frameworks</title>
@@ -3453,7 +3453,7 @@ font-style: inherit;"># dict</span></span></code></pre></div></div>
  ]]></description>
   <category>What an agent actually is</category>
   <guid>https://yeesengchan.com/posts/series/what-an-agent-actually-is/02-agent-frameworks/</guid>
-  <pubDate>Tue, 14 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 14 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>What the heck is an AI agent?</title>
@@ -3605,7 +3605,7 @@ Yao, Shunyu, Jeffrey Zhao, Dian Yu, et al. 2023. <span>“ReAct: Synergizing Rea
 </div></section></div> ]]></description>
   <category>What an agent actually is</category>
   <guid>https://yeesengchan.com/posts/series/what-an-agent-actually-is/01-what-is-an-agent/</guid>
-  <pubDate>Sat, 11 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sat, 11 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Information extraction didn’t disappear. It moved inside the workflow.</title>
@@ -3901,7 +3901,7 @@ Zhang, Zikun, Wei You, Tongtao Wu, Xiaolong Wang, Jianxin Li, and Min Zhang. 202
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/05-information-extraction/</guid>
-  <pubDate>Sun, 05 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sun, 05 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>The fine-tuning stack: one loss, different data</title>
@@ -4060,7 +4060,7 @@ Zhou, Chunting, Pengfei Liu, Puxin Xu, et al. 2023. <span>“LIMA: Less Is More 
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/04-fine-tuning-stack/</guid>
-  <pubDate>Tue, 31 Mar 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 31 Mar 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Retrieval is older than RAG: from DPR to end-to-end</title>
@@ -4250,7 +4250,7 @@ Siriwardhana, Shamane, Rivindu Weerasekera, Elliott Wen, Tharindu Kaluarachchi, 
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/03-retrieval/</guid>
-  <pubDate>Fri, 27 Mar 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 27 Mar 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>The encoder didn’t die. It became the embedding model</title>
@@ -4391,7 +4391,7 @@ Wang, Liang, Nan Yang, Xiaolong Huang, et al. 2022. <span>“Text Embeddings by 
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/02-encoder-embeddings/</guid>
-  <pubDate>Mon, 23 Mar 2026 04:00:00 GMT</pubDate>
+  <pubDate>Mon, 23 Mar 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Pretraining objectives: why decoder-only won</title>
@@ -4602,7 +4602,7 @@ Tay, Yi, Mostafa Dehghani, Vinh Q. Tran, et al. 2023. <span>“UL2: Unifying Lan
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/</guid>
-  <pubDate>Wed, 18 Mar 2026 04:00:00 GMT</pubDate>
+  <pubDate>Wed, 18 Mar 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>How reasoning models learn to use tools</title>
@@ -4951,7 +4951,7 @@ Qian, Cheng, Emre Can Acikgoz, Qi He, et al. 2026. <span>“ToolRL: Reward Is Al
 </div></section></div> ]]></description>
   <category>How LLMs learn to reason</category>
   <guid>https://yeesengchan.com/posts/series/how-llms-learn-to-reason/05-tool-use/</guid>
-  <pubDate>Sat, 14 Mar 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sat, 14 Mar 2026 00:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
