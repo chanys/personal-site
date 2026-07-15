@@ -25,7 +25,7 @@ format:
 
 [LLM workflow]{.proj-chip} [structured extraction]{.proj-chip} [clinical NLP]{.proj-chip}
 
-A multi-step LLM workflow that turns a clinician-patient encounter transcript into a structured clinical note. Parallel extraction calls produce typed, metadata-tagged frames that a downstream routing layer places into the correct note sections. Clinician evaluation showed [2× recall of medical facts]{.gt-span .gt-b} at maintained accuracy, improved clinical utility over the prior production system, and ~50% better run-to-run consistency on extracted medical problems and clinical facts.
+A multi-step LLM workflow that turns a clinician-patient encounter transcript into a structured clinical note. Parallel extraction calls produce typed, metadata-tagged frames that a downstream routing layer places into the correct note sections. Clinician evaluation showed [2× recall of medical facts]{.gt-span .gt-b} at maintained accuracy, improved clinical utility over the prior production system, and [~50% better run-to-run consistency]{.gt-span .gt-b} on extracted medical problems and clinical facts.
 
 [Pattern writeup →](/posts/series/research-foundations-of-modern-llms/05-information-extraction/#ie-as-workflow-state){.proj-cta}
 
@@ -62,7 +62,7 @@ The toolkit supported [~$25M in DARPA and IARPA contract value]{.gt-span}, most 
 
 [BERT]{.proj-chip} [DeBERTa]{.proj-chip} [T5]{.proj-chip} [LLaMA]{.proj-chip} [Mistral]{.proj-chip} [DPO]{.proj-chip} [RAG]{.proj-chip}
 
-A single codebase I designed and wrote by hand, covering the model and training stack end to end: sequence and token classification, span-pair relation extraction, seq2seq, contrastive retrieval, instruction and chat fine-tuning, DPO, and end-to-end RAG with a jointly trained retriever and generator. It uses standard backbones (BERT, DeBERTa, T5, LLaMA, Mistral) and the usual libraries where they fit, with custom model and training code where the task needed it: the span-pair model, the triplet contrastive model, and the joint retriever-generator RAG loss are [written from scratch]{.gt-span}, not pulled from a library.
+A single [codebase I designed and wrote by hand]{.gt-span}, covering the model and training stack end to end: [sequence and token classification, span-pair relation extraction, seq2seq, contrastive retrieval, instruction and chat fine-tuning, DPO, and end-to-end RAG with a jointly trained retriever and generator]{.gt-span}. It uses standard backbones (BERT, DeBERTa, T5, LLaMA, Mistral) and the usual libraries where they fit, with custom model and training code where the task needed it: the span-pair model, the triplet contrastive model, and the joint retriever-generator RAG loss are written from scratch, not pulled from a library.
 
 [Code →](https://github.com/chanys/tnlp){.proj-cta}
 
