@@ -241,6 +241,9 @@ body.series-index .series-banner-cover img {
   width: 100%;
   height: auto;
   max-width: 100%;
+  background: var(--fn-card);
+  border: 1px solid var(--fn-hairline);
+  border-radius: 5px;
 }
 body.series-index .series-banner-body {
   flex: 1;
@@ -773,4 +776,46 @@ figure figcaption,
   text-align: center;
   color: var(--fn-ink-soft);
   margin-top: 0.65rem;
+}
+
+// ===========================================================================
+//  SERIES LANDING PAGE
+//  Featured cover, no redundant category chip (it just repeats the H1), and
+//  numbered parts. The parts carry an `order:` and the page says "Read in
+//  order", so the numbers are structural sequence, not decoration.
+// ===========================================================================
+body.series-landing #title-block-header .quarto-categories { display: none; }
+
+// Full-width banner: the cover is the page's strongest asset, so it spans the
+// reading column. object-fit crops the transparent SVG's vertical margins to a
+// banner height; the themed card shows through (no white glare on dark).
+.series-hero {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  object-fit: cover;
+  object-position: center;
+  margin: 0 0 2.2rem;
+  background: var(--fn-card);
+  border: 1px solid var(--fn-hairline);
+  border-radius: 6px;
+}
+
+body.series-landing .quarto-listing-default { counter-reset: sl-part; }
+body.series-landing .quarto-listing-default .quarto-post {
+  counter-increment: sl-part;
+  // Numbers + whitespace segment the sequence; the per-row hairline is
+  // redundant structure (and the loudest editorial-template tell).
+  border-bottom: none;
+}
+// Number sits atop the date column (the left metadata column) as the sequence
+// marker; putting it here avoids fighting Quarto's flex ordering.
+body.series-landing .quarto-listing-default .quarto-post .metadata::before {
+  content: counter(sl-part, decimal-leading-zero);
+  display: block;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--fn-accent);
+  margin-bottom: 0.4rem;
 }

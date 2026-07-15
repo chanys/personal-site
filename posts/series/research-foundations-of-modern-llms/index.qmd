@@ -1,7 +1,10 @@
 ---
 title: "Research foundations of modern LLMs"
 description: "What modern LLMs inherited from earlier NLP research, and why those ideas reorganized into today's stack instead of disappearing."
-image: 02-foundations.png
+image: cover.svg
+format:
+  html:
+    body-classes: series-landing
 image-alt: "Cover image for the series: Research foundations of modern LLMs"
 order: 2
 parts: 5
@@ -20,6 +23,10 @@ listing:
     title: "Research foundations of modern LLMs — series"
     description: "What modern LLMs inherited from earlier NLP research, and why those ideas reorganized into today's stack instead of disappearing."
 ---
+
+```{=html}
+<img src="cover.svg" class="series-hero" alt="Research foundations of modern LLMs — series cover">
+```
 
 Encoders, retrieval, fine-tuning, and information extraction were each treated as the main event at some point. Each is now a component inside a larger system. The series traces where those ideas went and why the rearrangement matters.
 
