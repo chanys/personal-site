@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-label="LLM evaluation: a confusion matrix with a correct hit and a missed failure">
+  <rect x="360" y="160" width="240" height="240" fill="#E4E9FD"/>
+  <rect x="600" y="400" width="240" height="240" fill="#E4E9FD"/>
+  <g fill="none" stroke="#2457E5" stroke-width="5">
+    <rect x="360" y="160" width="480" height="480"/>
+    <line x1="600" y1="160" x2="600" y2="640"/>
+    <line x1="360" y1="400" x2="840" y2="400"/>
+  </g>
+  <path d="M432 282 l34 40 l62 -82" fill="none" stroke="#2457E5" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <g stroke="#C0895E" stroke-width="15" stroke-linecap="round">
+    <line x1="684" y1="244" x2="756" y2="316"/><line x1="756" y1="244" x2="684" y2="316"/>
+  </g>
+</svg>

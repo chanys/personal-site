@@ -10,7 +10,7 @@
 <atom:link href="https://yeesengchan.com/posts/series/the-agent-harness/index.xml" rel="self" type="application/rss+xml"/>
 <description>Why agent demos break in production, and why the harness, the state, gates, traces, verification, and engineering around the model, is often the actual product.</description>
 <image>
-<url>https://yeesengchan.com/04-harness.png</url>
+<url>https://yeesengchan.com/cover.svg</url>
 <title>The agent harness — series</title>
 <link>https://yeesengchan.com/posts/series/the-agent-harness/</link>
 </image>

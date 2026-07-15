@@ -10,7 +10,7 @@
 <atom:link href="https://yeesengchan.com/posts/series/what-an-agent-actually-is/index.xml" rel="self" type="application/rss+xml"/>
 <description>A first-principles definition of an AI agent: control loops, tools, state, and decisions, and what agent frameworks are really doing underneath their abstractions.</description>
 <image>
-<url>https://yeesengchan.com/03-agent.png</url>
+<url>https://yeesengchan.com/cover.svg</url>
 <title>What an agent actually is — series</title>
 <link>https://yeesengchan.com/posts/series/what-an-agent-actually-is/</link>
 </image>

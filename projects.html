@@ -8,7 +8,7 @@
 
 <meta name="description" content="Most of my work lives inside research programs and companies. The public pieces are collected here.">
 
-<title>Projects | Yee Seng Chan – Yee Seng Chan</title>
+<title>Projects – Yee Seng Chan</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -45,9 +45,9 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-70f71cdf0bba3622b74f37b8201f9ca3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-a65d1c36ebcfeda919725d9dca667c45.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-70f71cdf0bba3622b74f37b8201f9ca3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-7a11e85f4c617d17006b2b79ddbe52dd.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-5eba996455d7fab91a374ef99e09f3a2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-7a11e85f4c617d17006b2b79ddbe52dd.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -87,10 +87,10 @@ ul.task-list li input[type="checkbox"] {
 
 
 <link rel="stylesheet" href="styles.css">
-<meta property="og:title" content="Projects | Yee Seng Chan">
+<meta property="og:title" content="Projects">
 <meta property="og:description" content="Most of my work lives inside research programs and companies. The public pieces are collected here.">
 <meta property="og:site_name" content="Yee Seng Chan">
-<meta name="twitter:title" content="Projects | Yee Seng Chan">
+<meta name="twitter:title" content="Projects">
 <meta name="twitter:description" content="Most of my work lives inside research programs and companies. The public pieces are collected here.">
 <meta name="twitter:card" content="summary">
 </head>
@@ -359,25 +359,50 @@ ul.task-list li input[type="checkbox"] {
 
 <section id="clinical-documentation-pipeline" class="level2">
 <h2 class="anchored" data-anchor-id="clinical-documentation-pipeline">Clinical documentation pipeline</h2>
+<svg class="project-glyph" viewbox="0 0 100 100" aria-hidden="true" focusable="false">
+  <g fill="none" stroke="currentColor" stroke-width="3">
+    <path d="M18 25 L45 50"></path><path d="M18 50 L45 50"></path><path d="M18 75 L45 50"></path><path d="M55 50 L85 50"></path>
+  </g>
+  <g fill="currentColor">
+    <circle cx="18" cy="25" r="5"></circle><circle cx="18" cy="50" r="5"></circle><circle cx="18" cy="75" r="5"></circle>
+    <rect x="42" y="42" width="16" height="16" rx="3"></rect><circle cx="85" cy="50" r="6"></circle>
+  </g>
+</svg>
 <p><span class="project-meta"><code>Python · 2023–2026 · proprietary</code></span></p>
-<p>A multi-step LLM workflow that turns a clinician-patient encounter transcript into a structured clinical note. Parallel extraction calls produce typed, metadata-tagged frames that a downstream routing layer places into the correct note sections. Clinician evaluation showed 2× recall of medical facts at maintained accuracy, improved clinical utility over the prior production system, and ~50% better run-to-run consistency on extracted medical problems and clinical facts.</p>
-<p><a href="./posts/series/research-foundations-of-modern-llms/05-information-extraction/#ie-as-workflow-state">Pattern writeup →</a></p>
+<p><span class="proj-chip">LLM workflow</span> <span class="proj-chip">structured extraction</span> <span class="proj-chip">clinical NLP</span></p>
+<p>A multi-step LLM workflow that turns a clinician-patient encounter transcript into a structured clinical note. Parallel extraction calls produce typed, metadata-tagged frames that a downstream routing layer places into the correct note sections. Clinician evaluation showed <span class="gt-span gt-b">2× recall of medical facts</span> at maintained accuracy, improved clinical utility over the prior production system, and <span class="gt-span gt-b">~50% better run-to-run consistency</span> on extracted medical problems and clinical facts.</p>
+<p><a href="./posts/series/research-foundations-of-modern-llms/05-information-extraction/#ie-as-workflow-state" class="proj-cta">Pattern writeup →</a></p>
 </section>
 <section id="nlplingo" class="level2">
 <h2 class="anchored" data-anchor-id="nlplingo">NLPLingo</h2>
+<svg class="project-glyph" viewbox="0 0 100 100" aria-hidden="true" focusable="false">
+  <g fill="none" stroke="currentColor" stroke-width="3">
+    <path d="M25 30 L55 20"></path><path d="M25 30 L40 62"></path><path d="M55 20 L80 42"></path><path d="M40 62 L72 72"></path><path d="M80 42 L72 72"></path><path d="M55 20 L40 62"></path>
+  </g>
+  <g fill="currentColor">
+    <circle cx="25" cy="30" r="5"></circle><circle cx="55" cy="20" r="5"></circle><circle cx="80" cy="42" r="5"></circle><circle cx="40" cy="62" r="5"></circle><circle cx="72" cy="72" r="5"></circle>
+  </g>
+</svg>
 <p><span class="project-meta"><code>Python · 2017–2023 · open source · Raytheon BBN</code></span></p>
+<p><span class="proj-chip">event extraction</span> <span class="proj-chip">causal relations</span> <span class="proj-chip">deep learning</span> <span class="proj-chip">DARPA</span> <span class="proj-chip">IARPA</span></p>
 <p>Raytheon BBN’s deep-learning toolkit for event extraction and causal relation extraction. I created, led, and was the principal developer and maintainer of NLPLingo over its lifecycle, mentoring the scientists and engineers across Raytheon BBN who built on top of it.</p>
-<p>The toolkit supported ~$25M in DARPA and IARPA contract value, most notably DARPA World Modelers, where I served as Principal Investigator on the Raytheon BBN team (<a href="https://apps.dtic.mil/sti/html/trecms/AD1189441/index.html">DTIC final report</a>).</p>
-<p><a href="https://github.com/BBN-E/nlplingo">Code →</a></p>
+<p>The toolkit supported <span class="gt-span gt-b">~$25M in DARPA and IARPA contract value</span>, most notably DARPA World Modelers, where I served as Principal Investigator on the Raytheon BBN team (<a href="https://apps.dtic.mil/sti/html/trecms/AD1189441/index.html">DTIC final report</a>).</p>
+<p><a href="https://github.com/BBN-E/nlplingo" class="proj-cta">Code →</a></p>
 </section>
 <section id="tnlp" class="level2">
 <h2 class="anchored" data-anchor-id="tnlp">TNLP</h2>
+<svg class="project-glyph" viewbox="0 0 100 100" aria-hidden="true" focusable="false">
+  <g stroke="currentColor" stroke-width="3" fill="none">
+    <rect x="20" y="63" width="60" height="15" rx="3"></rect><rect x="28" y="42" width="44" height="15" rx="3"></rect><rect x="36" y="21" width="28" height="15" rx="3"></rect>
+  </g>
+</svg>
 <p><span class="project-meta"><code>Python · 2023–2024 · open source</code></span></p>
-<p>A single codebase I designed and wrote by hand, covering the model and training stack end to end: sequence and token classification, span-pair relation extraction, seq2seq, contrastive retrieval, instruction and chat fine-tuning, DPO, and end-to-end RAG with a jointly trained retriever and generator. It uses standard backbones (BERT, DeBERTa, T5, LLaMA, Mistral) and the usual libraries where they fit, with custom model and training code where the task needed it: the span-pair model, the triplet contrastive model, and the joint retriever-generator RAG loss are written from scratch, not pulled from a library.</p>
-<p><a href="https://github.com/chanys/tnlp">Code →</a></p>
+<p><span class="proj-chip">encoders</span> <span class="proj-chip">decoders</span> <span class="proj-chip">information extraction</span></p>
+<p>A single <span class="gt-span gt-b">codebase I designed and wrote by hand</span>, covering the model and training stack end to end: sequence and token classification, span-pair relation extraction, seq2seq, contrastive retrieval, instruction and chat fine-tuning, DPO, and end-to-end RAG with a jointly trained retriever and generator. It uses standard backbones (BERT, DeBERTa, T5, LLaMA, Mistral) and the usual libraries where they fit, with custom model and training code where the task needed it: the span-pair model, the triplet contrastive model, and the joint retriever-generator RAG loss are written from scratch, not pulled from a library.</p>
+<p><a href="https://github.com/chanys/tnlp" class="proj-cta">Code →</a></p>
 </section>
-<section id="paper-notes-archive" class="level2">
-<h2 class="anchored" data-anchor-id="paper-notes-archive">Paper notes archive</h2>
+<section id="paper-notes-archive" class="level2 project-minor">
+<h2 class="project-minor anchored" data-anchor-id="paper-notes-archive">Paper notes archive</h2>
 <p><span class="project-meta"><code>2022–2023 · reference</code></span></p>
 <p>75 explainer posts working through the transformer literature one paper at a time: encoders and decoders, efficiency methods, retrieval and RAG, evaluation. Written over about a year, it predates this site and is encyclopedic where this one is argued, kept as a standing reference rather than a current feed.</p>
 <p><a href="https://chanys.github.io/about">Archive →</a></p>

@@ -10,7 +10,7 @@
 <atom:link href="https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/index.xml" rel="self" type="application/rss+xml"/>
 <description>What modern LLMs inherited from earlier NLP research, and why those ideas reorganized into today&#39;s stack instead of disappearing.</description>
 <image>
-<url>https://yeesengchan.com/02-foundations.png</url>
+<url>https://yeesengchan.com/cover.svg</url>
 <title>Research foundations of modern LLMs — series</title>
 <link>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/</link>
 </image>

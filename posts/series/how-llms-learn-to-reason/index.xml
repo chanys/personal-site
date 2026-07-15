@@ -10,7 +10,7 @@
 <atom:link href="https://yeesengchan.com/posts/series/how-llms-learn-to-reason/index.xml" rel="self" type="application/rss+xml"/>
 <description>The RL lineage behind reasoning models, traced one algorithm at a time, from REINFORCE and PPO through GRPO and DPO to what R1 actually shipped.</description>
 <image>
-<url>https://yeesengchan.com/01-reasoning.png</url>
+<url>https://yeesengchan.com/cover.svg</url>
 <title>How LLMs learn to reason — series</title>
 <link>https://yeesengchan.com/posts/series/how-llms-learn-to-reason/</link>
 </image>

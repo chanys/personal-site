@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-label="The agent harness: signals routed through a central core">
+  <g fill="none" stroke="#AEC0F6" stroke-width="5">
+    <path d="M180 200 C400 200 470 400 600 400 C730 400 800 200 1020 200"/>
+    <path d="M180 600 C400 600 470 400 600 400 C730 400 800 600 1020 600"/>
+    <line x1="180" y1="400" x2="1020" y2="400"/>
+  </g>
+  <rect x="524" y="324" width="152" height="152" rx="10" fill="#2457E5"/>
+  <circle cx="600" cy="400" r="18" fill="#C0895E"/>
+  <g fill="none" stroke="#2457E5" stroke-width="5">
+    <circle cx="180" cy="200" r="18"/><circle cx="180" cy="400" r="18"/><circle cx="180" cy="600" r="18"/>
+    <circle cx="1020" cy="200" r="18"/><circle cx="1020" cy="400" r="18"/><circle cx="1020" cy="600" r="18"/>
+  </g>
+</svg>

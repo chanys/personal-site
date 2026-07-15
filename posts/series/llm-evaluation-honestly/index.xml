@@ -10,7 +10,7 @@
 <atom:link href="https://yeesengchan.com/posts/series/llm-evaluation-honestly/index.xml" rel="self" type="application/rss+xml"/>
 <description>Why your eval scores look good while the system stays unreliable, and what to measure instead.</description>
 <image>
-<url>https://yeesengchan.com/05-evaluation.png</url>
+<url>https://yeesengchan.com/cover.svg</url>
 <title>LLM evaluation, honestly — series</title>
 <link>https://yeesengchan.com/posts/series/llm-evaluation-honestly/</link>
 </image>
