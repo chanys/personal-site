@@ -663,13 +663,29 @@ table tbody td { border-bottom: 1px solid var(--fn-hairline); }
 // masthead. Targeting :empty is precise: real title blocks have children.
 #title-block-header:empty { display: none; }
 .gt-hero {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 2.5rem;
   align-items: start;
   margin: 0.5rem 0 2.75rem;
 }
-.gt-hero-body { min-width: 0; }
+.gt-hero-body { min-width: 0; position: relative; z-index: 1; }
+// Ambient node-and-edge constellation behind the hero: the site's schematic
+// vocabulary as atmosphere. Decorative (aria-hidden). Masked with a radial
+// gradient so it stays strong toward the top-right and fades away from the
+// dense hero text, which keeps the headline crisp.
+.gt-constellation {
+  position: absolute;
+  inset: -2rem -1.5rem auto -1rem;
+  height: 130%;
+  z-index: 0;
+  pointer-events: none;
+  color: var(--fn-accent);
+  opacity: 0.18;
+  -webkit-mask-image: radial-gradient(120% 100% at 85% 12%, #000 32%, transparent 78%);
+  mask-image: radial-gradient(120% 100% at 85% 12%, #000 32%, transparent 78%);
+}
 .gt-eyebrow {
   display: block;
   font-family: "IBM Plex Mono", ui-monospace, monospace;
@@ -716,8 +732,10 @@ table tbody td { border-bottom: 1px solid var(--fn-hairline); }
 }
 .gt-links a:hover { border-color: var(--fn-accent); color: var(--fn-accent); }
 .gt-portrait {
-  width: 9rem;
-  height: 9rem;
+  position: relative;
+  z-index: 1;
+  width: 11.5rem;
+  height: 11.5rem;
   border-radius: 50%;
   border: 1px solid var(--fn-hairline);
   object-fit: cover;
