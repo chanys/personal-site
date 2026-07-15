@@ -88,7 +88,9 @@ a:hover { background-size: 0 1px; color: var(--fn-accent-deep); }
 
 // --- Navbar ---------------------------------------------------------------
 .navbar {
-  border-bottom: 1px solid var(--fn-hairline);
+  // Faint light separator: visible where the dark bar meets a dark page
+  // (dark theme), negligible against the light page (light theme).
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   padding-top: 0.55rem;
   padding-bottom: 0.55rem;
   backdrop-filter: saturate(140%) blur(6px);
@@ -100,20 +102,27 @@ a:hover { background-size: 0 1px; color: var(--fn-accent-deep); }
   font-weight: 600;
   font-size: 1.15rem;
   letter-spacing: -0.01em;
-  color: var(--fn-ink) !important;
+  color: var(--fn-navbar-fg) !important;
 }
 .navbar .nav-link {
   font-family: "IBM Plex Mono", ui-monospace, monospace;
   font-size: 0.74rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--fn-ink-soft) !important;
+  color: var(--fn-navbar-fg-soft) !important;
   padding-left: 0.95rem !important;
   padding-right: 0.95rem !important;
   transition: color 0.16s ease;
 }
 .navbar .nav-link:hover,
-.navbar .nav-link.active { color: var(--fn-accent) !important; }
+.navbar .nav-link.active { color: var(--fn-navbar-hl) !important; }
+// Right-side icon tools (rss, github, search, theme toggle) inherit the light
+// navbar fg so they read on the dark bar.
+.navbar .quarto-navbar-tools a,
+.navbar .quarto-navbar-tools .quarto-navigation-tool {
+  color: var(--fn-navbar-fg-soft) !important;
+}
+.navbar .quarto-navbar-tools a:hover { color: var(--fn-navbar-hl) !important; }
 .navbar .nav-link.active { font-weight: 500; }
 
 // --- Title block ----------------------------------------------------------
@@ -147,17 +156,17 @@ body.projects-page #title-block-header {
   margin-top: 0.5rem;
 }
 .quarto-categories .quarto-category {
-  background: transparent;
-  border: 1px solid var(--fn-hairline);
+  background: var(--fn-span-a);
+  border: 1px solid transparent;
   border-radius: 100px;
   padding: 0.12rem 0.7rem;
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   opacity: 1;
-  color: var(--fn-ink-soft);
+  color: var(--fn-accent);
 }
-.quarto-categories .quarto-category:hover { border-color: var(--fn-accent); color: var(--fn-accent); }
+.quarto-categories .quarto-category:hover { background: var(--fn-accent); color: #fff; }
 
 // --- Listing: a journal index --------------------------------------------
 // Applies to Writing and to each series landing's parts list (both use the
@@ -477,7 +486,7 @@ pre.sourceCode::before {
   font-size: 0.66rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--fn-ink-soft);
+  color: var(--fn-accent);
   background: var(--fn-paper-sink);
   border-bottom: 1px solid var(--fn-hairline);
 }

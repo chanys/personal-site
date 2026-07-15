@@ -21,29 +21,29 @@ $headings-line-height: 1.12;
 $body-bg:    #14171C;
 $body-color: #E8E9EC;
 
-$link-color:        #6BA6D8;
-$link-hover-color:  #8FBFE6;
+$link-color:        #6E8CFF;
+$link-hover-color:  #93A6FF;
 $link-decoration:   none;
 
 $border-color: #2A2F37;
 
-$code-color:             #8FBFE6;
+$code-color:             #93A6FF;
 $code-bg:                #1B1F26;
 $code-block-bg:          #1A1E24;
-$code-block-border-left: #6BA6D8;
+$code-block-border-left: #6E8CFF;
 
 $border-radius:    2px;
 $border-radius-sm: 2px;
 $border-radius-lg: 3px;
 
 $navbar-bg: #14171C;
-$navbar-fg: #E8E9EC;
-$navbar-hl: #6BA6D8;
+$navbar-fg: #EDEBE4;
+$navbar-hl: #6E8CFF;
 
 $footer-bg: #14171C;
 $footer-fg: #979CA4;
 
-$component-active-bg: #6BA6D8;
+$component-active-bg: #6E8CFF;
 
 
 /*-- scss:rules --*/
@@ -56,15 +56,18 @@ $component-active-bg: #6BA6D8;
   --fn-ink:         #E8E9EC;
   --fn-ink-soft:    #979CA4;
   --fn-hairline:    #2A2F37;
-  --fn-accent:      #6BA6D8;
-  --fn-accent-deep: #8FBFE6;
+  --fn-accent:      #6E8CFF;
+  --fn-accent-deep: #93A6FF;
   --fn-grain-opacity: 0.18;
-  --fn-navbar-bg:   rgba(20, 23, 28, 0.86);
+  --fn-navbar-bg:   rgba(20, 23, 28, 0.88);
+  --fn-navbar-fg:   #EDEBE4;
+  --fn-navbar-fg-soft: #AAA396;
+  --fn-navbar-hl:   #6E8CFF;
 
   // Ground Truth signature tones — dark. Translucent fills so the highlight
   // sits on the dark ground without punching a bright hole in the text.
-  --fn-span-a:      rgba(108, 166, 216, 0.16);
-  --fn-span-a-tag:  #7FB0DA;
+  --fn-span-a:      rgba(110, 140, 255, 0.20);
+  --fn-span-a-tag:  #93A6FF;
   --fn-span-b:      rgba(196, 150, 110, 0.16);
   --fn-span-b-tag:  #C79E74;
 }
