@@ -343,19 +343,30 @@ body.series-index .series-banner-description {
   color: var(--fn-ink-soft);
 }
 .quarto-post .listing-categories { margin-top: 0.7rem; }
-.quarto-post .listing-categories .listing-category {
+// `div.quarto-post` matches Quarto's own listing rule specificity so the cobalt
+// text wins (a bare `.quarto-post` selector loses and the chips fall back to
+// Bootstrap grey, which also fails AA contrast on the pale fill).
+div.quarto-post .listing-categories .listing-category {
   font-family: "IBM Plex Mono", ui-monospace, monospace;
   font-size: 0.66rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--fn-ink-soft);
-  border: 1px solid var(--fn-hairline);
+  color: var(--fn-accent);
+  background: var(--fn-span-a);
+  border: 1px solid transparent;
   border-radius: 100px;
   padding: 0.1rem 0.6rem;
   margin-right: 0.35rem;
   opacity: 1;
 }
-.quarto-post .listing-categories .listing-category:hover { border-color: var(--fn-accent); color: var(--fn-accent); }
+div.quarto-post .listing-categories .listing-category:hover { background: var(--fn-accent); color: #fff; }
+// Mobile: Quarto stacks the post into a column with body-before-metadata, which
+// buries the date below the description. Restore the date to the top so it
+// stays the scan anchor.
+@media (max-width: 575.98px) {
+  .quarto-listing-default .quarto-post { flex-direction: column; }
+  .quarto-listing-default .quarto-post .metadata { order: -1; margin-bottom: 0.5rem; }
+}
 
 .quarto-listing-category { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.78rem; }
 .quarto-listing-category .category { color: var(--fn-ink-soft); padding: 0.15rem 0; }
