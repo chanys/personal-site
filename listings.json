@@ -31,13 +31,13 @@
     ]
   },
   {
-    "listing": "/posts/series/research-foundations-of-modern-llms/index.html",
+    "listing": "/series.html",
     "items": [
-      "/posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/index.html",
-      "/posts/series/research-foundations-of-modern-llms/02-encoder-embeddings/index.html",
-      "/posts/series/research-foundations-of-modern-llms/03-retrieval/index.html",
-      "/posts/series/research-foundations-of-modern-llms/04-fine-tuning-stack/index.html",
-      "/posts/series/research-foundations-of-modern-llms/05-information-extraction/index.html"
+      "/posts/series/how-llms-learn-to-reason/index.html",
+      "/posts/series/research-foundations-of-modern-llms/index.html",
+      "/posts/series/what-an-agent-actually-is/index.html",
+      "/posts/series/the-agent-harness/index.html",
+      "/posts/series/llm-evaluation-honestly/index.html"
     ]
   },
   {
@@ -51,28 +51,6 @@
     ]
   },
   {
-    "listing": "/posts/series/how-llms-learn-to-reason/index.html",
-    "items": [
-      "/posts/series/how-llms-learn-to-reason/00-reinforce-foundations/index.html",
-      "/posts/series/how-llms-learn-to-reason/00-reinforce-gradient/index.html",
-      "/posts/series/how-llms-learn-to-reason/01-ppo/index.html",
-      "/posts/series/how-llms-learn-to-reason/02-grpo/index.html",
-      "/posts/series/how-llms-learn-to-reason/03-dpo/index.html",
-      "/posts/series/how-llms-learn-to-reason/04-r1/index.html",
-      "/posts/series/how-llms-learn-to-reason/05-tool-use/index.html"
-    ]
-  },
-  {
-    "listing": "/series.html",
-    "items": [
-      "/posts/series/how-llms-learn-to-reason/index.html",
-      "/posts/series/research-foundations-of-modern-llms/index.html",
-      "/posts/series/what-an-agent-actually-is/index.html",
-      "/posts/series/the-agent-harness/index.html",
-      "/posts/series/llm-evaluation-honestly/index.html"
-    ]
-  },
-  {
     "listing": "/posts/series/llm-evaluation-honestly/index.html",
     "items": [
       "/posts/series/llm-evaluation-honestly/01-stop-vibe-checking/index.html",
@@ -82,6 +60,28 @@
       "/posts/series/llm-evaluation-honestly/05-scores-are-samples/index.html",
       "/posts/series/llm-evaluation-honestly/06-rag-evaluation/index.html",
       "/posts/series/llm-evaluation-honestly/07-eval-drift/index.html"
+    ]
+  },
+  {
+    "listing": "/posts/series/research-foundations-of-modern-llms/index.html",
+    "items": [
+      "/posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/index.html",
+      "/posts/series/research-foundations-of-modern-llms/02-encoder-embeddings/index.html",
+      "/posts/series/research-foundations-of-modern-llms/03-retrieval/index.html",
+      "/posts/series/research-foundations-of-modern-llms/04-fine-tuning-stack/index.html",
+      "/posts/series/research-foundations-of-modern-llms/05-information-extraction/index.html"
+    ]
+  },
+  {
+    "listing": "/posts/series/how-llms-learn-to-reason/index.html",
+    "items": [
+      "/posts/series/how-llms-learn-to-reason/00-reinforce-foundations/index.html",
+      "/posts/series/how-llms-learn-to-reason/00-reinforce-gradient/index.html",
+      "/posts/series/how-llms-learn-to-reason/01-ppo/index.html",
+      "/posts/series/how-llms-learn-to-reason/02-grpo/index.html",
+      "/posts/series/how-llms-learn-to-reason/03-dpo/index.html",
+      "/posts/series/how-llms-learn-to-reason/04-r1/index.html",
+      "/posts/series/how-llms-learn-to-reason/05-tool-use/index.html"
     ]
   },
   {
