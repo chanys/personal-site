@@ -46,7 +46,7 @@ A multi-step LLM workflow that turns a clinician-patient encounter transcript in
 
 Raytheon BBN's deep-learning toolkit for event extraction and causal relation extraction. I created, led, and was the principal developer and maintainer of NLPLingo over its lifecycle, mentoring the scientists and engineers across Raytheon BBN who built on top of it.
 
-The toolkit supported [~$25M in DARPA and IARPA contract value]{.gt-span}, most notably DARPA World Modelers, where I served as Principal Investigator on the Raytheon BBN team ([DTIC final report](https://apps.dtic.mil/sti/html/trecms/AD1189441/index.html)).
+The toolkit supported [~$25M in DARPA and IARPA contract value]{.gt-span .gt-b}, most notably DARPA World Modelers, where I served as Principal Investigator on the Raytheon BBN team ([DTIC final report](https://apps.dtic.mil/sti/html/trecms/AD1189441/index.html)).
 
 [Code →](https://github.com/BBN-E/nlplingo){.proj-cta}
 
@@ -62,7 +62,7 @@ The toolkit supported [~$25M in DARPA and IARPA contract value]{.gt-span}, most 
 
 [encoders]{.proj-chip} [decoders]{.proj-chip} [information extraction]{.proj-chip}
 
-A single [codebase I designed and wrote by hand]{.gt-span}, covering the model and training stack end to end: sequence and token classification, span-pair relation extraction, seq2seq, contrastive retrieval, instruction and chat fine-tuning, DPO, and end-to-end RAG with a jointly trained retriever and generator. It uses standard backbones (BERT, DeBERTa, T5, LLaMA, Mistral) and the usual libraries where they fit, with custom model and training code where the task needed it: the span-pair model, the triplet contrastive model, and the joint retriever-generator RAG loss are written from scratch, not pulled from a library.
+A single [codebase I designed and wrote by hand]{.gt-span .gt-b}, covering the model and training stack end to end: sequence and token classification, span-pair relation extraction, seq2seq, contrastive retrieval, instruction and chat fine-tuning, DPO, and end-to-end RAG with a jointly trained retriever and generator. It uses standard backbones (BERT, DeBERTa, T5, LLaMA, Mistral) and the usual libraries where they fit, with custom model and training code where the task needed it: the span-pair model, the triplet contrastive model, and the joint retriever-generator RAG loss are written from scratch, not pulled from a library.
 
 [Code →](https://github.com/chanys/tnlp){.proj-cta}
 
