@@ -60,9 +60,9 @@ The toolkit supported [~$25M in DARPA and IARPA contract value]{.gt-span}, most 
 ```
 [`Python · 2023–2024 · open source`]{.project-meta}
 
-[BERT]{.proj-chip} [DeBERTa]{.proj-chip} [T5]{.proj-chip} [LLaMA]{.proj-chip} [Mistral]{.proj-chip} [DPO]{.proj-chip} [RAG]{.proj-chip}
+[encoders]{.proj-chip} [decoders]{.proj-chip} [information extraction]{.proj-chip}
 
-A single [codebase I designed and wrote by hand]{.gt-span}, covering the model and training stack end to end: [sequence and token classification, span-pair relation extraction, seq2seq, contrastive retrieval, instruction and chat fine-tuning, DPO, and end-to-end RAG with a jointly trained retriever and generator]{.gt-span}. It uses standard backbones (BERT, DeBERTa, T5, LLaMA, Mistral) and the usual libraries where they fit, with custom model and training code where the task needed it: the span-pair model, the triplet contrastive model, and the joint retriever-generator RAG loss are written from scratch, not pulled from a library.
+A single [codebase I designed and wrote by hand]{.gt-span}, covering the model and training stack end to end: sequence and token classification, span-pair relation extraction, seq2seq, contrastive retrieval, instruction and chat fine-tuning, DPO, and end-to-end RAG with a jointly trained retriever and generator. It uses standard backbones (BERT, DeBERTa, T5, LLaMA, Mistral) and the usual libraries where they fit, with custom model and training code where the task needed it: the span-pair model, the triplet contrastive model, and the joint retriever-generator RAG loss are written from scratch, not pulled from a library.
 
 [Code →](https://github.com/chanys/tnlp){.proj-cta}
 
