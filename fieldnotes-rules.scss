@@ -102,7 +102,7 @@ a {
 a:hover { background-size: 0 1px; color: var(--fn-accent-deep); }
 .navbar a, .nav-link, .quarto-title-meta a, a.about-link,
 .series-nav a, .quarto-categories a, .quarto-post .listing-categories a,
-.gt-links a { background-image: none; }
+.gt-links a, .proj-cta { background-image: none; }
 
 // --- Navbar ---------------------------------------------------------------
 .navbar {
@@ -460,10 +460,57 @@ div.quarto-post .listing-categories .listing-category:hover { background: var(--
 // links sit close together. The large gap above each h2 (the section
 // divider above) is what separates one project from the next.
 body.projects-page main.content > section.level2 {
+  clear: both; // start below the previous project's floated glyph
   h2 { margin-bottom: 0.25rem; }
   p { margin-top: 0; margin-bottom: 0.4rem; }
   p:last-child { margin-bottom: 0; }
 }
+// The first project's h2 sits right under the title-block rule; drop its
+// section-divider top border so the two hairlines don't stack into a gap.
+body.projects-page main.content > section.level2:first-of-type > h2 {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 0;
+}
+// Per-project schematic glyph: a small cobalt node/edge anchor floated beside
+// the text, giving each project the site's visual vocabulary.
+.project-glyph {
+  float: right;
+  width: 66px;
+  height: 66px;
+  margin: 0.1rem 0 0.6rem 1.4rem;
+  color: var(--fn-accent);
+}
+// Tech chips: the stack promoted out of prose into scannable cobalt pills
+// (casing preserved, so DeBERTa/LLaMA read correctly).
+.proj-chip {
+  display: inline-block;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.02em;
+  color: var(--fn-accent);
+  background: var(--fn-span-a);
+  border-radius: 100px;
+  padding: 0.12rem 0.62rem;
+  margin: 0 0.3rem 0.4rem 0;
+}
+// Primary link per project as a pill button.
+.proj-cta {
+  display: inline-block;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+  border: 1px solid var(--fn-hairline);
+  border-radius: 100px;
+  padding: 0.32rem 0.95rem;
+  color: var(--fn-ink);
+  margin-top: 0.35rem;
+  transition: border-color 0.16s ease, color 0.16s ease;
+}
+.proj-cta:hover { border-color: var(--fn-accent); color: var(--fn-accent); }
+// Reference/minor project: de-emphasised heading and body, no glyph.
+body.projects-page section.level2.project-minor h2 { font-size: 1.18rem; }
+body.projects-page section.level2.project-minor { color: var(--fn-ink-soft); }
 
 // --- Prose details --------------------------------------------------------
 p { margin-bottom: 1.25rem; }
