@@ -1,40 +1,72 @@
 ---
 title: "Projects"
 description: "Most of my work lives inside research programs and companies. The public pieces are collected here."
-pagetitle: "Projects | Yee Seng Chan"
+pagetitle: "Projects"
 format:
   html:
     body-classes: projects-page
+    grid:
+      body-width: 700px
 ---
 
 ## Clinical documentation pipeline
-
+```{=html}
+<svg class="project-glyph" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+  <g fill="none" stroke="currentColor" stroke-width="3">
+    <path d="M18 25 L45 50"/><path d="M18 50 L45 50"/><path d="M18 75 L45 50"/><path d="M55 50 L85 50"/>
+  </g>
+  <g fill="currentColor">
+    <circle cx="18" cy="25" r="5"/><circle cx="18" cy="50" r="5"/><circle cx="18" cy="75" r="5"/>
+    <rect x="42" y="42" width="16" height="16" rx="3"/><circle cx="85" cy="50" r="6"/>
+  </g>
+</svg>
+```
 [`Python · 2023–2026 · proprietary`]{.project-meta}
 
-A multi-step LLM workflow that turns a clinician-patient encounter transcript into a structured clinical note. Parallel extraction calls produce typed, metadata-tagged frames that a downstream routing layer places into the correct note sections. Clinician evaluation showed 2× recall of medical facts at maintained accuracy, improved clinical utility over the prior production system, and ~50% better run-to-run consistency on extracted medical problems and clinical facts.
+[LLM workflow]{.proj-chip} [structured extraction]{.proj-chip} [clinical NLP]{.proj-chip}
 
-[Pattern writeup →](/posts/series/research-foundations-of-modern-llms/05-information-extraction/#ie-as-workflow-state)
+A multi-step LLM workflow that turns a clinician-patient encounter transcript into a structured clinical note. Parallel extraction calls produce typed, metadata-tagged frames that a downstream routing layer places into the correct note sections. Clinician evaluation showed [2× recall of medical facts]{.gt-span .gt-b} at maintained accuracy, improved clinical utility over the prior production system, and [~50% better run-to-run consistency]{.gt-span .gt-b} on extracted medical problems and clinical facts.
+
+[Pattern writeup →](/posts/series/research-foundations-of-modern-llms/05-information-extraction/#ie-as-workflow-state){.proj-cta}
 
 ## NLPLingo
-
+```{=html}
+<svg class="project-glyph" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+  <g fill="none" stroke="currentColor" stroke-width="3">
+    <path d="M25 30 L55 20"/><path d="M25 30 L40 62"/><path d="M55 20 L80 42"/><path d="M40 62 L72 72"/><path d="M80 42 L72 72"/><path d="M55 20 L40 62"/>
+  </g>
+  <g fill="currentColor">
+    <circle cx="25" cy="30" r="5"/><circle cx="55" cy="20" r="5"/><circle cx="80" cy="42" r="5"/><circle cx="40" cy="62" r="5"/><circle cx="72" cy="72" r="5"/>
+  </g>
+</svg>
+```
 [`Python · 2017–2023 · open source · Raytheon BBN`]{.project-meta}
+
+[event extraction]{.proj-chip} [causal relations]{.proj-chip} [deep learning]{.proj-chip} [DARPA]{.proj-chip} [IARPA]{.proj-chip}
 
 Raytheon BBN's deep-learning toolkit for event extraction and causal relation extraction. I created, led, and was the principal developer and maintainer of NLPLingo over its lifecycle, mentoring the scientists and engineers across Raytheon BBN who built on top of it.
 
-The toolkit supported ~$25M in DARPA and IARPA contract value, most notably DARPA World Modelers, where I served as Principal Investigator on the Raytheon BBN team ([DTIC final report](https://apps.dtic.mil/sti/html/trecms/AD1189441/index.html)).
+The toolkit supported [~$25M in DARPA and IARPA contract value]{.gt-span .gt-b}, most notably DARPA World Modelers, where I served as Principal Investigator on the Raytheon BBN team ([DTIC final report](https://apps.dtic.mil/sti/html/trecms/AD1189441/index.html)).
 
-[Code →](https://github.com/BBN-E/nlplingo)
+[Code →](https://github.com/BBN-E/nlplingo){.proj-cta}
 
 ## TNLP
-
+```{=html}
+<svg class="project-glyph" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+  <g stroke="currentColor" stroke-width="3" fill="none">
+    <rect x="20" y="63" width="60" height="15" rx="3"/><rect x="28" y="42" width="44" height="15" rx="3"/><rect x="36" y="21" width="28" height="15" rx="3"/>
+  </g>
+</svg>
+```
 [`Python · 2023–2024 · open source`]{.project-meta}
 
-A single codebase I designed and wrote by hand, covering the model and training stack end to end: sequence and token classification, span-pair relation extraction, seq2seq, contrastive retrieval, instruction and chat fine-tuning, DPO, and end-to-end RAG with a jointly trained retriever and generator. It uses standard backbones (BERT, DeBERTa, T5, LLaMA, Mistral) and the usual libraries where they fit, with custom model and training code where the task needed it: the span-pair model, the triplet contrastive model, and the joint retriever-generator RAG loss are written from scratch, not pulled from a library.
+[encoders]{.proj-chip} [decoders]{.proj-chip} [information extraction]{.proj-chip}
 
-[Code →](https://github.com/chanys/tnlp)
+A single [codebase I designed and wrote by hand]{.gt-span .gt-b}, covering the model and training stack end to end: sequence and token classification, span-pair relation extraction, seq2seq, contrastive retrieval, instruction and chat fine-tuning, DPO, and end-to-end RAG with a jointly trained retriever and generator. It uses standard backbones (BERT, DeBERTa, T5, LLaMA, Mistral) and the usual libraries where they fit, with custom model and training code where the task needed it: the span-pair model, the triplet contrastive model, and the joint retriever-generator RAG loss are written from scratch, not pulled from a library.
 
-## Paper notes archive
+[Code →](https://github.com/chanys/tnlp){.proj-cta}
 
+## Paper notes archive {.project-minor}
 [`2022–2023 · reference`]{.project-meta}
 
 75 explainer posts working through the transformer literature one paper at a time: encoders and decoders, efficiency methods, retrieval and RAG, evaluation. Written over about a year, it predates this site and is encyclopedic where this one is argued, kept as a standing reference rather than a current feed.

@@ -22,9 +22,9 @@ listing:
     description: "Essays on how modern language models work, and on building and evaluating the systems around them."
   fields: [date, title, description, categories]
   date-format: "YYYY · MMM D"
-  page-size: 25
+  page-size: 60
 ---
 
 ::: {.column-body}
-Individual essays, newest first. Multi-part arguments are collected under [Series](series.qmd).
+All essays, newest first. Multi-part arguments are collected under [Series](series.qmd).
 :::

@@ -21,29 +21,29 @@ $headings-line-height: 1.12;
 $body-bg:    #FBFBF9;
 $body-color: #191C20;
 
-$link-color:        #1F5C8B;
-$link-hover-color:  #123F5E;
+$link-color:        #2457E5;
+$link-hover-color:  #1B3AC2;
 $link-decoration:   none;
 
 $border-color: #E6E4DE;
 
-$code-color:             #1F5C8B;
+$code-color:             #2457E5;
 $code-bg:                #F1F1ED;
 $code-block-bg:          #FFFFFF;
-$code-block-border-left: #1F5C8B;
+$code-block-border-left: #2457E5;
 
 $border-radius:    2px;
 $border-radius-sm: 2px;
 $border-radius-lg: 3px;
 
-$navbar-bg: #FBFBF9;
-$navbar-fg: #191C20;
-$navbar-hl: #1F5C8B;
+$navbar-bg: #14171C;
+$navbar-fg: #EDEBE4;
+$navbar-hl: #6E8CFF;
 
 $footer-bg: #FBFBF9;
 $footer-fg: #5B6169;
 
-$component-active-bg: #1F5C8B;
+$component-active-bg: #2457E5;
 
 
 /*-- scss:rules --*/
@@ -56,16 +56,21 @@ $component-active-bg: #1F5C8B;
   --fn-ink:         #191C20;
   --fn-ink-soft:    #5B6169;
   --fn-hairline:    #E6E4DE;
-  --fn-accent:      #1F5C8B;
-  --fn-accent-deep: #123F5E;
+  --fn-accent:      #2457E5;
+  --fn-accent-deep: #1B3AC2;
   --fn-grain-opacity: 0.1;
-  --fn-navbar-bg:   rgba(251, 251, 249, 0.86);
+  // Navbar is a dark statement bar in BOTH themes, so its fg tokens are light
+  // here too; --fn-navbar-hl is a brighter cobalt tuned to read on near-black.
+  --fn-navbar-bg:   rgba(20, 23, 28, 0.88);
+  --fn-navbar-fg:   #EDEBE4;
+  --fn-navbar-fg-soft: #AAA396;
+  --fn-navbar-hl:   #6E8CFF;
 
   // Ground Truth signature: two annotation "highlight" tones. Used ONLY on the
   // span-tag motif (hero statement, occasional inline labels) so they never
-  // become generic accent colours. -a is the cool/entity tone, -b the warm one.
-  --fn-span-a:      #E7EDF2;
-  --fn-span-a-tag:  #2C6E9B;
+  // become generic accent colours. -a is the cobalt/entity tone, -b the warm one.
+  --fn-span-a:      #E4E9FD;
+  --fn-span-a-tag:  #2457E5;
   --fn-span-b:      #F0E6DE;
   --fn-span-b-tag:  #9A6A3C;
 }
