@@ -2,9 +2,18 @@
 title: "About"
 description: "A decade of NLP and information extraction judged by external evaluation, now applied to LLM evaluation and the reliability of production LLM systems."
 pagetitle: "About"
+format:
+  html:
+    body-classes: about-page
+    grid:
+      body-width: 700px
 toc: true
 toc-title: "On this page"
 ---
+
+```{=html}
+<img src="ys_profile.png" class="about-portrait" alt="Portrait of Yee Seng Chan">
+```
 
 I work on reliable LLM systems. The hard part is rarely the model. It is the engineering around it.
 

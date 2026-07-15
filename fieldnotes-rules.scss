@@ -30,8 +30,26 @@ body {
 
 // --- Reading measure ------------------------------------------------------
 main.content { max-width: 44rem; margin-inline: auto; }
-body.quarto-listing-page main.content,
-body.about-page main.content { max-width: 50rem; }
+body.quarto-listing-page main.content { max-width: 50rem; }
+// About is long-form prose, not a listing: its narrow reading measure is set
+// by a per-page `grid: body-width` override in about.qmd (the Quarto-native
+// lever); no width rule needed here.
+// Portrait: floated so the opening prose wraps around it (shape-outside hugs
+// the circle); section headings clear below it.
+.about-portrait {
+  float: right;
+  width: 12rem;
+  height: 12rem;
+  border-radius: 50%;
+  border: 1px solid var(--fn-hairline);
+  object-fit: cover;
+  margin: 0.25rem 0 1.25rem 1.75rem;
+  shape-outside: circle();
+}
+body.about-page main.content h2 { clear: both; }
+@media (max-width: 520px) {
+  .about-portrait { float: none; display: block; margin: 0 auto 1.5rem; }
+}
 // Series index and Writing index both use `page-layout: full` to escape the
 // global grid body-width, then we constrain back here so only these listing
 // pages are widened. Article pages keep the default 44rem reading measure.
