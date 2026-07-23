@@ -8,8 +8,6 @@ draft: false
 
 {{< include ../_series.qmd >}}
 
-R1-Zero is the conceptual result. R1 is the engineering wrapping around it.
-
 A reasoning model's trace looks structurally different from a standard LLM's. The model works through a problem, gets partway, says *wait, that's not quite right*, backs up, tries a different approach, checks the result against the constraints, notices the check failed, revises again, then commits. Thousands of tokens of exploration, self-correction, and hypothesis revision before the boxed answer.
 
 Nobody wrote down the rule "if your first approach looks wrong, say *wait* and try a different one." Nobody curated a corpus of reasoning traces with backtracking and trained on them via SFT. The behavior consolidates out of a simple training procedure.
@@ -43,13 +41,13 @@ Karpathy calls this "sucking supervision through a straw." A minute of rollout u
 
 ### What R1-Zero shows
 
-R1-Zero establishes an important claim: GRPO with rule-based verifiable rewards, on a sufficiently strong pretrained base model, consolidates latent reasoning behavior into a reliable long-CoT policy.
+R1-Zero establishes that GRPO with rule-based verifiable rewards, on a sufficiently strong pretrained base model, consolidates latent reasoning behavior into a reliable long-CoT policy.
 
-*Consolidates* is doing the work. Recent work on chain-of-thought decoding [@wang_zhou_2024] shows that reasoning traces, including backtracking and self-correction, are already present in pretrained models, just not at rank one in the next-token distribution. R1-Zero doesn't create reasoning behavior from nothing. It surfaces latent capability as a consistent policy, with trace lengths scaling up as the model discovers what gets rewarded.
+*Consolidates* is doing the work. Recent work on chain-of-thought decoding [@wang_zhou_2024] shows that reasoning traces, including backtracking and self-correction, are already present in pretrained models, just not at rank one in the next-token distribution. R1-Zero surfaces latent capability as a consistent policy rather than creating reasoning behavior from nothing, with trace lengths scaling up as the model discovers what gets rewarded.
 
 ## R1 is what you build when the policy needs to be a product
 
-R1's contribution is different from R1-Zero's. It's the recipe for taking the raw reasoning behavior and making it a deployable assistant.
+R1's contribution is the recipe for taking the raw reasoning behavior and making it a deployable assistant.
 
 ### Why R1-Zero isn't a product
 
@@ -80,7 +78,7 @@ Every successful application of this recipe shares a common feature: outcomes ca
 
 Reasoning behavior consolidates in R1-Zero because GRPO can attribute reward credit reliably across thousands of tokens based on a single end-of-trace check. The trace is long, the signal is sparse, the per-step contribution is invisible. None of that matters as long as the final-answer check is trustworthy. You compare trajectories, reward the ones that ended right, and over enough samples the policy gradient finds whatever in the middle of the trace was helping. Self-correction phrases, hypothesis exploration, longer length all win the comparison on average, when verification is reliable.
 
-Run the same recipe with a learned reward model (say, a neural judge trained on human preferences for "good reasoning") and the signal becomes noisy and gameable under optimization pressure. Rule-based rewards on verifiable domains don't.
+Run the same recipe with a learned reward model (say, a neural judge trained on human preferences for "good reasoning") and the signal becomes noisy and gameable under optimization pressure, whereas rule-based rewards on verifiable domains do not.
 
 ### The limits of the recipe
 

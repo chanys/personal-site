@@ -36,7 +36,7 @@ $$\max_\pi \; \mathbb{E}_{x \sim D, \, y \sim \pi(\cdot|x)} \left[ r(x, y) - \be
 
 In words: maximize expected reward, subject to a KL penalty that keeps you close to the reference model. The hyperparameter $\beta$ controls the tradeoff.
 
-The punchline of DPO is that this objective has a closed-form optimal policy, and that closed form contains all the information you need to train against preference data directly: no reward model, no rollouts, no PPO. We'll work through the derivation in a few paragraphs. But first, the conceptual move.
+This objective has a closed-form optimal policy, and that closed form contains all the information you need to train against preference data directly: no reward model, no rollouts, no PPO. We'll work through the derivation in a few paragraphs. But first, the conceptual move.
 
 ## The DPO surprise
 
@@ -50,13 +50,13 @@ The result: a single supervised loss on preference pairs. No rollouts. No value 
 
 Two models in memory: the policy being trained, and the reference model. That's it. Compare to PPO + RLHF's four. The memory and simplicity savings are significant.
 
-But before showing the math, I want to land the right intuition for what DPO is doing, because there's a misreading of DPO that's tempting and wrong.
+But before showing the math, I want to land the right intuition for what DPO is doing.
 
 ## The key intuition: relative to the reference
 
 The wrong reading of DPO: "It's preference training. Increase chosen, decrease rejected." Roughly what happens, but it misses the structural point.
 
-DPO doesn't push chosen up and rejected down in absolute terms. The intuition: if the reference already strongly preferred chosen, DPO barely moves. If the reference was indifferent or wrong, DPO pushes hard.
+DPO doesn't push chosen up and rejected down in absolute terms. If the reference already strongly preferred chosen, DPO barely moves; if it was indifferent or wrong, DPO pushes hard.
 
 This is what preserves the KL anchor from RLHF. Naive preference training (just push chosen up, rejected down) would let the policy drift arbitrarily far from the reference. The "above what the reference already was" part is what keeps DPO solving the same KL-regularized problem PPO + RLHF solves. And it's free: the KL anchor falls out of the derivation. No separate KL term in the loss.
 
@@ -120,15 +120,15 @@ This is the DPO loss. Run gradient descent on it over a preference dataset, and 
 
 Look at the structure of the DPO loss. There are two log-probability ratios: one for the chosen response, one for the rejected. Each compares the current policy's probability to the reference policy's probability. The loss wants the chosen log-ratio to be larger than the rejected log-ratio.
 
-This is the formal version of the intuition I described earlier. The training pressure isn't "increase chosen, decrease rejected." It's "increase the chosen-over-rejected log-ratio relative to the reference." If the reference model already gave higher probability to the chosen response, the loss is already partially satisfied; the gradient is small. If the reference was wrong (gave higher probability to the rejected response), the gradient is large, pushing hard against the reference.
+This is the formal version of the intuition I described earlier. The training pressure is to increase the chosen-over-rejected log-ratio relative to the reference, not to increase chosen and decrease rejected in absolute terms. If the reference model already gave higher probability to the chosen response, the loss is already partially satisfied; the gradient is small. If the reference was wrong (gave higher probability to the rejected response), the gradient is large, pushing hard against the reference.
 
-The KL anchor isn't a separate term. It's built into the structure of the loss. Both numerators in the log-ratios are the policy being trained; both denominators are the reference. The reference's behavior is the implicit constraint on what the policy can do.
+The KL anchor is built into the structure of the loss, not a separate term. Both numerators in the log-ratios are the policy being trained; both denominators are the reference. The reference's behavior is the implicit constraint on what the policy can do.
 
 The original RLHF objective had a KL penalty as an *added term*. DPO collapses everything: the reward, the KL anchor, the policy update; into a single supervised loss where the structure of the equation enforces all three.
 
 ## What DPO meant for the field
 
-DPO didn't replace online RL. It carved out a specific lane. What DPO won is the open-source ecosystem of *budget-constrained* preference tuning: for teams without lab-scale compute, DPO is the dominant approach. The structural distinction that matters isn't PPO vs. DPO; it's *online* (fresh rollouts during training) vs. *offline* (a fixed preference dataset). Online has an exploration advantage; offline is simpler. For most use cases, the simplicity wins.
+Rather than replacing online RL, DPO carved out a specific lane. What DPO won is the open-source ecosystem of *budget-constrained* preference tuning: for teams without lab-scale compute, DPO is the dominant approach. The structural distinction that matters is *online* (fresh rollouts during training) vs. *offline* (a fixed preference dataset), not PPO vs. DPO. Online has an exploration advantage; offline is simpler. For most use cases, the simplicity wins.
 
 In mid-2023, doing RLHF was something a small number of well-resourced labs could do. PPO was complex and engineering-intensive. The infrastructure for online preference tuning was confined to teams that had built it. Most people who wanted to fine-tune a model on preference data couldn't realistically do it.
 

@@ -8,7 +8,7 @@ draft: false
 
 {{< include ../_series.qmd >}}
 
-Most treatments of PPO either start with MDPs and Bellman equations and lose you in the abstract before the algorithm appears, or treat PPO as a black box. Neither helps when you actually want to understand it. Here's the framing that finally made it stick for me: PPO [@schulman_etal_2017] is REINFORCE with five fixes that, together, solve two problems.
+Most treatments of PPO either start with MDPs and Bellman equations and lose you in the abstract before the algorithm appears, or treat PPO as a black box. Neither helps when you actually want to understand it. PPO [@schulman_etal_2017] is REINFORCE with five fixes that, together, solve two problems.
 
 The plan: walk through the two problems REINFORCE has, watch each PPO fix arise as a response to one of them, and end by tracing how the final objective decomposes all the way down to things you can actually compute.
 
@@ -110,7 +110,7 @@ PPO trains two networks in parallel:
 
 For the chatbot, the value network looks at a partial response, e.g. *"PPO is a reinforcement learning"*, and outputs something like 0.6, meaning "responses that start this way tend to score around 0.6 from the reward model." After the next token, the partial response becomes *"PPO is a reinforcement learning algorithm"* and the value might shift to a slightly higher score of 0.65, indicating that the response is heading somewhere good. The critic is essentially a running estimate of "how well is this generation going so far?"
 
-The critic doesn't act. It just judges. Taken together, the actor and critic give an *actor-critic* architecture, of which PPO is one specific instance.
+The critic judges rather than acts. Taken together, the actor and critic give an *actor-critic* architecture, of which PPO is one specific instance.
 
 How does the critic learn? Standard regression. After a rollout, you have actual rewards $r_0, r_1, \ldots, r_T$. From any state $s_t$ along the trajectory, the actual return is $G_t = r_t + \gamma r_{t+1} + \ldots + \gamma^{T-t} r_T$. Train the critic to predict $G_t$ from $s_t$ using mean-squared-error. Over many trajectories the critic becomes a calibrated estimator, and the advantages it underwrites become reliable.
 
@@ -123,7 +123,7 @@ There's a subtle decision in *how* to compute the advantage from rollout data. T
 - **Use the actual rewards that followed.** Accurate but noisy: at the mercy of every random thing that happened in the trajectory.
 - **Trust the value network's predictions.** Stable but biased: if the critic is wrong, your advantages are wrong.
 
-You can blend. Use the actual rewards for the next few steps, then have the critic estimate the rest. This is the *n-step* family of advantage estimators, parameterized by how many real-reward steps to use before deferring to the critic. Small $n$ trusts the critic. Large $n$ trusts the rewards.
+You can blend. Use the actual rewards for the next few steps, then have the critic estimate the rest. This is the *n-step* family of advantage estimators, parameterized by how many real-reward steps to use before deferring to the critic. Small $n$ trusts the critic; large $n$ trusts the rewards.
 
 Rather than picking one $n$, **Generalized Advantage Estimation** [@schulman_etal_2016] takes an exponentially-weighted average across all $n$:
 
