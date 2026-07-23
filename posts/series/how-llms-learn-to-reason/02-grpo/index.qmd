@@ -41,7 +41,7 @@ A natural question is whether the reward model could just take over. It can't.
 
 The reward model and the value network do fundamentally different jobs. The reward model answers: "How good is this *complete* response?" It takes a (prompt, response) pair and outputs a scalar. It was trained on human preferences over finished outputs, so it has no signal for half-finished responses. The value network answers a different question: "Given this *partial* state, what total reward do I expect by the end?" It takes a state (prompt plus tokens-so-far) and predicts where things are heading.
 
-The reward model can't do the second job because no human ever rated half-responses during preference data collection.
+These are different questions. One scores finished things. The other predicts where things are heading. The reward model can't do the second job because no human ever rated half-responses during preference data collection.
 
 So the value network isn't redundant. PPO needs it because GAE (the per-token advantage estimator) needs to know the expected outcome at every state along the trajectory, and only the value network can provide that.
 
