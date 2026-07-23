@@ -32,7 +32,7 @@ For the intake agent, the handoff writer needed this field:
 
 That field lets the agent skip a redundant plan-tier question, lets the handoff writer emit `plan_tier: enterprise`, and lets a required-field check decide whether the handoff is ready.
 
-State also records reliability. If a user first says, "I think it might be the migration," and later says, "Support confirmed it was the migration," state should mark one claim as uncertain and the other as confirmed. The transcript preserves both sentences, but state tells the system how to use them.
+State also records reliability. If a user first says, "I think it might be the migration," and later says, "Support confirmed it was the migration," state should mark one claim as uncertain and the other as confirmed. The transcript preserves both sentences; state tells the system how to use them.
 
 The same issue appears in handoff readiness. If the handoff requires `plan_tier`, `affected_feature`, and `confirmed_root_cause`, state should show which fields are filled, which are uncertain, and which still need follow-up. The agent can then read state instead of reconstructing the situation from the transcript every turn.
 
@@ -137,7 +137,7 @@ A useful state object answers four questions at each step:
 
 These questions expose whether state is usable. Without those fields, the model has to reconstruct the situation from raw history. It may treat guesses as facts, skip required questions, or advance the workflow too early.
 
-State gives the model and runtime stable fields to read. The model uses state to decide what to say next. The runtime uses state to decide what is allowed next.
+State gives the model and runtime stable fields to read. The model uses state to decide what to say next; the runtime uses state to decide what is allowed next.
 
 ## State changes as the workflow runs
 
@@ -167,7 +167,7 @@ if action == "produce_handoff":
     assert state["ready_for_handoff"] is True
 ```
 
-Prompts suggest behavior. Runtime checks enforce it.
+Prompts suggest behavior; runtime checks enforce it.
 
 ## Common mistakes
 
@@ -183,7 +183,7 @@ Use a simple test when deciding what belongs in state: will the system behave wo
 
 ## State is the system's memory
 
-The transcript records what was said. State records what the system can rely on.
+The transcript records what was said; state records what the system can rely on.
 
 The intake agent needed to store two confirmed facts: the user was on the enterprise plan, and the dashboard was the affected feature. Once those facts became state, later steps could use them. The agent could avoid a redundant question, produce a better handoff, and expose unresolved fields before claiming the workflow was ready.
 

@@ -12,15 +12,15 @@ A stronger model does not automatically give you a reliable agent.
 
 The [previous article](/posts/series/the-agent-harness/01-demos-break/index.qmd) catalogued six ways agent demos break in production. The intake agent forgot a fact the user gave it on turn 2. The scheduling assistant double-booked a meeting after an ambiguous timeout. The docs Q&A agent gave a confident, well-formed, wrong answer.
 
-The instinct after each failure is to reach for a stronger model. Sometimes that helps a little. More often, the failure returns in a slightly different shape because the system around the model has not changed. The useful reframe is simple:
+The instinct after each failure is to reach for a stronger model. Sometimes that helps a little. More often, the failure returns in a slightly different shape because the system around the model has not changed. The reframe:
 
 **Agent = model + harness**
 
-The model is the reasoning engine. The harness is the system the model lives inside. Models get swapped, cheaper, and faster. The harness carries the team's accumulated understanding of how to make the agent reliable. For production agents, the harness is the product.
+The model is the reasoning engine; the harness is the system the model lives inside. Models get swapped, cheaper, and faster. The harness carries the team's accumulated understanding of how to make the agent reliable. For production agents, the harness is the product.
 
 ## Prompts guide. Harnesses constrain.
 
-A prompt tells the model what behavior you want. A harness decides what behavior the system permits.
+A prompt tells the model what behavior you want; a harness decides what behavior the system permits.
 
 The difference is concrete:
 
@@ -29,7 +29,7 @@ The difference is concrete:
 - **Docs Q&A:** a prompt can say, "Use only the retrieved documents." A harness can require every final claim to map to a cited passage.
 - **Retries:** a prompt can say, "Be careful with retries." A harness can enforce one write attempt, require an idempotency key, and route ambiguous timeouts to verification.
 
-The prompt shapes one model call. The harness controls the workflow around that call. It makes some failures impossible to commit and makes the rest easier to detect.
+The prompt shapes one model call; the harness controls the workflow around that call. It makes some failures impossible to commit and makes the rest easier to detect.
 
 That is the shift from prompt engineering to harness engineering.
 
@@ -88,4 +88,4 @@ Some harness pieces get lighter as models improve. Tool-selection scaffolding ma
 
 Other harness pieces remain necessary because they control product risk. A smarter model still cannot unsend a calendar invite, undo a payment, or reconstruct last month's behavior without traces. It still needs runtime boundaries around tools, writes, permissions, and user-visible actions.
 
-The pieces that age are scaffolding around weak model behavior. The pieces that stay are tied to reliability: state, tool contracts, gates, verification, recovery, traces, and tests.
+The pieces that age are scaffolding around weak model behavior, while the pieces that stay are tied to reliability: state, tool contracts, gates, verification, recovery, traces, and tests.

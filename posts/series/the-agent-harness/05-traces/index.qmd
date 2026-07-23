@@ -21,9 +21,9 @@ The team finds out a day later, when the user files a correction. The logs show 
 2026-05-08 14:23:21  run_551  run completed
 ```
 
-That log records events. It does not show which passages were retrieved, what the model saw, why it chose 30 days, which passage supported the claim, or which validation checks ran. The team can guess. It cannot debug.
+That log records events. It does not show which passages were retrieved, what the model saw, why it chose 30 days, which passage supported the claim, or which validation checks ran. The team can guess but cannot debug.
 
-Logs tell you what happened. Traces show why it happened.
+Logs record what happened; traces show why.
 
 The [previous article](/posts/series/the-agent-harness/04-prompts-gate/index.qmd) covered gates: runtime checks that stop wrong actions before they happen. This article covers traces: structured records that make failures explainable after they happen.
 
@@ -127,7 +127,7 @@ retrieved_passages = [
 ]
 ```
 
-Retrieval found the right passage and ranked it first. The system did not fail to retrieve the answer.
+Retrieval found the right passage and ranked it first.
 
 Step 3, `synthesize`, shows the first bad move. Synthesis received passage text without category tags. It saw four general passages saying 30 days and one trial-account passage saying 90 days. Without category metadata, the model had no signal that the 90-day passage was the relevant one.
 
@@ -135,7 +135,7 @@ Step 4, `ground`, mapped the drafted claim to `psg_0871`. Grounding succeeded na
 
 The failure is now specific: retrieval found the answer, context assembly dropped the metadata, synthesis chose the wrong passage, and validation missed the category mismatch.
 
-A team reading only the output might edit the synthesis prompt. A team reading the trace fixes the right layer: include category metadata in the context pack, weight category-specific passages for category-specific queries, and validate category alignment before returning the answer.
+Reading only the output, a team might edit the synthesis prompt; reading the trace, it fixes the right layer: include category metadata in the context pack, weight category-specific passages for category-specific queries, and validate category alignment before returning the answer.
 
 ## From first bad move to durable fix
 
@@ -147,7 +147,7 @@ A failure should leave behind a trace, a fix, and a regression case.
 
 ![The hardening loop. A failure produces a trace; the trace identifies the first bad move; the team ships a durable fix and a regression case. The cycle feeds back into the system. The harness is what changes, and what changes is what compounds.](hardening_loop.png){#fig-hardening-loop fig-alt="A closed feedback loop with four stages. A failure produces a trace; the trace is read to identify the first bad move; the team ships a durable fix to the harness plus a regression test case; the fix and case feed back into the system, where they prevent that failure on future runs. An annotation marks the harness as the part that changes each cycle, so the improvements accumulate over time."}
 
-Teams that run this loop on every incident are doing reliability engineering. Teams that stop at "patched the prompt, moved on" are managing symptoms. A system improves when the team stops wasting failure.
+Running this loop on every incident is reliability engineering; stopping at "patched the prompt, moved on" only manages symptoms. A system improves when the team stops wasting failure.
 
 ## Minimum viable trace
 
