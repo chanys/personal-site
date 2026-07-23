@@ -10,7 +10,7 @@ draft: false
 
 The standard story about post-pretraining is: first supervised fine-tuning (often called instruction tuning), then alignment with RLHF or DPO. Two stages, presented as several distinct techniques because the SFT stage has gone by many names: supervised fine-tuning, instruction tuning, distilled SFT, chat tuning. Mechanically, they're the same operation.
 
-Here's the thesis: SFT shares its loss function with pretraining. They're both next-token cross-entropy, differing only in what data goes in and which tokens contribute to the loss. Preference optimization is the only stage that introduces a genuinely new loss family.
+SFT shares its loss function with pretraining. They're both next-token cross-entropy, differing only in what data goes in and which tokens contribute to the loss. Preference optimization is the only stage that introduces a genuinely new loss family.
 
 ## Two loss families across three stages
 
@@ -56,7 +56,7 @@ LoRA and QLoRA don't change what the model is being trained on or how the loss i
 
 ![LoRA decomposes the fine-tuning update into two small matrices B (d×r) and A (r×k), with r much smaller than d or k. The base weight matrix W₀ stays frozen. Right: memory for fine-tuning a 7B model under three regimes; full fine-tuning at FP32 needs ~84GB, LoRA on FP16 base ~14GB, QLoRA on 4-bit base ~4GB.](lora.png){#fig-lora fig-alt="Two panels. Left: a frozen base weight matrix W-zero shown alongside a low-rank update formed by multiplying matrix B of size d by r with matrix A of size r by k, where the rank r is much smaller than d or k, so only A and B are trained. Right: a bar chart comparing GPU memory to fine-tune a 7B model under three regimes, roughly 84GB for full fine-tuning at FP32, about 14GB for LoRA on an FP16 base, and about 4GB for QLoRA on a 4-bit quantized base."}
 
-[LoRA](https://chanys.github.io/lora/) [@hu_etal_2022] trains a small low-rank adapter on top of a frozen base model. The premise: full fine-tuning is overkill for most tasks because fine-tuning updates have low intrinsic rank. The base already knows grammar, world facts, and reasoning patterns; fine-tuning is usually a *nudge*, not a rewrite. LoRA replaces the full update $\Delta W$ with the product of two much smaller matrices $BA$, where the rank $r$ is much smaller than the original matrix dimensions. The base $W_0$ stays frozen; only the small $B$ and $A$ are trained. The phrase to remember: LoRA works because fine-tuning is usually steering, not rebuilding.
+[LoRA](https://chanys.github.io/lora/) [@hu_etal_2022] trains a small low-rank adapter on top of a frozen base model. The premise: full fine-tuning is overkill for most tasks because fine-tuning updates have low intrinsic rank. The base already knows grammar, world facts, and reasoning patterns; fine-tuning is usually a *nudge*, not a rewrite. LoRA replaces the full update $\Delta W$ with the product of two much smaller matrices $BA$, where the rank $r$ is much smaller than the original matrix dimensions. The base $W_0$ stays frozen; only the small $B$ and $A$ are trained.
 
 [QLoRA](https://chanys.github.io/qlora/) [@dettmers_etal_2023]  keeps LoRA's structure but quantizes the frozen base to 4 bits while leaving the adapter in 16-bit. The QLoRA mechanics (NF4 quantization, double quantization of scale constants, paged optimizers for memory spikes) are covered in the [QLoRA deep-dive post](https://chanys.github.io/qlora/); they're what makes the memory math work but they're orthogonal to the article's thesis.
 
