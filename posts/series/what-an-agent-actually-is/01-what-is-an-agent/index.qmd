@@ -10,7 +10,7 @@ draft: false
 
 "Agent" has become the most overloaded word in AI engineering. Vendors apply it to everything from a single tool-use LLM call to systems that run autonomously for days. The definitions in serious use don't agree with each other, and the disagreement isn't going to resolve.
 
-The right move isn't to pick a winner. It's to refuse the question. Stop asking whether something is an agent. Ask how much autonomy it has, and whether that's the right amount for the task.
+Rather than pick a winner, stop asking whether something is an agent. Ask how much autonomy it has, and whether that's the right amount for the task.
 
 ## Stop asking for one definition
 
@@ -26,7 +26,7 @@ The definitions across the field vary, and the variation is real:
 
 - **McKinsey’s 2025 enterprise survey** [@mckinsey_2025] frames AI agents as systems based on foundation models that act in the real world and are capable of autonomously planning and executing multiple steps in a workflow. This is a more autonomy-heavy enterprise framing than Lambert’s tool-use baseline.
 
-These definitions do not fully agree. That is why the better question is not "is this an agent?" but "how much autonomy does it have, and is that the right amount for the task?"
+These definitions do not fully agree.
 
 ## The autonomy spectrum
 
@@ -48,7 +48,7 @@ A few of these stages deserve more than a row.
 
 **+ Autonomy** is the regime Anthropic reserves the word "agent" for, and it's where the failure modes get expensive.
 
-Each step adds capability and removes a constraint. Each one is also a deliberate engineering choice. More autonomy isn't better; it's different. A task that would be well served by a fixed workflow doesn't improve when you add a planning loop, and a task that genuinely needs open-ended exploration isn't solved by a single tool call.
+Each step adds capability and removes a constraint. Each one is also a deliberate engineering choice. More autonomy is different, not better. A task that would be well served by a fixed workflow doesn't improve when you add a planning loop, and a task that genuinely needs open-ended exploration isn't solved by a single tool call.
 
 To make this concrete, take a customer-support refund task. A standard LLM can't handle it at all. With no access to the order record, the best it can do is draft a generic reply that pretends to. With tools, it can look up the order and draft a real one. With a loop, it can ask for missing information and retry. With reasoning, it can handle edge cases: orders past the policy window, partial refunds, conflicts with prior tickets. With autonomy, it decides whether to issue the refund or escalate.
 
@@ -64,15 +64,15 @@ Strip away the marketing and the architecture is consistent across the spectrum.
 - **Memory.** What's available across loop iterations and across sessions.
 - **Control flow.** Decides which path through the system gets taken; via explicit code, or implicit in the model's reasoning.
 
-The proportions and complexity vary; the components don't.
+The proportions and complexity vary, but the components stay the same.
 
-This is also why agents aren't a fundamentally new paradigm. A modern agent is a tool-use LLM in a loop with structured control flow, and each component has been around for years: Toolformer [@schick_etal_2023] for tool use, ReAct [@yao_etal_2023] for the reasoning-and-action loop, and the broader control-flow patterns Anthropic documented in late 2024. The novelty isn't the architecture. It's that the underlying language models are finally good enough at instruction-following, structured output, and reasoning that the architecture works in production.
+This is also why agents aren't a fundamentally new paradigm. A modern agent is a tool-use LLM in a loop with structured control flow, and each component has been around for years: Toolformer [@schick_etal_2023] for tool use, ReAct [@yao_etal_2023] for the reasoning-and-action loop, and the broader control-flow patterns Anthropic documented in late 2024. The novelty is in the models, not the architecture: the underlying language models are finally good enough at instruction-following, structured output, and reasoning that the architecture works in production.
 
 Frameworks like LangChain, LangGraph, and the OpenAI Agents SDK abstract these primitives into higher-level constructs. That's often useful, as they handle schema generation, message management, tool dispatch, retry logic. But the abstraction has a cost. Anthropic's recommendation is worth taking seriously: start with direct API calls so you understand the mechanics, then reach for frameworks once the cost of not using one is clear. The [next article](/posts/series/what-an-agent-actually-is/02-agent-frameworks/index.qmd) goes deep and looks at what tool calls look like at the token level, how the loop is implemented, and what frameworks save you versus what they hide.
 
 ## More autonomy is not always better
 
-If you read AI marketing in 2026, the implicit definition of an agent is the right end of the spectrum: a system that operates without human input, makes decisions, takes actions, plans across long horizons. That's the picture. It's also a small slice of what's actually deployed.
+If you read AI marketing in 2026, the implicit definition of an agent is the right end of the spectrum: a system that operates without human input, makes decisions, takes actions, plans across long horizons. That's the picture, but it's a small slice of what's actually deployed.
 
 Anthropic's engineering team has been direct about this. Their observation, after working with dozens of teams building production systems: the most successful implementations weren't using complex frameworks or specialized libraries. They were building with simple, composable patterns. The systems delivering value in production are mostly workflows with LLM calls in them, not open-ended autonomous agents.
 
