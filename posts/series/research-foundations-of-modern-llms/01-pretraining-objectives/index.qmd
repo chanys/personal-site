@@ -12,7 +12,7 @@ The standard tutorial story: "BERT was bidirectional, T5 was sequence-to-sequenc
 
 I think this story is shallow. Decoder-only won because of the paradigm, not the objective.
 
-I've been writing about these architectures individually since late 2022: deep-dives on [transformer architecture](https://chanys.github.io/transformer-architecture/), [BERT](https://chanys.github.io/bert/), [RoBERTa](https://chanys.github.io/roberta/), [T5](https://chanys.github.io/t5/), [GPT-1](https://chanys.github.io/gpt1/), [ELECTRA](https://chanys.github.io/electra/), [DeBERTa](https://chanys.github.io/deberta/), [DeBERTa-v3](https://chanys.github.io/deberta-v3/), [UL2](https://chanys.github.io/ul2/), [FLAN](https://chanys.github.io/flan-palm/), and [LLaMA-2](https://chanys.github.io/llama2/) over at <https://chanys.github.io>. This article steps back from those individual treatments to make an argument those posts don't make explicitly: the field's reasons for converging on decoder-only are often misstated. Decoder-only did not win because causal language modeling was magically superior. It won because the decoder-only paradigm made pretraining, prompting, generation, inference, and deployment all line up.
+I've been writing about these architectures individually since late 2022: deep-dives on [transformer architecture](https://chanys.github.io/transformer-architecture/), [BERT](https://chanys.github.io/bert/), [RoBERTa](https://chanys.github.io/roberta/), [T5](https://chanys.github.io/t5/), [GPT-1](https://chanys.github.io/gpt1/), [ELECTRA](https://chanys.github.io/electra/), [DeBERTa](https://chanys.github.io/deberta/), [DeBERTa-v3](https://chanys.github.io/deberta-v3/), [UL2](https://chanys.github.io/ul2/), [FLAN](https://chanys.github.io/flan-palm/), and [LLaMA-2](https://chanys.github.io/llama2/) over at <https://chanys.github.io>. This article steps back from those individual treatments to make an argument those posts don't make explicitly: the field's reasons for converging on decoder-only are often misstated. Decoder-only won because the paradigm made pretraining, prompting, generation, inference, and deployment all line up, not because causal language modeling was magically superior.
 
 ## A short tour of the pretraining objectives
 
@@ -109,7 +109,7 @@ So the important question is not simply, "Which objective is best?" The better q
 
 From that angle, decoder-only models had a major advantage. They could absorb many task formats into a single pattern: put context in the prefix, then generate the continuation.
 
-The claim is not that CLM is theoretically superior to every denoising objective. The claim is that decoder-only made the fewest assumptions about the shape of the task. Once everything can be represented as context followed by continuation, the same model can support pretraining, instruction following, few-shot prompting, chat, tool use, and long-form generation without changing architecture.
+The claim is not that CLM is theoretically superior to every denoising objective, but that decoder-only made the fewest assumptions about the shape of the task. Once everything can be represented as context followed by continuation, the same model can support pretraining, instruction following, few-shot prompting, chat, tool use, and long-form generation without changing architecture.
 
 ## At small scale, objective matters more
 
@@ -127,7 +127,7 @@ So the point is not that MLM, span corruption, or RTD were bad ideas. The point 
 
 ## The actual reason decoder-only won: unification
 
-Decoder-only did not win because MLM was "wrong" or span corruption was "worse." It won because the field moved from many specialized NLP tasks toward one general-purpose modeling interface.
+Decoder-only won because the field moved from many specialized NLP tasks toward one general-purpose modeling interface, not because MLM was "wrong" or span corruption was "worse."
 
 BERT-style models were excellent for classification, sequence labeling, span extraction, and retrieval. But each task usually required a specific setup: a head, a pooling strategy, a masking scheme, or a fine-tuned output format.
 

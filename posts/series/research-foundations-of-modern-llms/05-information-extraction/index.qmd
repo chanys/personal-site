@@ -40,7 +40,7 @@ The defining property of pre-BERT IE was the labor model, not any particular arc
 
 ## BERT made IE better, not cheaper
 
-BERT [@devlin_etal_2019] changed the modeling. It did not change the labor. The pipeline shape stayed identical to the pre-BERT pipeline; the component models got better:
+BERT [@devlin_etal_2019] changed the modeling but not the labor. The pipeline shape stayed identical to the pre-BERT pipeline; the component models got better:
 
 - **NER** became encoder + token classifier with BIO tags (what Hugging Face exposes as `AutoModelForTokenClassification`).
 - **Relation extraction** became encoder + span-pair classifier: encode the sentence, pull out the two entity span representations, pool them, run through an MLP head.
