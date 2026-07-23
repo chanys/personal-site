@@ -8,7 +8,7 @@ draft: false
 
 {{< include ../_series.qmd >}}
 
-These notes walk through REINFORCE end-to-end. This first half builds the conceptual world the algorithm lives in: what RL is, what an MDP is, what value functions are, what trajectories are, where the objective $J(\theta)$ comes from, and what every piece of notation in it means. The [second half](/posts/series/how-llms-learn-to-reason/00-reinforce-gradient/index.qmd) derives the gradient that actually drives training. Both halves are needed: one tells you *what* you're maximizing, the other tells you *how* gradient descent accomplishes it.
+These notes walk through REINFORCE end-to-end. This first half builds the conceptual world the algorithm lives in: what RL is, what an MDP is, what value functions are, what trajectories are, where the objective $J(\theta)$ comes from, and what every piece of notation in it means. The [second half](/posts/series/how-llms-learn-to-reason/00-reinforce-gradient/index.qmd) derives the gradient that actually drives training. Both halves are needed: one tells you *what* you're maximizing, the other *how* gradient descent accomplishes it.
 
 ## 1. RL is a different kind of learning problem
 
@@ -48,7 +48,7 @@ In a deterministic environment like this grid world, $a$ uniquely determines $s'
 
 The reward function $R(s, a)$ deserves a closer look, because it's the silent partner in the whole RL story.
 
-The reward function is a **fixed property of the environment**, defined before training begins. It's not learned. It's not a parameter. The agent never modifies it. When the agent takes action $a$ from state $s$ and the environment returns reward $r_t$, the agent simply observes that number. It doesn't see the rule that produced it.
+The reward function is a **fixed property of the environment**, defined before training begins. It's not learned. It's not a parameter. The agent never modifies it. When the agent takes action $a$ from state $s$ and the environment returns reward $r_t$, the agent simply observes that number without seeing the rule that produced it.
 
 In the grid world, you (the designer) wrote the rules: $+5$ at one terminal, $+4$ at another, $-1$ at the "penalty", $-1$ for every step taken. That table is the reward function. The agent will spend its entire training experiencing that table's outputs without ever being told the table exists.
 
@@ -58,7 +58,7 @@ This means **defining the reward function is how you specify the task**. Change 
 - Reward $+1$ for staying alive each step → agent learns to survive.
 - Reward $-1$ everywhere → agent learns to terminate as fast as possible, possibly by walking into the "penalty".
 
-Same environment, same states, same actions, but completely different behavior, because the reward function is different. This is why reward design is famously tricky: a poorly-specified reward gives you an agent that solves the wrong problem. (The classic example is a boat-racing agent that learned to drive in circles hitting respawning power-ups instead of finishing the race, because that gave more points.)
+The environment, states, and actions are the same; only the reward function differs, and that changes the behavior completely. This is why reward design is famously tricky: a poorly-specified reward gives you an agent that solves the wrong problem. (The classic example is a boat-racing agent that learned to drive in circles hitting respawning power-ups instead of finishing the race, because that gave more points.)
 
 ## 3. Trajectories and returns
 
@@ -93,9 +93,9 @@ The rewards are $r_0 = -1, r_1 = -1, r_2 = -1, r_3 = +5$. The returns at each ti
 - $G_2 = -1 + 5 = 4$
 - $G_3 = 5$
 
-Notice: $r_0 = -1$ but $G_0 = 2$. They're not the same number, and they're not measuring the same thing.
+Notice: $r_0 = -1$ but $G_0 = 2$. They're not the same number, and they measure different things.
 
-Earlier timesteps had to pay more fuel costs before reaching the $+5$, so their returns are smaller. From $(2,1)$ at the end, the agent is one step from the reward; from $(0,0)$ at the start, it had to walk all the way there.
+Earlier timesteps had to pay more fuel costs before reaching the $+5$, so their returns are smaller. From $(2,1)$ at the end, the agent is one step from the reward, whereas from $(0,0)$ at the start it had to walk all the way there.
 
 ![The worked trajectory τ on the 4×4 grid world. Every move costs $r=-1$ (fuel) until the $+5$ terminal; the return $G_t$ sums rewards from step $t$ onward, so steps nearer the goal carry larger returns ($G_0=2$ rising to $G_3=5$).](grid_world_trajectory.png){#fig-grid-world fig-alt="A 4 by 4 grid world. The agent starts at the bottom-left cell and moves right, then up, then right, then right into a green plus-five goal cell, which is terminal. A red minus-one penalty cell and a green plus-four terminal cell sit in the top row, off the path. Each of the first three moves earns a reward of minus one (a fuel cost); the final move into the goal earns plus five. The return shown at each visited cell is 2, 3, 4, then 5: returns are larger for steps closer to the goal, because earlier steps pay more fuel before reaching the plus-five."}
 
@@ -103,7 +103,7 @@ Earlier timesteps had to pay more fuel costs before reaching the $+5$, so their 
 
 Anticipating where REINFORCE is going: the gradient updates will weight each action by a return, not by an immediate reward. The reason is that the immediate reward $r_t$ doesn't tell you whether the action you took was *good* in any meaningful sense. In the grid world, every step has reward $-1$ regardless of which direction you moved. The single-step reward gives you no information about whether you moved *toward* the $+5$ or *away* from it.
 
-What does carry that information? The total reward you collected after taking the action. If you took action $a_t$ and ultimately got to the $+5$, then $a_t$ was probably part of a good plan. If you took action $a_t$ and ended up at the "penalty", then $a_t$ was probably a bad choice.
+What does carry that information? The total reward you collected after taking the action. If $a_t$ ultimately got you to the $+5$, it was probably part of a good plan; if it ended up at the "penalty", it was probably a bad choice.
 
 $G_t$ captures this. It's the agent's verdict on "how did things go after I took action $a_t$?", which is exactly the right signal for deciding whether to make $a_t$ more or less likely in the future. We'll come back to this when we form the objective.
 
@@ -115,7 +115,7 @@ Suppose the agent finally gets a $+5$ reward at step 20. *Which of the 20 action
 
 This is called the **credit assignment problem**, and it's the central difficulty of reinforcement learning. In supervised learning, every input has its own label, so credit is unambiguous: image $x_i$ goes with label $y_i$. In RL, rewards are often sparse and delayed: you take many actions before learning whether any of them were good, and there's no per-step label telling you which actions worked.
 
-$G_t$'s answer is brutally simple: assign every action the credit of *everything that came after it*. The action at step 15 gets credit for the $+5$ reward at step 20, because that reward is part of $G_{15}$. So does the action at step 1, because $G_1$ also includes that reward. This is unfair on a per-action basis because some of those early actions probably didn't matter, but it averages out across many trajectories. Actions that *consistently* precede good outcomes will accumulate positive updates over many rollouts; actions that don't, won't. The noise washes out; the signal accumulates.
+$G_t$'s answer is brutally simple: assign every action the credit of *everything that came after it*. The action at step 15 gets credit for the $+5$ reward at step 20, because that reward is part of $G_{15}$. So does the action at step 1, because $G_1$ also includes that reward. This is unfair on a per-action basis because some of those early actions probably didn't matter, but it averages out across many trajectories. Actions that *consistently* precede good outcomes will accumulate positive updates over many rollouts; actions that don't, won't. The noise washes out while the signal accumulates.
 
 This is why REINFORCE needs lots of samples to work. Each individual trajectory gives you a noisy, unfair credit assignment. Only across many trajectories does the right policy emerge.
 
@@ -219,7 +219,7 @@ The two are related. $V$ is what you get when you average $Q$ over the actions t
 
 $$V(s) = \sum_a \pi(a \mid s) \, Q(s, a).$$
 
-If the policy is greedy (always picks the best action), this collapses to $V(s) = \max_a Q(s, a)$. So $V$ is the summary, $Q$ is the breakdown.
+If the policy is greedy (always picks the best action), this collapses to $V(s) = \max_a Q(s, a)$. So $V$ is the summary and $Q$ is the breakdown.
 
 Why does this matter? Because $Q$ is more useful for *acting*. Suppose you have a value function and you need to choose an action.
 
@@ -230,7 +230,7 @@ This is why deep RL methods that learn value functions almost always learn $Q$, 
 
 ## 7. Why neural networks?
 
-Iterating Bellman across a 16-square grid is fine. Iterating across the state space of Go, which has more positions than there are atoms in the universe, is not. You can't store one number per state, let alone visit each state repeatedly to update it.
+Iterating Bellman across a 16-square grid is fine, but iterating across the state space of Go, which has more positions than there are atoms in the universe, is not. You can't store one number per state, let alone visit each state repeatedly to update it.
 
 The fix is to use a neural network as a **function approximator** in place of a giant lookup table. The network takes a state as input and outputs either:
 
@@ -291,7 +291,7 @@ The policy controls the second arrow. Everything downstream is the environment d
 
 This is also why the gradient mechanics in Part II are expressed in terms of $\nabla_\theta \log \pi_\theta(a \mid s)$. The only thing the agent can adjust is action probabilities. The only thing the gradient can affect is which actions get sampled.
 
-A useful contrast to hold in mind: a **value function** ($V$ or $Q$) tells you *how good* states are. It doesn't tell you what to do. A **policy** tells you *what to do*. It doesn't predict return. REINFORCE trains the policy directly, without ever learning a value function: the trajectories themselves provide the feedback signal.
+A useful contrast: a **value function** ($V$ or $Q$) tells you *how good* states are rather than what to do, while a **policy** tells you *what to do* rather than predicting return. REINFORCE trains the policy directly, without ever learning a value function: the trajectories themselves provide the feedback signal.
 
 ## 10. The objective from a single trajectory
 
@@ -335,7 +335,7 @@ That's one number: the value of $J(\theta)$ for this specific trajectory under t
 
 On its own, the absolute value isn't very meaningful. What matters is how the sum *changes* as $\theta$ changes.
 
-Here's the intuition for why this particular form is what we want to maximize. Each term $G_t \log \pi_\theta(a_t \mid s_t)$ is doing something specific:
+Each term $G_t \log \pi_\theta(a_t \mid s_t)$ is doing something specific:
 
 - **If $G_t$ is large and positive** (the trajectory after this timestep was good), then $G_t \log \pi_\theta(a_t \mid s_t)$ is a large negative number that gets *less negative* if $\pi_\theta(a_t \mid s_t)$ increases. So the sum increases when the policy raises the probability of $a_t$.
 

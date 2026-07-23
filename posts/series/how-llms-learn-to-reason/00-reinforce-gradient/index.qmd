@@ -74,7 +74,7 @@ For example, with $z_\rightarrow = 1.0$ and $z_\leftarrow = 0.0$:
 
 $$p(\rightarrow) = \frac{e^1}{e^1 + e^0} \approx 0.73, \qquad p(\leftarrow) \approx 0.27.$$
 
-Logits determine probabilities, and changing logits changes probabilities. Gradient descent updates the logits (and ultimately the weights that produce them):
+Logits determine probabilities, so changing the logits changes them. Gradient descent updates the logits (and ultimately the weights that produce them):
 
 $$z_\rightarrow \leftarrow z_\rightarrow - \eta \frac{\partial L}{\partial z_\rightarrow}.$$
 
@@ -102,7 +102,7 @@ Putting it together:
 
 $$\frac{\partial \log p(\rightarrow)}{\partial z_\rightarrow} = 1 - p(\rightarrow).$$
 
-This is a clean, elegant result: as the action becomes more confident ($p \to 1$), the gradient shrinks toward zero. There's nothing left to push.
+This is a clean, elegant result: as the action becomes more confident ($p \to 1$), the gradient shrinks toward zero, with nothing left to push.
 
 ## 7. The gradient on the loss
 

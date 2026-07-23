@@ -10,7 +10,7 @@ draft: false
 
 In January 2025, DeepSeek released R1 [@guo_etal_2025]: a reasoning model that closed most of the gap to OpenAI's o1 at a fraction of the training cost, and (more importantly) shipped with the training recipe described in the open. The recipe centered on an algorithm called GRPO. Within a few months, essentially every open-source reasoning model (Qwen's reasoning variants, Llama derivatives, the wave that followed) was using GRPO or close cousins of it.
 
-GRPO itself wasn't new in 2025. The DeepSeek team had introduced it a year earlier, in their DeepSeekMath paper [@shao_etal_2024], where they used it to train a 7B math-specialist model. What changed in 2025 wasn't the algorithm. It was the demonstration that the same algorithm could produce general reasoning capability at frontier scale.
+GRPO itself wasn't new in 2025. The DeepSeek team had introduced it a year earlier, in their DeepSeekMath paper [@shao_etal_2024], where they used it to train a 7B math-specialist model. What changed in 2025 was the demonstration that the same algorithm could produce general reasoning capability at frontier scale.
 
 If you've been trying to understand how reasoning models like o1, R1, or their successors actually get trained, GRPO is most of the answer. This post is about what GRPO is, why it works, and where it sits relative to the PPO + RLHF recipe it (sometimes) replaces.
 
@@ -37,7 +37,7 @@ Two of those roles you can't avoid. The reference model is structurally necessar
 
 But the value network? It's only there to compute advantages. If you can compute advantages another way, you can drop it.
 
-A natural question is whether the reward model could just take over. It can't, and the reason matters.
+A natural question is whether the reward model could just take over. It can't.
 
 The reward model and the value network do fundamentally different jobs. The reward model answers: "How good is this *complete* response?" It takes a (prompt, response) pair and outputs a scalar. It was trained on human preferences over finished outputs, so it has no signal for half-finished responses. The value network answers a different question: "Given this *partial* state, what total reward do I expect by the end?" It takes a state (prompt plus tokens-so-far) and predicts where things are heading.
 
@@ -45,7 +45,7 @@ These are different questions. One scores finished things. The other predicts wh
 
 So the value network isn't redundant. PPO needs it because GAE (the per-token advantage estimator) needs to know the expected outcome at every state along the trajectory, and only the value network can provide that.
 
-GRPO's move isn't to substitute the reward model for the value network. It's to give up on per-token advantage estimation entirely.
+Rather than substitute the reward model for the value network, GRPO gives up on per-token advantage estimation entirely.
 
 ## Group-relative advantages
 
@@ -99,9 +99,9 @@ The intuition is clean: of these attempts, which ones got it right? Reinforce th
 
 A subtle but important case. If all 4 rollouts get reward 0 (model failed every attempt), or all 4 get reward 1 (model succeeded every time), then the standard deviation is 0, the mean equals every $r_i$, and every advantage is 0.
 
-This isn't a bug. It's the algorithm correctly saying *"there's no learning signal here."* If all attempts failed, we don't know which failures were closer to success. If all succeeded, we don't know which successes were genuinely well-reasoned versus lucky. Either way, no rollout in this group is "better than its siblings," so no gradient signal gets generated.
+This is the algorithm correctly saying *"there's no learning signal here."* If all attempts failed, we don't know which failures were closer to success. If all succeeded, we don't know which successes were genuinely well-reasoned versus lucky. Either way, no rollout in this group is "better than its siblings," so no gradient signal gets generated.
 
-The practical implication: GRPO is most effective when the model is at a difficulty level where it sometimes succeeds and sometimes fails. Too easy and all rewards are 1. Too hard and all rewards are 0. Either way, no signal. Training data needs to sit in the model's "frontier" of difficulty, which is why curriculum learning matters more for GRPO than it does for PPO.
+The practical implication: GRPO is most effective when the model is at a difficulty level where it sometimes succeeds and sometimes fails. Too easy and all rewards are 1; too hard and all rewards are 0. Either way, no signal. Training data needs to sit in the model's "frontier" of difficulty, which is why curriculum learning matters more for GRPO than it does for PPO.
 
 ## Everything else looks PPO-shaped
 
@@ -143,11 +143,11 @@ Reasoning tasks have two properties that are awkward for PPO:
 
 PPO handles sparse rewards via the value network, which has to learn "how good does this partial reasoning trajectory look?" That's a hard regression problem. Reasoning trajectories can look identical for many tokens, then diverge wildly at the answer. The value network struggles to fit this signal cleanly, and the resulting advantages are noisy.
 
-GRPO sidesteps the problem entirely. It doesn't try to predict per-token value. It just compares whole rollouts to each other.
+GRPO sidesteps the problem entirely. It compares whole rollouts to each other rather than trying to predict per-token value.
 
 There's also a practical reason GRPO and verifiable rewards pair well. GRPO needs $G$ rollouts per prompt to compute group statistics: meaning the reward function gets called $G$ times per prompt. If the reward function is a few lines of Python that runs in microseconds (a math correctness checker, a code test runner), scaling to $G = 16$ is free. If the reward function is a 7B-parameter reward model requiring a full forward pass, $G\times$ inference cost gets expensive fast. GRPO's economics work in the verifier setting.
 
-This is also where the practical scope of "verifiable" matters. Verifiable rewards work cleanly for math (correctness check on the final answer), code (test cases), formal proofs (proof assistants), and constrained generation (regex compliance). They don't work for tasks like "is this response helpful?" or "is this writing tasteful?". Those are inherently subjective and need RLHF-style learned rewards. So GRPO + RLVR doesn't replace RLHF for general assistant training. It's a complementary tool for a specific (and increasingly important) class of tasks.
+This is also where the practical scope of "verifiable" matters. Verifiable rewards work cleanly for math (correctness check on the final answer), code (test cases), formal proofs (proof assistants), and constrained generation (regex compliance). They don't work for tasks like "is this response helpful?" or "is this writing tasteful?". Those are inherently subjective and need RLHF-style learned rewards. So GRPO + RLVR complements RLHF for a specific (and increasingly important) class of tasks rather than replacing it for general assistant training.
 
 ## What R1-Zero showed
 
@@ -164,9 +164,9 @@ When DeepSeek published the R1 paper in early 2025, they actually published two 
 
 None of this was programmed in. The RL process simply rewarded the model for producing correct answers in the right format, and the rest emerged. The DeepSeek paper calls this a "self-evolution": the model learning, through exploration and reward, how to reason without ever being shown an example.
 
-R1-Zero's outputs were rough at the surface. The model would mix languages mid-response (sometimes Chinese in the middle of an English answer), use inconsistent formatting, occasionally produce incoherent passages. Strong reasoning, weak presentation. That's what made the deployable R1 require additional SFT stages on top, to clean up the surface presentation while keeping the reasoning capability.
+R1-Zero's outputs were rough at the surface. The model would mix languages mid-response (sometimes Chinese in the middle of an English answer), use inconsistent formatting, occasionally produce incoherent passages. That's what made the deployable R1 require additional SFT stages on top, to clean up the surface presentation while keeping the reasoning capability.
 
-The R1-Zero result changed how people thought about what RL could do. The conventional wisdom had been that you needed SFT to give the model a starting distribution before any RL could help. R1-Zero showed that's not strictly true for capabilities that have verifiable signals. Pure RL on a base model can produce reasoning. You don't need to demonstrate how to reason; you just need to be able to verify when it worked.
+The R1-Zero result changed how people thought about what RL could do. The conventional wisdom had been that you needed SFT to give the model a starting distribution before any RL could help. R1-Zero showed that's not strictly true for capabilities that have verifiable signals. Pure RL on a base model can produce reasoning. You don't need to demonstrate how to reason, only to verify when it worked.
 
 The current consensus pipeline for production reasoning models combines: SFT for assistant behavior, preference tuning for helpfulness/harmlessness/honesty, RLVR for reasoning capability. Each stage does a job the others can't do well. R1-Zero showed the RL stage could work without the prior stages; R1 showed why production models include them anyway.
 
@@ -188,4 +188,4 @@ The practical takeaway: PPO and DPO/variants share the general-RLHF space (front
 
 In the broader arc that this post sits in, the next piece is [**DPO**](/posts/series/how-llms-learn-to-reason/03-dpo/index.qmd), the offline alternative that displaced PPO in much of the open-source ecosystem. Conceptually different from GRPO, DPO collapses the whole RL pipeline into a single supervised loss, but solves a related problem.
 
-There's a broader point worth naming here. PPO is hard. The four-models setup, the value network's instability, and the sensitivity to hyperparameters are real engineering challenges. For years, these kept serious RL research mostly confined to a handful of well-resourced labs. GRPO didn't just simplify an algorithm. It made RL training accessible to teams that couldn't have run a stable PPO pipeline if they tried. It was a story about an algorithm simple enough that more people could actually use it.
+There's a broader point worth naming here. PPO is hard. The four-models setup, the value network's instability, and the sensitivity to hyperparameters are real engineering challenges. For years, these kept serious RL research mostly confined to a handful of well-resourced labs. GRPO did more than simplify an algorithm; it made RL training accessible to teams that couldn't have run a stable PPO pipeline if they tried.

@@ -131,6 +131,6 @@ Three things tend to go wrong when teams evaluate this pipeline.
 
 ## Closing
 
-The retrieval lineage from DPR through RA-DIT is a story of escalating sophistication: bi-encoder dense retrieval, then joint training with a frozen index, then joint training with an updating index, then a two-stage practical compromise. Production RAG, meanwhile, mostly stopped at step one. That's not a critique. The simpler pattern works well for most use cases, and the engineering cost of going further is real.
+The retrieval lineage from DPR through RA-DIT is a story of escalating sophistication: bi-encoder dense retrieval, then joint training with a frozen index, then joint training with an updating index, then a two-stage practical compromise. Production RAG, meanwhile, mostly stopped at step one. The simpler pattern works well for most use cases, and the engineering cost of going further is real.
 
 But the gap is worth knowing. When the off-the-shelf pipeline isn't working on your data, the next step isn't to swap embedding models or try another vector database. It's to figure out where in the pipeline the loss is happening, and whether the answer is a configuration change, a fine-tune, or the more ambitious territory the original RAG paper was actually about.

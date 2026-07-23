@@ -20,7 +20,7 @@ The running example: a customer support intake agent that classifies issues, ask
 
 A score is useful only if it changes what the team does next. Eval supports different decisions at different stages: during development, whether a new prompt is better; before merge, whether old failures came back; in production, whether new failure patterns are emerging.
 
-The operational test for any metric: *When this number moves, what decision changes?* If the answer is merge, hold, investigate, roll back, or add a regression case, the metric is useful. If the answer is "nothing," it does not belong on the dashboard.
+The operational test for any metric: *When this number moves, what decision changes?* If the answer is merge, hold, investigate, roll back, or add a regression case, the metric is useful; if the answer is "nothing," it does not belong on the dashboard.
 
 ## The minimum viable eval loop
 
@@ -40,7 +40,7 @@ Reading only the final answer misses the first bad move. A malformed handoff at 
 
 ### 2. Labels
 
-A label is a human judgment attached to a trace: pass or fail, plus a short critique. For example: *"Failed: agent routed the case as billing instead of refund at turn three; downstream handoff omitted refund-request status."* That critique tells the team what failed, where, and what to watch for. A score of 3 out of 5 does not.
+A label is a human judgment attached to a trace: pass or fail, plus a short critique. For example: *"Failed: agent routed the case as billing instead of refund at turn three; downstream handoff omitted refund-request status."* That critique tells the team what failed, where, and what to watch for; a score of 3 out of 5 does not.
 
 ### 3. Failure modes
 
@@ -93,7 +93,7 @@ Run the regression suite before important merges. If the new version fails cases
 
 The loop only matters if it changes what the team does. A failed check blocks a merge, a spike in redundant-question failures triggers investigation, a new production failure becomes a regression case, a judge disagreement becomes a calibration example.
 
-Pull a small sample of recent failures regularly, read them end-to-end, and ask whether they reveal a pattern the current dataset misses. The habit is simple: new failures feed back into the eval loop instead of disappearing into Slack.
+Pull a small sample of recent failures regularly, read them end-to-end, and ask whether they reveal a pattern the current dataset misses. New failures feed back into the eval loop instead of disappearing into Slack.
 
 [Your eval system also drifts](/posts/series/llm-evaluation-honestly/07-eval-drift/index.qmd) returns to this production loop: how new failures from real usage become new eval cases, alerts, and hardening work.
 
@@ -110,12 +110,12 @@ The first version for the intake agent might look like this:
 | Regression cases | 10–15 real historical failures fixed as test cases |
 | Review | Regular review of recent failures and judge disagreements |
 
-The numbers are illustrative. The shape matters: start small, use real failures, make every new failure feed back into the loop.
+The numbers are illustrative; the shape is what matters: start small, use real failures, make every new failure feed back into the loop.
 
 ## The smallest useful promise
 
 Having a minimal eval loop in place is enough to change how the team builds. "Does v2 feel better?" becomes "Which failure modes improved, which regressed, and do we trust the measurement?" Eval stops being a side research exercise and becomes part of the engineering loop.
 
-**The harness made the agent's behavior observable, the eval system turns that behavior into evidence, and the hardening loop turns evidence into a system harder to break.**
+The harness made the agent's behavior observable, the eval system turns that behavior into evidence, and the hardening loop turns evidence into a system harder to break.
 
 The [next article](/posts/series/llm-evaluation-honestly/02-eval-dataset/index.qmd) goes one layer deeper: the eval dataset.

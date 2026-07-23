@@ -52,6 +52,6 @@ Every RAG result should be tied to the retrieval environment that produced it: t
 
 ## What comes next
 
-A composite RAG score is fine as a summary, but it can't drive debugging. The next time someone reports *RAG quality is 84%*, ask: *which part is 84%, and what would we fix if it dropped?*
+A composite RAG score is fine as a summary, but it can't drive debugging. A report of *RAG quality is 84%* only becomes actionable once you know which part is 84% and what you would fix if it dropped.
 
 [The next article](/posts/series/llm-evaluation-honestly/07-eval-drift/index.qmd) closes the series on the eval system itself: judges go stale, traffic shifts, documents change, and old eval cases stop representing the current product. The agent isn't the only thing that drifts.

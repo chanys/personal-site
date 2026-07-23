@@ -12,9 +12,9 @@ For thirty years, information extraction was a real subfield of NLP. Named entit
 
 By 2024, the center of gravity had shifted.
 
-The standard story is that LLMs replaced IE. The truer claim is that IE didn't disappear. It moved inside the workflow. Where the pre-LLM IE pipeline was the *product* (extract entities, link them, populate a knowledge base, ship the KB), modern IE is the *structured layer* between raw text and downstream generation or action.
+The standard story is that LLMs replaced IE. What actually happened is that IE moved inside the workflow. Where the pre-LLM IE pipeline was the *product* (extract entities, link them, populate a knowledge base, ship the KB), modern IE is the *structured layer* between raw text and downstream generation or action.
 
-What changed wasn't the existence of the work. It was the labor model. Pre-LLM IE meant labeling thousands of examples per task, engineering features, training task-specific classifiers, and tuning a pipeline. LLM-era IE means designing a JSON schema, writing a prompt, and evaluating the result. Both are real engineering. They are not the same engineering.
+The work still exists. What changed is the labor model. Pre-LLM IE required labeling thousands of examples per task, engineering features, training task-specific classifiers, and tuning a pipeline. LLM-era IE requires designing a JSON schema, writing a prompt, and evaluating the result. Both require real engineering of different kinds.
 
 I worked across all three eras the article traces: pre-BERT IE during a postdoc, BERT-era production IE through the late 2010s, and LLM-era workflow IE now.
 
@@ -36,7 +36,7 @@ The labor was substantial and concentrated on the input side. To build an NER sy
 
 I worked in this regime during my postdoc. The published work from that period is on relation extraction [@chan_roth_2010; @chan_roth_2011] and minimally-supervised event causality [@do_etal_2011]. The relation-extraction setup was typical for the era: a feature engineering pass over syntactic and semantic structures (constituency parses, dependency paths, semantic roles, Wikipedia categories as background knowledge), then a structured classifier.
 
-The defining property of pre-BERT IE wasn't any particular model. It was the labor model. Every new task, every new domain, every new ontology required a fresh labeling effort, a fresh feature-engineering pass, and a fresh trained model. Performance was decent on benchmarks and worse in domain transfer. Adapting to a new domain typically meant starting over.
+The defining property of pre-BERT IE was the labor model, not any particular architecture. Every new task, every new domain, every new ontology required a fresh labeling effort, a fresh feature-engineering pass, and a fresh trained model. Performance was decent on benchmarks and worse in domain transfer. Adapting to a new domain typically meant starting over.
 
 ## BERT made IE better, not cheaper
 
@@ -61,7 +61,7 @@ The point of dwelling on this isn't nostalgia. Too many current writeups treat t
 
 ## LLMs changed the labor model
 
-What changed with LLMs wasn't that you could finally do IE. You could already do IE. What changed was the cost structure.
+IE was already possible before LLMs. What they changed was the cost structure.
 
 A frontier LLM with structured-output support can solve most NER, RE, and slot-filling tasks zero-shot or few-shot from a prompt and a JSON schema. Quality is task-dependent:
 - On standard benchmarks like CoNLL-2003, a well-prompted frontier LLM lands within a few F1 points of fine-tuned baselines.
@@ -97,7 +97,7 @@ I've designed and led a clinical-documentation pipeline that takes a clinician-p
 - **Metadata on each extracted item.** Temporal status (past / present / future), source and stance (patient-reported vs clinician-assessed), section affinity.
 - **Downstream routing.** Present-tense problem details go to HPI; clinician assessment and treatment plans go to A&P; past resolved history goes to medical history.
 
-This is the modern form of IE I see most often: not an extractor that ships as the product, but a structured control layer that lets the rest of the workflow behave reliably. The product is the clinical note; the extractions are what the downstream system builds it from.
+This is the modern form of IE I see most often: a structured control layer that lets the rest of the workflow behave reliably. The product is the clinical note; the extractions are what the downstream system builds it from.
 
 The pattern isn't unique. SpecialtyScribe [@goyal_etal_2025] and GENIE [@ying_etal_2025] are published instances of the same idea: IE as the structured intermediate layer of a workflow, with the extraction done by a frontier LLM, a fine-tuned smaller specialist, or a mix.
 
@@ -125,7 +125,7 @@ The richer schema is what makes the workflow possible: every extracted fact carr
 - **Workflow orchestration**: how extractions compose, how frames are routed, where metadata gates decisions.
 - **Cost control**: which calls run on a frontier model, which on a smaller specialist, which can be batched or cached.
 
-The old labor was annotation, feature engineering, and per-task model training. The new labor is schema, prompts, eval, and orchestration. The label changed, but the work did not vanish. It moved from model training into workflow design.
+None of this is less work than before. It moved from model training into workflow design.
 
 ## When classical IE still wins
 
@@ -163,10 +163,8 @@ To make the transition concrete, my [TNLP repo](https://github.com/chanys/tnlp) 
 
 ## Closing
 
-For decades, information extraction was a product: annotate, train, extract, ship the knowledge base. BERT made the models better but left the labor model intact; every new domain still cost an annotation effort. LLMs didn't make IE possible. IE was already possible. They made it low-startup-cost enough that it stopped being a product and became infrastructure: the structured layer between raw text and whatever the system does next.
+For decades, information extraction was a product: annotate, train, extract, ship the knowledge base. BERT made the models better but left the labor model intact; every new domain still cost an annotation effort. LLMs did not make IE possible; it already was. They made it low-startup-cost enough that it stopped being a product and became infrastructure: the structured layer between raw text and whatever the system does next.
 
-The work didn't disappear. The annotation-and-feature-engineering labor became schema-and-eval labor.
-
-**The extractor stopped being the deliverable and became workflow state.**
+The extractor now serves as workflow state rather than the final deliverable.
 
 The papers on the hard research problems (coreference, cross-document linking, strict argument-role constraints) are still being written; they're just no longer where most production IE work happens. The next time someone says their system "doesn't do information extraction," it's worth asking what the JSON between their LLM calls is.

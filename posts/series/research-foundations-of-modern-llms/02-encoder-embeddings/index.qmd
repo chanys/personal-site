@@ -14,7 +14,7 @@ But most LLM-powered systems also depend on a quieter model running in the backg
 
 This is where encoders went.
 
-The [previous article](/posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/index.qmd) argued that decoder-only models won the general-purpose generation interface. This article makes the complementary argument: encoders didn't die. They became the default architecture for turning text into reusable vectors.
+The [previous article](/posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/index.qmd) argued that decoder-only models won the general-purpose generation interface. This article makes the complementary argument: encoders became the default architecture for turning text into reusable vectors.
 
 More precisely, the embedding role was won by encoder-style machinery: bidirectional attention, pooled output representations, and contrastive fine-tuning. Even modern decoder-based embedders often move in this direction during fine-tuning, relaxing causal attention and training the model to produce reusable vectors.
 
@@ -93,7 +93,7 @@ The current generation is stronger. Large decoder backbones (Llama, Mistral) can
 
 That recipe looks encoder-like. Bidirectional access, pooled output, contrastive geometry. The starting weights may come from a decoder-only LLM, but the embedding behavior is built by the fine-tuning stage.
 
-So "decoders caught up" is only half right. The better framing is that large decoder backbones can be adapted into strong embedders when the fine-tuning recipe starts to look encoder-like. For most production systems, small encoder-based embedders remain attractive because they are fast and cheap. For highest-quality retrieval where compute is available, large decoder-based embedders are now real competitors.
+So "decoders caught up" is only half right. Large decoder backbones can be adapted into strong embedders when the fine-tuning recipe starts to look encoder-like. For most production systems, small encoder-based embedders remain attractive because they are fast and cheap. For highest-quality retrieval where compute is available, large decoder-based embedders are now real competitors.
 
 ## Closing
 

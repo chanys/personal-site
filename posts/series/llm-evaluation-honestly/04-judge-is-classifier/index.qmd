@@ -91,7 +91,7 @@ Examples almost always move first: if the judge is wrong on five cases of subtle
 
 ## Revalidate when things change
 
-The judge agrees with humans on the held-out set today. That doesn't mean it will agree in six months. Foundation models update, the agent's failure distribution shifts, and new failure types appear. Calibration is a snapshot: true at measurement time, increasingly stale afterward.
+The judge agrees with humans on the held-out set today. That doesn't mean it will agree in six months. Foundation models update, the agent's failure distribution shifts, and new failure types appear. Calibration is a snapshot that is accurate when measured and grows stale afterward.
 
 [Your eval system also drifts](/posts/series/llm-evaluation-honestly/07-eval-drift/index.qmd) covers what to do about it: re-validate against fresh labels on a schedule and monitor agreement rates over time. Large drift in those agreement rates is usually a signal that the failure distribution itself has changed.
 
@@ -99,6 +99,6 @@ Every deployed judge should carry a short record of what it was validated on: th
 
 ## The judge is part of the system
 
-An LLM judge is not an oracle. It is a model component that needs the same discipline as any other classifier: held-out labels, a confusion matrix, precision and recall on the class that matters, and periodic revalidation.
+An LLM judge is a model component that needs the same discipline as any other classifier: held-out labels, a confusion matrix, precision and recall on the class that matters, and periodic revalidation.
 
 Once the judge is validated, there is still one more question: how much should we trust movement in the score? A judge may report that v2 improved by two points, but that movement may be real or may be noise. [The next article](/posts/series/llm-evaluation-honestly/05-scores-are-samples/index.qmd) covers that next layer: uncertainty, sample size, and when an eval result is large enough to act on.

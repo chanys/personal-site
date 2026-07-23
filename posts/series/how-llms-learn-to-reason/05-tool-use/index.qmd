@@ -71,7 +71,7 @@ The fix is to mask retrieved tokens out of the loss. Only update on tokens the m
 
 $$\text{Loss} \;=\; -\sum_{t=1}^{|y|} I(y_t) \,\cdot\, [\,\text{policy-gradient signal at token } t\,]$$
 
-where $I(y_t) = 1$ if the model generated token $y_t$, and $I(y_t) = 0$ if the token came from a retrieved passage. Without the indicator, retrieved tokens contribute to the gradient and pull the policy toward whatever was in the search results. With it, only tokens the model actually chose contribute.
+where $I(y_t) = 1$ if the model generated token $y_t$, and $I(y_t) = 0$ if the token came from a retrieved passage. Without the indicator, retrieved tokens contribute to the gradient and pull the policy toward whatever was in the search results; with it, only tokens the model actually chose contribute.
 
 Without the mask, the same model gets 34% average accuracy. With it, 43%. Nine points from one indicator function.
 
@@ -121,11 +121,11 @@ ToolRL tested this directly by adding a length reward, a small bonus for traject
 
 The length rewards work. The traces visibly get longer. But accuracy gets worse, not better.
 
-This reshapes how to think about the R1 piece. In math and code, longer reasoning traces meant more exploration before commitment, which translated cleanly into accuracy. In tool use, the same instinct backfires. The model about to commit to a tool call doesn't always benefit from talking itself through one more time. It can talk itself out of the right call, or elaborate a wrong call into a worse one.
+This reshapes how to think about the R1 piece. In math and code, longer reasoning traces meant more exploration before commitment, which translated cleanly into accuracy; in tool use, the same instinct backfires. The model about to commit to a tool call doesn't always benefit from talking itself through one more time. It can talk itself out of the right call, or elaborate a wrong call into a worse one.
 
-Thinking helps when the structure of the task rewards thinking. Math problems reward exploration before commitment. Tool use rewards picking the right tool, getting the arguments right, and getting on with it.
+Thinking helps when the structure of the task rewards thinking. Math problems reward exploration before commitment; tool use rewards picking the right tool, getting the arguments right, and getting on with it.
 
-You can see hints of this in production models. Claude and GPT-4 produce different amounts of reasoning depending on whether you've asked them to do math or look up a fact. The faster response on a tool-use task isn't laziness, it's efficiency. Optimal trace length is task-shaped.
+You can see hints of this in production models. Claude and GPT-4 produce different amounts of reasoning depending on whether you've asked them to do math or look up a fact. The faster response on a tool-use task is efficiency, not laziness. Optimal trace length is task-shaped.
 
 ## What this means for the models you use
 

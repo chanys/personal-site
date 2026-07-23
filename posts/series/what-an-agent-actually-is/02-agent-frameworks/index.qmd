@@ -100,7 +100,7 @@ generate_email_schema = {
 
 The framework's `@function_tool` decorator generates this from the Pydantic model and the docstring at import time. Without the framework you write it by hand for every tool, and keep it in sync when the function signature changes.
 
-One thing worth knowing now, because it determines how well the agent works: **the schema is part of the prompt the model sees during generation.** Vague parameter descriptions weaken the agent more than people expect. Treat schemas with the same care you'd treat a system prompt.
+One thing worth knowing now, because it determines how well the agent works: the schema is part of the prompt the model sees during generation. Vague parameter descriptions weaken the agent more than people expect. Treat schemas with the same care you'd treat a system prompt.
 
 The schema can also constrain values, but only for constraints you actually put in. If `style` should only be one of three strings, use an enum:
 
@@ -135,7 +135,7 @@ When tool schemas are passed in the request, providers train the model to emit t
 }
 ```
 
-The model didn't emit `<tool_call>...</tool_call>` tags as plain text. It produced output that the API surfaces in a typed `tool_calls` field, with `content: null` because the model didn't generate any text alongside.
+The API surfaces this output in a typed `tool_calls` field, with `content: null` because the model didn't generate any text alongside.
 
 ### 3. The messages array
 
@@ -168,7 +168,7 @@ When the API returns a response, it includes a `finish_reason` field telling you
 - `length`: generation hit the token limit. Response is truncated.
 - `content_filter`: the API's safety filter intervened.
 
-`finish_reason` is the API's label for what just happened, not a decision the model made. The model emits tokens; the API examines what was emitted and applies the label. If the output ended with structured tool-call tokens, the API labels it `tool_calls`. If the budget was hit mid-generation, the API labels it `length`. Knowing which layer the signal comes from is the first move in debugging.
+`finish_reason` is the API's label for what just happened. The model emits tokens; the API examines what was emitted and applies the label. If the output ended with structured tool-call tokens, the API labels it `tool_calls`. If the budget was hit mid-generation, the API labels it `length`. Knowing which layer the signal comes from is the first move in debugging.
 
 ### 5. The loop itself
 
@@ -231,7 +231,7 @@ The messages array now has six entries: `system`, `user`, `assistant` (with thre
 
 **Loop 2.** Second API call. The model is now seeing the system prompt, the user query, the three tool calls it made, and the three emails the tools produced. It evaluates them, the professional one is generic, the engaging one too casual, the concise one lacks credibility, and emits two new `generate_email` calls with `include_data=true` and adjusted lengths. The model didn't "remember" anything between loops; models are stateless. The continuity is your code's responsibility, sitting in the messages array that gets re-sent each iteration.
 
-**Loop 3.** Your code dispatches the two retries. By now the array contains ten entries and five emails worth of text. Every loop iteration re-sends the entire array, so by Loop 3 you're paying input tokens on the system prompt, the user query, three full email texts from Loop 1, two more from Loop 2, and the assistant messages tying them together. Server-managed state via `previous_response_id` avoids the physical re-upload, but the conceptual cost is the same: the model attends to all accumulated history on every step, and the token bill reflects that. This is one of the main reasons production agents trim, summarize, or compress their context as it grows. The framework hides the loop but it doesn't hide the bill.
+**Loop 3.** Your code dispatches the two retries. By now the array contains ten entries and five emails worth of text. Every loop iteration re-sends the entire array, so by Loop 3 you're paying input tokens on the system prompt, the user query, three full email texts from Loop 1, two more from Loop 2, and the assistant messages tying them together. Server-managed state via `previous_response_id` avoids the physical re-upload, but the conceptual cost is the same: the model attends to all accumulated history on every step, and the token bill reflects that. This is one of the main reasons production agents trim, summarize, or compress their context as it grows. The framework hides the loop, but the token cost stays yours.
 
 **Loops 4-5.** The pattern repeats. The model sees the five emails, picks the strongest, and emits a single `send_email` call. Your code dispatches it. The next API call has nothing left to do; the model generates a brief confirmation in plain text, no tool calls, and the API sets `finish_reason="stop"`. Your code returns the assistant message and exits.
 
@@ -268,4 +268,4 @@ When something goes wrong, the symptom often surfaces in the framework layer (an
 - **Did the API parse and return the tool call correctly?** Almost always yes for tool-call shape, since structured output is constrained at the API boundary. But `finish_reason` values come from the API and tell you why generation stopped (`length`, `content_filter`, etc.), not what the model decided.
 - **Did your code dispatch the tool, append the result, and continue the loop correctly?** This is where most bugs in a manual implementation live, and where [most bugs in a framework implementation are hidden behind abstractions you can't see](/posts/series/the-agent-harness/05-traces/index.qmd). Drop down to the API call directly when in doubt; the framework can be a fog over what the model is actually emitting.
 
-The useful mental model is short: **the model emits, the API parses, your code dispatches and loops.** Frameworks are convenience layered over those three steps.
+The model emits, the API parses, your code dispatches and loops. Frameworks are convenience layered over those three steps.

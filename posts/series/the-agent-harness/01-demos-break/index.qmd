@@ -82,7 +82,7 @@ state["customer"] = {
 }
 ```
 
-Now the agent reads `plan_tier = enterprise` instead of rediscovering it from the transcript. The transcript records what the user said. State records what the system can rely on. [State, not transcript, is agent memory](/posts/series/the-agent-harness/03-state-not-transcript/index.qmd) goes deeper into that distinction.
+Now the agent reads `plan_tier = enterprise` instead of rediscovering it from the transcript. The transcript records what the user said; state records what the system can rely on. [State, not transcript, is agent memory](/posts/series/the-agent-harness/03-state-not-transcript/index.qmd) goes deeper into that distinction.
 
 - **Visible failure:** the model forgot.
 - **Deeper failure:** the system treated the conversation transcript as memory.
@@ -132,7 +132,7 @@ Synthesis should write from supported claims, not from a raw pile of passages.
 - **Visible failure:** the agent gave a wrong answer.
 - **Deeper failure:** the system never tracked which claims were supported by which evidence.
 
-Groundedness is a system property. Polished prose does not make an answer grounded.
+Groundedness is a system property; polished prose does not make an answer grounded.
 
 ## Failure 5: The agent repeats a side effect
 
@@ -157,7 +157,7 @@ payload = {
 }
 ```
 
-After an ambiguous timeout, the agent should check the calendar before retrying. Verify first, retry second.
+After an ambiguous timeout, the agent should check the calendar before retrying.
 
 - **Visible failure:** the meeting update happened twice.
 - **Deeper failure:** the system treated reads and writes as equivalent tool calls.
@@ -214,4 +214,4 @@ Teams usually get agent reliability wrong in predictable ways:
 - **Step logging:** logs that say what happened do not explain why it happened. A useful trace records state, decisions, tool inputs, tool outputs, verification results, and version information.
 - **Random-failure framing:** most failures are recurring shapes. Once the category is visible, the team can engineer against it.
 
-Reliable agents do not come from prompts alone. They come from moving the right responsibilities into the harness: state, workflow, gates, tools, verification, traces, and tests.
+Reliable agents come from moving the right responsibilities into the harness rather than from prompts alone: state, workflow, gates, tools, verification, traces, and tests.

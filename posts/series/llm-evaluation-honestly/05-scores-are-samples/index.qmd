@@ -123,9 +123,9 @@ So the individual trace-level changes have standard deviation about $0.384$.
 
 ### Step 3: Convert standard deviation into standard error
 
-The standard deviation tells us how much individual trace outcomes vary. The standard error tells us how much the average improvement would vary across repeated eval samples.
+The standard deviation tells us how much individual trace outcomes vary; the standard error tells us how much the average improvement would vary across repeated eval samples.
 
-A useful way to remember it:
+The standard error is:
 
 $$
 \mathrm{SE} = \frac{\mathrm{SD}}{\sqrt{N}}
@@ -209,7 +209,7 @@ $$
 \end{aligned}
 $$
 
-In plain English: the improvement should be large enough not merely to look significant in one lucky eval run, but to be detected reliably across repeated eval samples.
+The improvement should be large enough to be detected reliably across repeated eval samples, not just to look significant in one lucky eval run.
 
 In the example above:
 
@@ -233,7 +233,7 @@ For paired pass/fail evals with a disagreement pattern similar to this example, 
 
 The exact numbers change with the disagreement rate, but the lesson is stable: small eval sets cannot reliably detect tiny improvements.
 
-If v8 improves by 2 points on a small eval set, the honest conclusion is usually not *"v8 is better."* It is *"directionally positive, but too small to trust on this eval set."*
+If v8 improves by 2 points on a small eval set, the honest conclusion is usually not *"v8 is better"* but *"directionally positive, but too small to trust on this eval set."*
 
 ## The same paired logic works for scored ratings
 

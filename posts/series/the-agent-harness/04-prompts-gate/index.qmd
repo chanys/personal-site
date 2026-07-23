@@ -8,13 +8,13 @@ draft: false
 
 {{< include ../_series.qmd >}}
 
-A prompt can guide behavior. It cannot enforce behavior.
+A prompt can guide behavior but cannot enforce it.
 
 The scheduling assistant's prompt says, "Always confirm the target meeting before making any changes." A user asks it to move "my Tuesday review with Priya" to Thursday afternoon. The model calls `reschedule_event(description="Tuesday review with Priya", new_time="Thursday afternoon")`; the API matches a different recurring meeting with Priya; the agent replies, "I've moved it, and I'll keep an eye on it going forward."
 
-The failure is not the wording of the prompt. The runtime allowed an unsafe action. A gate should have blocked `reschedule_event` until the target event was uniquely confirmed, non-recurring, and represented by a specific event ID.
+The failure was not the wording of the prompt; the runtime allowed an unsafe action. A gate should have blocked `reschedule_event` until the target event was uniquely confirmed, non-recurring, and represented by a specific event ID.
 
-Prompts shape behavior. Gates enforce behavior.
+Prompts shape behavior; gates enforce it.
 
 The [previous article](/posts/series/the-agent-harness/03-state-not-transcript/index.qmd) established that state holds the system's beliefs. This article is about the runtime checks that decide whether the system can act on those beliefs.
 
@@ -70,7 +70,7 @@ Semantic gates check meaning rather than schema or permissions. They answer ques
 
 These checks usually require model judgment. They are slower and more expensive than hard gates, so use them when the risk is semantic and code cannot capture it.
 
-Use hard gates for crisp conditions. Use semantic gates for judgment calls.
+Use hard gates for crisp conditions and semantic gates for judgment calls.
 
 ## The tool executes
 
@@ -104,9 +104,9 @@ def reschedule_event(
 
 The second tool removes unsafe paths. It requires a specific `event_id`, which forces the workflow to identify the target before the call. It requires an idempotency key. It does not expose a broad `field` parameter that could update anything.
 
-Tool contracts should also distinguish reads from writes. Reads can usually be retried after a timeout. Writes need more care. A write should carry an idempotency key, and an ambiguous timeout should route to verification before retry.
+Tool contracts should also distinguish reads from writes. Reads can usually be retried after a timeout; writes need more care. A write should carry an idempotency key, and an ambiguous timeout should route to verification before retry.
 
-Broad tools push hidden responsibility onto the model. Narrow tools move more of that responsibility into the harness.
+Broad tools push hidden responsibility onto the model; narrow tools move more of it into the harness.
 
 ## The harness verifies and routes
 
@@ -144,11 +144,11 @@ packet = {
 
 Before execution, the runtime checks that the approval has not expired and that the relevant state has not changed. If the target event, user request, or proposed action changed, the packet is stale and should not execute.
 
-Humans approve specific actions, not summaries of actions.
+Humans should approve the exact action rather than a summary of it.
 
 ## Gate where failure matters
 
-Gate the actions where failure matters most. Do not gate everything.
+Gate the actions where failure matters most, not every action.
 
 Heavy gates belong around actions that change the outside world, affect another person, are hard to undo, depend on weak evidence, or may require human escalation. Keep the path light for harmless clarifying questions, read-only lookups, and low-stakes summaries.
 
