@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -76,14 +76,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d5cc8be5113747845e6a8f301e2f5216.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-84d2a07a02d80bd473282a08374b6e76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-fe40ab8e643ad6158d4e6e7f87defb9b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -462,8 +462,8 @@ The agent harness
 2026-05-08 14:23:19  run_551  tool_call: retrieval, status: success
 2026-05-08 14:23:21  run_551  response generated
 2026-05-08 14:23:21  run_551  run completed</code></pre>
-<p>That log records events. It does not show which passages were retrieved, what the model saw, why it chose 30 days, which passage supported the claim, or which validation checks ran. The team can guess. It cannot debug.</p>
-<p>Logs tell you what happened. Traces show why it happened.</p>
+<p>That log records events. It does not show which passages were retrieved, what the model saw, why it chose 30 days, which passage supported the claim, or which validation checks ran. The team can guess but cannot debug.</p>
+<p>Logs record what happened; traces show why.</p>
 <p>The <a href="../../../../posts/series/the-agent-harness/04-prompts-gate/index.html">previous article</a> covered gates: runtime checks that stop wrong actions before they happen. This article covers traces: structured records that make failures explainable after they happen.</p>
 <section id="what-a-useful-trace-records" class="level2">
 <h2 class="anchored" data-anchor-id="what-a-useful-trace-records">What a useful trace records</h2>
@@ -553,11 +553,11 @@ The agent harness
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    {<span class="st">"id"</span>: <span class="st">"psg_0915"</span>, <span class="st">"category"</span>: <span class="st">"general"</span>, <span class="st">"score"</span>: <span class="fl">0.85</span>,</span>
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>     <span class="st">"snippet"</span>: <span class="st">"Standard data retention: 30 days post-closure..."</span>},</span>
 <span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Retrieval found the right passage and ranked it first. The system did not fail to retrieve the answer.</p>
+<p>Retrieval found the right passage and ranked it first.</p>
 <p>Step 3, <code>synthesize</code>, shows the first bad move. Synthesis received passage text without category tags. It saw four general passages saying 30 days and one trial-account passage saying 90 days. Without category metadata, the model had no signal that the 90-day passage was the relevant one.</p>
 <p>Step 4, <code>ground</code>, mapped the drafted claim to <code>psg_0871</code>. Grounding succeeded narrowly because the claim had a citation. The missing check was category alignment. The trace shows <code>category_alignment_check: not_run</code>.</p>
 <p>The failure is now specific: retrieval found the answer, context assembly dropped the metadata, synthesis chose the wrong passage, and validation missed the category mismatch.</p>
-<p>A team reading only the output might edit the synthesis prompt. A team reading the trace fixes the right layer: include category metadata in the context pack, weight category-specific passages for category-specific queries, and validate category alignment before returning the answer.</p>
+<p>Reading only the output, a team might edit the synthesis prompt; reading the trace, it fixes the right layer: include category metadata in the context pack, weight category-specific passages for category-specific queries, and validate category alignment before returning the answer.</p>
 </section>
 <section id="from-first-bad-move-to-durable-fix" class="level2">
 <h2 class="anchored" data-anchor-id="from-first-bad-move-to-durable-fix">From first bad move to durable fix</h2>
@@ -577,7 +577,7 @@ Figure&nbsp;1: The hardening loop. A failure produces a trace; the trace identif
 </figcaption>
 </figure>
 </div>
-<p>Teams that run this loop on every incident are doing reliability engineering. Teams that stop at “patched the prompt, moved on” are managing symptoms. A system improves when the team stops wasting failure.</p>
+<p>Running this loop on every incident is reliability engineering; stopping at “patched the prompt, moved on” only manages symptoms. A system improves when the team stops wasting failure.</p>
 </section>
 <section id="minimum-viable-trace" class="level2">
 <h2 class="anchored" data-anchor-id="minimum-viable-trace">Minimum viable trace</h2>

@@ -14,8 +14,8 @@
 <title>LLM evaluation, honestly — series</title>
 <link>https://yeesengchan.com/posts/series/llm-evaluation-honestly/</link>
 </image>
-<generator>quarto-1.9.37</generator>
-<lastBuildDate>Fri, 05 Jun 2026 04:00:00 GMT</lastBuildDate>
+<generator>quarto-1.9.38</generator>
+<lastBuildDate>Fri, 05 Jun 2026 00:00:00 GMT</lastBuildDate>
 <item>
   <title>Your eval system also drifts</title>
   <dc:creator>Yee Seng Chan</dc:creator>
@@ -56,7 +56,7 @@ LLM evaluation, honestly
 <p>The running example is the docs Q&amp;A agent from <a href="../../../../posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.html">the judge calibration</a> and <a href="../../../../posts/series/llm-evaluation-honestly/06-rag-evaluation/index.html">RAG evaluation</a> articles. It answers retention-policy questions. At launch, the eval stack looks solid: retrieval checks, faithfulness judges, answer relevance judges, and answerability tests.</p>
 <p>Six months later, the dashboard is still green. That only means the agent still passes the old eval.</p>
 <p>Suppose the retention policy changes. Trial accounts used to retain data for 90 days. Now they retain data for 120 days. The docs are updated, and the agent correctly answers “120 days.” The eval set still expects “90 days,” so the dashboard reports a regression.</p>
-<p>The agent did not regress. The eval system became stale.</p>
+<p>The agent did not regress; the eval system became stale.</p>
 <p>The fix is eval maintenance:</p>
 <ul>
 <li><strong>Update the active case:</strong> the current expected answer is now 120 days.</li>
@@ -80,7 +80,7 @@ LLM evaluation, honestly
 </section>
 <section id="production-traces-keep-the-eval-current" class="level2">
 <h2 class="anchored" data-anchor-id="production-traces-keep-the-eval-current">Production traces keep the eval current</h2>
-<p>A locked eval set protects known failures. It does not discover new ones.</p>
+<p>A locked eval set protects known failures but does not discover new ones.</p>
 <p>Production traces show what users are asking now, what the agent is retrieving now, and which answers are failing now. Sample them regularly and feed the important cases back into the eval set.</p>
 <p>Use a small sampling plan:</p>
 <ul>
@@ -106,8 +106,8 @@ LLM evaluation, honestly
 <h2 class="anchored" data-anchor-id="the-eval-system-is-part-of-the-product">The eval system is part of the product</h2>
 <p>A dashboard is useful only if the eval still matches the product.</p>
 <p>The eval system has to track current policies, current documents, current traffic, judge validity, and the team’s standard for correctness. Production traces become labels. Labels become failure modes. Failure modes become checks, judges, and regression cases. Incidents update the suite.</p>
-<p>Teams that treat eval as first-class code version, review, monitor, and maintain it. Teams that do not eventually read numbers they can no longer trust.</p>
-<p>The next time someone reports “the eval system says we’re at 87%,” ask: <em>when did we last check that the eval system is still telling the truth?</em></p>
+<p>Teams that treat eval as first-class code version, review, monitor, and maintain it; teams that do not eventually read numbers they can no longer trust.</p>
+<p>A reading like “the eval system says we’re at 87%” is only worth trusting if you know when the eval system was last checked to confirm it still tells the truth.</p>
 
 
 </section>
@@ -115,7 +115,7 @@ LLM evaluation, honestly
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/07-eval-drift/</guid>
-  <pubDate>Fri, 05 Jun 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 05 Jun 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Your RAG score hides the diagnosis</title>
@@ -237,7 +237,7 @@ Figure&nbsp;1: One bad answer, five different bugs. The same wrong answer (“30
 </section>
 <section id="what-comes-next" class="level2">
 <h2 class="anchored" data-anchor-id="what-comes-next">What comes next</h2>
-<p>A composite RAG score is fine as a summary, but it can’t drive debugging. The next time someone reports <em>RAG quality is 84%</em>, ask: <em>which part is 84%, and what would we fix if it dropped?</em></p>
+<p>A composite RAG score is fine as a summary, but it can’t drive debugging. A report of <em>RAG quality is 84%</em> only becomes actionable once you know which part is 84% and what you would fix if it dropped.</p>
 <p><a href="../../../../posts/series/llm-evaluation-honestly/07-eval-drift/index.html">The next article</a> closes the series on the eval system itself: judges go stale, traffic shifts, documents change, and old eval cases stop representing the current product. The agent isn’t the only thing that drifts.</p>
 
 
@@ -246,7 +246,7 @@ Figure&nbsp;1: One bad answer, five different bugs. The same wrong answer (“30
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/06-rag-evaluation/</guid>
-  <pubDate>Mon, 01 Jun 2026 04:00:00 GMT</pubDate>
+  <pubDate>Mon, 01 Jun 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Eval scores are samples, not truth</title>
@@ -368,8 +368,8 @@ Figure&nbsp;1: The signal is in the disagreements. Running v7 and v8 on the same
 </section>
 <section id="step-3-convert-standard-deviation-into-standard-error" class="level3">
 <h3 class="anchored" data-anchor-id="step-3-convert-standard-deviation-into-standard-error">Step 3: Convert standard deviation into standard error</h3>
-<p>The standard deviation tells us how much individual trace outcomes vary. The standard error tells us how much the average improvement would vary across repeated eval samples.</p>
-<p>A useful way to remember it:</p>
+<p>The standard deviation tells us how much individual trace outcomes vary; the standard error tells us how much the average improvement would vary across repeated eval samples.</p>
+<p>The standard error is:</p>
 <p><img src="https://latex.codecogs.com/png.latex?%0A%5Cmathrm%7BSE%7D%20=%20%5Cfrac%7B%5Cmathrm%7BSD%7D%7D%7B%5Csqrt%7BN%7D%7D%0A"></p>
 <p>Here:</p>
 <p><img src="https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Baligned%7D%0A%5Cmathrm%7BSE%7D%0A&amp;=%20%5Cfrac%7B0.384%7D%7B%5Csqrt%7B300%7D%7D%20%5C%5C%0A&amp;%5Capprox%200.022%0A%5Cend%7Baligned%7D%0A"></p>
@@ -423,7 +423,7 @@ Figure&nbsp;2: Overlap is the wrong test. Top (the wrong test): v7’s pass-rate
 <p>To get 80% power, the true effect needs some extra margin beyond the 95% significance cutoff. Under the normal approximation, that extra margin is about <img src="https://latex.codecogs.com/png.latex?0.84%20%5Ctimes%20%5Cmathrm%7BSE%7D">.</p>
 <p>So the rough detectable improvement is:</p>
 <p><img src="https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Baligned%7D%0A%5Ctext%7Bdetectable%20improvement%7D%0A&amp;%5Capprox%20(1.96%20+%200.84)%20%5Ctimes%20%5Cmathrm%7BSE%7D%20%5C%5C%0A&amp;%5Capprox%202.8%20%5Ctimes%20%5Cmathrm%7BSE%7D%0A%5Cend%7Baligned%7D%0A"></p>
-<p>In plain English: the improvement should be large enough not merely to look significant in one lucky eval run, but to be detected reliably across repeated eval samples.</p>
+<p>The improvement should be large enough to be detected reliably across repeated eval samples, not just to look significant in one lucky eval run.</p>
 <p>In the example above:</p>
 <p><img src="https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Baligned%7D%0A%5Ctext%7Bdetectable%20improvement%7D%0A&amp;%5Capprox%202.8%20%5Ctimes%202.2%5C%25%20%5C%5C%0A&amp;%5Capprox%206.2%5C%25%0A%5Cend%7Baligned%7D%0A"></p>
 <p>So this 300-trace eval can reliably detect improvements around 6 percentage points under this disagreement pattern. The observed improvement is 5 points. v8 is probably better, but the evidence is borderline.</p>
@@ -444,7 +444,7 @@ Figure&nbsp;3: Small eval sets can’t see small gains. The smallest improvement
 </figure>
 </div>
 <p>The exact numbers change with the disagreement rate, but the lesson is stable: small eval sets cannot reliably detect tiny improvements.</p>
-<p>If v8 improves by 2 points on a small eval set, the honest conclusion is usually not <em>“v8 is better.”</em> It is <em>“directionally positive, but too small to trust on this eval set.”</em></p>
+<p>If v8 improves by 2 points on a small eval set, the honest conclusion is usually not <em>“v8 is better”</em> but <em>“directionally positive, but too small to trust on this eval set.”</em></p>
 </section>
 <section id="the-same-paired-logic-works-for-scored-ratings" class="level2">
 <h2 class="anchored" data-anchor-id="the-same-paired-logic-works-for-scored-ratings">The same paired logic works for scored ratings</h2>
@@ -477,7 +477,7 @@ Figure&nbsp;3: Small eval sets can’t see small gains. The smallest improvement
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/05-scores-are-samples/</guid>
-  <pubDate>Fri, 29 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 29 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Your LLM judge is a classifier</title>
@@ -606,13 +606,13 @@ F1 on FAIL            = (2 * P * R) / (P + R) = 41%</code></pre>
 </section>
 <section id="revalidate-when-things-change" class="level2">
 <h2 class="anchored" data-anchor-id="revalidate-when-things-change">Revalidate when things change</h2>
-<p>The judge agrees with humans on the held-out set today. That doesn’t mean it will agree in six months. Foundation models update, the agent’s failure distribution shifts, and new failure types appear. Calibration is a snapshot: true at measurement time, increasingly stale afterward.</p>
+<p>The judge agrees with humans on the held-out set today. That doesn’t mean it will agree in six months. Foundation models update, the agent’s failure distribution shifts, and new failure types appear. Calibration is a snapshot that is accurate when measured and grows stale afterward.</p>
 <p><a href="../../../../posts/series/llm-evaluation-honestly/07-eval-drift/index.html">Your eval system also drifts</a> covers what to do about it: re-validate against fresh labels on a schedule and monitor agreement rates over time. Large drift in those agreement rates is usually a signal that the failure distribution itself has changed.</p>
 <p>Every deployed judge should carry a short record of what it was validated on: the domain, the trace types, the test-set size, the date, and what it’s allowed to be used for. Without that record, judges get re-used on data the original validation doesn’t cover, and the team trusts a number that no longer applies.</p>
 </section>
 <section id="the-judge-is-part-of-the-system" class="level2">
 <h2 class="anchored" data-anchor-id="the-judge-is-part-of-the-system">The judge is part of the system</h2>
-<p>An LLM judge is not an oracle. It is a model component that needs the same discipline as any other classifier: held-out labels, a confusion matrix, precision and recall on the class that matters, and periodic revalidation.</p>
+<p>An LLM judge is a model component that needs the same discipline as any other classifier: held-out labels, a confusion matrix, precision and recall on the class that matters, and periodic revalidation.</p>
 <p>Once the judge is validated, there is still one more question: how much should we trust movement in the score? A judge may report that v2 improved by two points, but that movement may be real or may be noise. <a href="../../../../posts/series/llm-evaluation-honestly/05-scores-are-samples/index.html">The next article</a> covers that next layer: uncertainty, sample size, and when an eval result is large enough to act on.</p>
 
 
@@ -621,7 +621,7 @@ F1 on FAIL            = (2 * P * R) / (P + R) = 41%</code></pre>
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/04-judge-is-classifier/</guid>
-  <pubDate>Tue, 26 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 26 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Don’t ask an LLM judge what code can check</title>
@@ -660,9 +660,9 @@ LLM evaluation, honestly
 </ol>
 </div>
 <p>Most bad LLM judges are doing a simpler evaluator’s job. They are asked whether JSON is valid. Whether a required field is present. Whether a tool was called. Whether a prohibited phrase appears in the final answer. Whether a handoff record contains an order ID.</p>
-<p>That is not judgment. That is checking.</p>
+<p>That is checking, not judgment.</p>
 <p>When a team asks an LLM judge to do what code could have checked, it gets the worst of both worlds: slower, noisier, more expensive, and harder to debug.</p>
-<p>LLM judges are useful when the evaluator needs to understand meaning in context. They are wasted when the failure has a structural shape. If the failure can be detected with code, use code. Save judges for failures that require understanding meaning.</p>
+<p>LLM judges are useful when the evaluator needs to understand meaning in context, and wasted when the failure has a structural shape. If the failure can be detected with code, use code.</p>
 <section id="start-with-the-failure-mode" class="level2">
 <h2 class="anchored" data-anchor-id="start-with-the-failure-mode">Start with the failure mode</h2>
 <p>The wrong question is <em>“Should we use an LLM judge here?”</em> The right question is <em>“What exactly are we trying to detect?”</em></p>
@@ -736,7 +736,7 @@ font-style: inherit;">=</span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Handoff record well-formed"</span>)</span></code></pre></div></div>
 <p>Five lines. Runs in milliseconds. Deterministic: same input, same output, every time. Debuggable: when it fails, the reason tells you exactly what to look at. Free: no API calls, no token costs, no rate limits. Runs on every trace, on every CI build, on every production trace if you want.</p>
-<p>Code and judges aren’t always alternatives. <strong>Sometimes they’re layers.</strong> A regex check for refund-promise language catches explicit cases (<em>“Your refund has been approved”</em>); it misses subtler implications (<em>“We’ll make sure you get your money back”</em>). The fix isn’t to abandon the regex for a judge. Run the cheap regex on every trace; run a more expensive judge only when the trace involves a refund request and the regex didn’t fire. The principle: run cheap checks broadly, run judges where they add value.</p>
+<p>Code and judges aren’t always alternatives. Sometimes they’re layers. A regex check for refund-promise language catches explicit cases (<em>“Your refund has been approved”</em>); it misses subtler implications (<em>“We’ll make sure you get your money back”</em>). The fix isn’t to abandon the regex for a judge. Run the cheap regex on every trace; run a more expensive judge only when the trace involves a refund request and the regex didn’t fire. Run cheap checks broadly, and run judges where they add value.</p>
 </section>
 <section id="use-llm-judges-for-semantic-failures" class="level2">
 <h2 class="anchored" data-anchor-id="use-llm-judges-for-semantic-failures">Use LLM judges for semantic failures</h2>
@@ -745,7 +745,7 @@ font-style: inherit;">"Handoff record well-formed"</span>)</span></code></pre></
 </section>
 <section id="keep-each-evaluator-narrow" class="level2">
 <h2 class="anchored" data-anchor-id="keep-each-evaluator-narrow">Keep each evaluator narrow</h2>
-<p>The mistake is building one big judge called <code>quality_judge_v3</code> and asking it to score everything: tone, helpfulness, schema validity, routing. That judge produces a number. It does not produce a diagnosis.</p>
+<p>The mistake is building one big judge called <code>quality_judge_v3</code> and asking it to score everything: tone, helpfulness, schema validity, routing. That judge produces a number, not a diagnosis.</p>
 <p>It’s the same reason you don’t write a single function called <code>is_correct()</code> in production code. Composite signals are harder to act on, harder to debug, and harder to improve.</p>
 <p>Suppose the intake agent’s “overall quality” judge drops from 87% to 81% over a release. What changed? Tone got worse? Helpfulness got worse? Grounding got worse? Some combination? The composite verdict can’t tell you. You read failures by hand, you guess, and you propose a fix without knowing which dimension you’re targeting.</p>
 <p>Specialized evaluators fix this. The tone judge tracks tone. The redundant-question judge tracks redundancy. When tone scores drop and redundancy scores hold steady, you know what changed. When you fix the tone issue, the tone judge tells you whether the fix worked.</p>
@@ -817,7 +817,7 @@ Figure&nbsp;1: One number can’t tell you what broke. The composite quality_jud
 </section>
 <section id="code-first-judges-when-you-need-them" class="level2">
 <h2 class="anchored" data-anchor-id="code-first-judges-when-you-need-them">Code first, judges when you need them</h2>
-<p><a href="../../../../posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.html">Your LLM judge is a classifier</a> covers the next layer: making judges trustworthy when you do need them. A judge that produces verdicts in the right format isn’t the same as a judge that produces correct verdicts.</p>
+<p><a href="../../../../posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.html">Your LLM judge is a classifier</a> covers the next layer: making judges trustworthy when you do need them. A judge that produces verdicts in the right format doesn’t necessarily produce correct ones.</p>
 <p>The next time someone proposes a judge, first ask: <em>could code answer this?</em></p>
 
 
@@ -826,7 +826,7 @@ Figure&nbsp;1: One number can’t tell you what broke. The composite quality_jud
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/03-judge-vs-code/</guid>
-  <pubDate>Fri, 22 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 22 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Read traces before you write the labeling guide</title>
@@ -907,12 +907,12 @@ Figure&nbsp;1: Design the dataset on two axes. Coverage is what situations the s
 <li><strong>Hard cases:</strong> the system often fails. These show the frontier.</li>
 <li><strong>Safety cases:</strong> the system must refuse, escalate, or avoid forbidden behavior.</li>
 </ul>
-<p>Too easy and the dataset saturates; too hard and it doesn’t show progress. Aim for a visible mix so the team can tell what actually improved.</p>
+<p>A dataset that is too easy saturates, and one that is too hard fails to show progress, so aim for a visible mix that tells the team what actually improved.</p>
 <p><a href="../../../../posts/series/llm-evaluation-honestly/05-scores-are-samples/index.html">Eval scores are samples, not truth</a> returns to sample size and uncertainty. If a slice matters, include it deliberately and track it separately.</p>
 </section>
 <section id="when-you-dont-have-production-data" class="level2">
 <h2 class="anchored" data-anchor-id="when-you-dont-have-production-data">When you don’t have production data</h2>
-<p>Before launch, the dataset has to come from somewhere other than production. The key rule: generate inputs, not outputs. Let the real system produce the responses, and label the resulting traces like any other trace.</p>
+<p>Before launch, the dataset has to come from somewhere other than production. Generate the inputs and let the real system produce the responses, then label the resulting traces like any other trace.</p>
 <p>Two sources work well in combination.</p>
 <p><strong>Persona-based generation.</strong> Define three to five user personas that match the product (for the scheduling assistant: a time-zone-confused product manager, an executive with overlapping calendars, an IC handling forwarded meeting threads). For each persona, generate eight to twelve plausible queries.</p>
 <p><strong>Expert elicitation.</strong> Sit with someone who has done this product’s work before: a customer success lead, a power user from a prior product, a domain expert. Ask: <em>“What is the worst question someone could ask this?”</em> and <em>“Where do you expect this to fail?”</em> The answers encode failure intuition the team doesn’t yet have from data, including the high-risk cases the coverage section calls out.</p>
@@ -928,7 +928,7 @@ Figure&nbsp;1: Design the dataset on two axes. Coverage is what situations the s
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/02-eval-dataset/</guid>
-  <pubDate>Tue, 19 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 19 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Stop vibe-checking your agent</title>
@@ -973,7 +973,7 @@ LLM evaluation, honestly
 <section id="what-eval-is-for" class="level2">
 <h2 class="anchored" data-anchor-id="what-eval-is-for">What eval is for</h2>
 <p>A score is useful only if it changes what the team does next. Eval supports different decisions at different stages: during development, whether a new prompt is better; before merge, whether old failures came back; in production, whether new failure patterns are emerging.</p>
-<p>The operational test for any metric: <em>When this number moves, what decision changes?</em> If the answer is merge, hold, investigate, roll back, or add a regression case, the metric is useful. If the answer is “nothing,” it does not belong on the dashboard.</p>
+<p>The operational test for any metric: <em>When this number moves, what decision changes?</em> If the answer is merge, hold, investigate, roll back, or add a regression case, the metric is useful; if the answer is “nothing,” it does not belong on the dashboard.</p>
 </section>
 <section id="the-minimum-viable-eval-loop" class="level2">
 <h2 class="anchored" data-anchor-id="the-minimum-viable-eval-loop">The minimum viable eval loop</h2>
@@ -1006,7 +1006,7 @@ Figure&nbsp;2: The final answer hides the first bad move. A final-answer check s
 </section>
 <section id="labels" class="level3">
 <h3 class="anchored" data-anchor-id="labels">2. Labels</h3>
-<p>A label is a human judgment attached to a trace: pass or fail, plus a short critique. For example: <em>“Failed: agent routed the case as billing instead of refund at turn three; downstream handoff omitted refund-request status.”</em> That critique tells the team what failed, where, and what to watch for. A score of 3 out of 5 does not.</p>
+<p>A label is a human judgment attached to a trace: pass or fail, plus a short critique. For example: <em>“Failed: agent routed the case as billing instead of refund at turn three; downstream handoff omitted refund-request status.”</em> That critique tells the team what failed, where, and what to watch for; a score of 3 out of 5 does not.</p>
 </section>
 <section id="failure-modes" class="level3">
 <h3 class="anchored" data-anchor-id="failure-modes">3. Failure modes</h3>
@@ -1100,7 +1100,7 @@ font-style: inherit;">"No refund-promise language"</span>)</span></code></pre></
 <section id="review-and-decisions" class="level3">
 <h3 class="anchored" data-anchor-id="review-and-decisions">6. Review and decisions</h3>
 <p>The loop only matters if it changes what the team does. A failed check blocks a merge, a spike in redundant-question failures triggers investigation, a new production failure becomes a regression case, a judge disagreement becomes a calibration example.</p>
-<p>Pull a small sample of recent failures regularly, read them end-to-end, and ask whether they reveal a pattern the current dataset misses. The habit is simple: new failures feed back into the eval loop instead of disappearing into Slack.</p>
+<p>Pull a small sample of recent failures regularly, read them end-to-end, and ask whether they reveal a pattern the current dataset misses. New failures feed back into the eval loop instead of disappearing into Slack.</p>
 <p><a href="../../../../posts/series/llm-evaluation-honestly/07-eval-drift/index.html">Your eval system also drifts</a> returns to this production loop: how new failures from real usage become new eval cases, alerts, and hardening work.</p>
 </section>
 <section id="a-concrete-first-version" class="level3">
@@ -1144,13 +1144,13 @@ font-style: inherit;">"No refund-promise language"</span>)</span></code></pre></
 </tr>
 </tbody>
 </table>
-<p>The numbers are illustrative. The shape matters: start small, use real failures, make every new failure feed back into the loop.</p>
+<p>The numbers are illustrative; the shape is what matters: start small, use real failures, make every new failure feed back into the loop.</p>
 </section>
 </section>
 <section id="the-smallest-useful-promise" class="level2">
 <h2 class="anchored" data-anchor-id="the-smallest-useful-promise">The smallest useful promise</h2>
 <p>Having a minimal eval loop in place is enough to change how the team builds. “Does v2 feel better?” becomes “Which failure modes improved, which regressed, and do we trust the measurement?” Eval stops being a side research exercise and becomes part of the engineering loop.</p>
-<p><strong>The harness made the agent’s behavior observable, the eval system turns that behavior into evidence, and the hardening loop turns evidence into a system harder to break.</strong></p>
+<p>The harness made the agent’s behavior observable, the eval system turns that behavior into evidence, and the hardening loop turns evidence into a system harder to break.</p>
 <p>The <a href="../../../../posts/series/llm-evaluation-honestly/02-eval-dataset/index.html">next article</a> goes one layer deeper: the eval dataset.</p>
 
 
@@ -1159,7 +1159,7 @@ font-style: inherit;">"No refund-promise language"</span>)</span></code></pre></
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/01-stop-vibe-checking/</guid>
-  <pubDate>Fri, 15 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 15 May 2026 00:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>

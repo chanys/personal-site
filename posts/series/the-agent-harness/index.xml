@@ -14,8 +14,8 @@
 <title>The agent harness — series</title>
 <link>https://yeesengchan.com/posts/series/the-agent-harness/</link>
 </image>
-<generator>quarto-1.9.37</generator>
-<lastBuildDate>Sun, 10 May 2026 04:00:00 GMT</lastBuildDate>
+<generator>quarto-1.9.38</generator>
+<lastBuildDate>Sun, 10 May 2026 00:00:00 GMT</lastBuildDate>
 <item>
   <title>Traces are how agents get better</title>
   <dc:creator>Yee Seng Chan</dc:creator>
@@ -57,8 +57,8 @@ The agent harness
 2026-05-08 14:23:19  run_551  tool_call: retrieval, status: success
 2026-05-08 14:23:21  run_551  response generated
 2026-05-08 14:23:21  run_551  run completed</code></pre>
-<p>That log records events. It does not show which passages were retrieved, what the model saw, why it chose 30 days, which passage supported the claim, or which validation checks ran. The team can guess. It cannot debug.</p>
-<p>Logs tell you what happened. Traces show why it happened.</p>
+<p>That log records events. It does not show which passages were retrieved, what the model saw, why it chose 30 days, which passage supported the claim, or which validation checks ran. The team can guess but cannot debug.</p>
+<p>Logs record what happened; traces show why.</p>
 <p>The <a href="../../../../posts/series/the-agent-harness/04-prompts-gate/index.html">previous article</a> covered gates: runtime checks that stop wrong actions before they happen. This article covers traces: structured records that make failures explainable after they happen.</p>
 <section id="what-a-useful-trace-records" class="level2">
 <h2 class="anchored" data-anchor-id="what-a-useful-trace-records">What a useful trace records</h2>
@@ -360,11 +360,11 @@ font-style: inherit;">"snippet"</span>: <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Standard data retention: 30 days post-closure..."</span>},</span>
 <span id="cb3-12">]</span></code></pre></div></div>
-<p>Retrieval found the right passage and ranked it first. The system did not fail to retrieve the answer.</p>
+<p>Retrieval found the right passage and ranked it first.</p>
 <p>Step 3, <code>synthesize</code>, shows the first bad move. Synthesis received passage text without category tags. It saw four general passages saying 30 days and one trial-account passage saying 90 days. Without category metadata, the model had no signal that the 90-day passage was the relevant one.</p>
 <p>Step 4, <code>ground</code>, mapped the drafted claim to <code>psg_0871</code>. Grounding succeeded narrowly because the claim had a citation. The missing check was category alignment. The trace shows <code>category_alignment_check: not_run</code>.</p>
 <p>The failure is now specific: retrieval found the answer, context assembly dropped the metadata, synthesis chose the wrong passage, and validation missed the category mismatch.</p>
-<p>A team reading only the output might edit the synthesis prompt. A team reading the trace fixes the right layer: include category metadata in the context pack, weight category-specific passages for category-specific queries, and validate category alignment before returning the answer.</p>
+<p>Reading only the output, a team might edit the synthesis prompt; reading the trace, it fixes the right layer: include category metadata in the context pack, weight category-specific passages for category-specific queries, and validate category alignment before returning the answer.</p>
 </section>
 <section id="from-first-bad-move-to-durable-fix" class="level2">
 <h2 class="anchored" data-anchor-id="from-first-bad-move-to-durable-fix">From first bad move to durable fix</h2>
@@ -384,7 +384,7 @@ Figure&nbsp;1: The hardening loop. A failure produces a trace; the trace identif
 </figcaption>
 </figure>
 </div>
-<p>Teams that run this loop on every incident are doing reliability engineering. Teams that stop at “patched the prompt, moved on” are managing symptoms. A system improves when the team stops wasting failure.</p>
+<p>Running this loop on every incident is reliability engineering; stopping at “patched the prompt, moved on” only manages symptoms. A system improves when the team stops wasting failure.</p>
 </section>
 <section id="minimum-viable-trace" class="level2">
 <h2 class="anchored" data-anchor-id="minimum-viable-trace">Minimum viable trace</h2>
@@ -428,7 +428,7 @@ Figure&nbsp;1: The hardening loop. A failure produces a trace; the trace identif
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/05-traces/</guid>
-  <pubDate>Sun, 10 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sun, 10 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Prompts guide. Gates enforce</title>
@@ -464,10 +464,10 @@ The agent harness
 <li><a href="../05-traces/">Traces are how agents get better</a></li>
 </ol>
 </div>
-<p>A prompt can guide behavior. It cannot enforce behavior.</p>
+<p>A prompt can guide behavior but cannot enforce it.</p>
 <p>The scheduling assistant’s prompt says, “Always confirm the target meeting before making any changes.” A user asks it to move “my Tuesday review with Priya” to Thursday afternoon. The model calls <code>reschedule_event(description="Tuesday review with Priya", new_time="Thursday afternoon")</code>; the API matches a different recurring meeting with Priya; the agent replies, “I’ve moved it, and I’ll keep an eye on it going forward.”</p>
-<p>The failure is not the wording of the prompt. The runtime allowed an unsafe action. A gate should have blocked <code>reschedule_event</code> until the target event was uniquely confirmed, non-recurring, and represented by a specific event ID.</p>
-<p>Prompts shape behavior. Gates enforce behavior.</p>
+<p>The failure was not the wording of the prompt; the runtime allowed an unsafe action. A gate should have blocked <code>reschedule_event</code> until the target event was uniquely confirmed, non-recurring, and represented by a specific event ID.</p>
+<p>Prompts shape behavior; gates enforce it.</p>
 <p>The <a href="../../../../posts/series/the-agent-harness/03-state-not-transcript/index.html">previous article</a> established that state holds the system’s beliefs. This article is about the runtime checks that decide whether the system can act on those beliefs.</p>
 <section id="why-prompt-only-control-breaks" class="level2">
 <h2 class="anchored" data-anchor-id="why-prompt-only-control-breaks">Why prompt-only control breaks</h2>
@@ -597,7 +597,7 @@ font-style: inherit;">return</span> Allow()</span></code></pre></div></div>
 <li>Does this response give advice outside the agent’s role?</li>
 </ul>
 <p>These checks usually require model judgment. They are slower and more expensive than hard gates, so use them when the risk is semantic and code cannot capture it.</p>
-<p>Use hard gates for crisp conditions. Use semantic gates for judgment calls.</p>
+<p>Use hard gates for crisp conditions and semantic gates for judgment calls.</p>
 </section>
 </section>
 <section id="the-tool-executes" class="level2">
@@ -657,8 +657,8 @@ font-style: inherit;">    Requires a specific event_id, not a free-text descript
 background-color: null;
 font-style: inherit;">    """</span></span></code></pre></div></div>
 <p>The second tool removes unsafe paths. It requires a specific <code>event_id</code>, which forces the workflow to identify the target before the call. It requires an idempotency key. It does not expose a broad <code>field</code> parameter that could update anything.</p>
-<p>Tool contracts should also distinguish reads from writes. Reads can usually be retried after a timeout. Writes need more care. A write should carry an idempotency key, and an ambiguous timeout should route to verification before retry.</p>
-<p>Broad tools push hidden responsibility onto the model. Narrow tools move more of that responsibility into the harness.</p>
+<p>Tool contracts should also distinguish reads from writes. Reads can usually be retried after a timeout; writes need more care. A write should carry an idempotency key, and an ambiguous timeout should route to verification before retry.</p>
+<p>Broad tools push hidden responsibility onto the model; narrow tools move more of it into the harness.</p>
 </section>
 </section>
 <section id="the-harness-verifies-and-routes" class="level2">
@@ -719,12 +719,12 @@ background-color: null;
 font-style: inherit;">"Move Tuesday 2pm with Priya to Wednesday 10am"</span>,</span>
 <span id="cb4-11">}</span></code></pre></div></div>
 <p>Before execution, the runtime checks that the approval has not expired and that the relevant state has not changed. If the target event, user request, or proposed action changed, the packet is stale and should not execute.</p>
-<p>Humans approve specific actions, not summaries of actions.</p>
+<p>Humans should approve the exact action rather than a summary of it.</p>
 </section>
 </section>
 <section id="gate-where-failure-matters" class="level2">
 <h2 class="anchored" data-anchor-id="gate-where-failure-matters">Gate where failure matters</h2>
-<p>Gate the actions where failure matters most. Do not gate everything.</p>
+<p>Gate the actions where failure matters most, not every action.</p>
 <p>Heavy gates belong around actions that change the outside world, affect another person, are hard to undo, depend on weak evidence, or may require human escalation. Keep the path light for harmless clarifying questions, read-only lookups, and low-stakes summaries.</p>
 <p>The goal is appropriate gating, not maximum gating. A gate that fires on every action becomes a gate the team learns to ignore.</p>
 </section>
@@ -745,7 +745,7 @@ The harness verifies.</code></pre>
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/04-prompts-gate/</guid>
-  <pubDate>Fri, 01 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 01 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>State, not transcript, is agent memory</title>
@@ -809,7 +809,7 @@ background-color: null;
 font-style: inherit;">"user_turn_2"</span>,</span>
 <span id="cb1-5">}</span></code></pre></div></div>
 <p>That field lets the agent skip a redundant plan-tier question, lets the handoff writer emit <code>plan_tier: enterprise</code>, and lets a required-field check decide whether the handoff is ready.</p>
-<p>State also records reliability. If a user first says, “I think it might be the migration,” and later says, “Support confirmed it was the migration,” state should mark one claim as uncertain and the other as confirmed. The transcript preserves both sentences, but state tells the system how to use them.</p>
+<p>State also records reliability. If a user first says, “I think it might be the migration,” and later says, “Support confirmed it was the migration,” state should mark one claim as uncertain and the other as confirmed. The transcript preserves both sentences; state tells the system how to use them.</p>
 <p>The same issue appears in handoff readiness. If the handoff requires <code>plan_tier</code>, <code>affected_feature</code>, and <code>confirmed_root_cause</code>, state should show which fields are filled, which are uncertain, and which still need follow-up. The agent can then read state instead of reconstructing the situation from the transcript every turn.</p>
 </section>
 <section id="state-turns-remembered-facts-into-usable-facts" class="level2">
@@ -1030,7 +1030,7 @@ font-style: inherit;">"user_turn_5"</span>,</span>
 <li>What stage of the workflow are we in?</li>
 </ol>
 <p>These questions expose whether state is usable. Without those fields, the model has to reconstruct the situation from raw history. It may treat guesses as facts, skip required questions, or advance the workflow too early.</p>
-<p>State gives the model and runtime stable fields to read. The model uses state to decide what to say next. The runtime uses state to decide what is allowed next.</p>
+<p>State gives the model and runtime stable fields to read. The model uses state to decide what to say next; the runtime uses state to decide what is allowed next.</p>
 </section>
 <section id="state-changes-as-the-workflow-runs" class="level2">
 <h2 class="anchored" data-anchor-id="state-changes-as-the-workflow-runs">State changes as the workflow runs</h2>
@@ -1105,7 +1105,7 @@ font-weight: bold;
 font-style: inherit;">is</span> <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">True</span></span></code></pre></div></div>
-<p>Prompts suggest behavior. Runtime checks enforce it.</p>
+<p>Prompts suggest behavior; runtime checks enforce it.</p>
 </section>
 <section id="common-mistakes" class="level2">
 <h2 class="anchored" data-anchor-id="common-mistakes">Common mistakes</h2>
@@ -1121,7 +1121,7 @@ font-style: inherit;">True</span></span></code></pre></div></div>
 </section>
 <section id="state-is-the-systems-memory" class="level2">
 <h2 class="anchored" data-anchor-id="state-is-the-systems-memory">State is the system’s memory</h2>
-<p>The transcript records what was said. State records what the system can rely on.</p>
+<p>The transcript records what was said; state records what the system can rely on.</p>
 <p>The intake agent needed to store two confirmed facts: the user was on the enterprise plan, and the dashboard was the affected feature. Once those facts became state, later steps could use them. The agent could avoid a redundant question, produce a better handoff, and expose unresolved fields before claiming the workflow was ready.</p>
 <p>State gives gates, tools, verification steps, and traces concrete fields to read and update. Runtime control reads state before acting. Gates and tool contracts decide what the system is allowed to do with that memory.</p>
 
@@ -1131,7 +1131,7 @@ font-style: inherit;">True</span></span></code></pre></div></div>
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/03-state-not-transcript/</guid>
-  <pubDate>Tue, 28 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 28 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>The harness is the product</title>
@@ -1169,12 +1169,12 @@ The agent harness
 </div>
 <p>A stronger model does not automatically give you a reliable agent.</p>
 <p>The <a href="../../../../posts/series/the-agent-harness/01-demos-break/index.html">previous article</a> catalogued six ways agent demos break in production. The intake agent forgot a fact the user gave it on turn 2. The scheduling assistant double-booked a meeting after an ambiguous timeout. The docs Q&amp;A agent gave a confident, well-formed, wrong answer.</p>
-<p>The instinct after each failure is to reach for a stronger model. Sometimes that helps a little. More often, the failure returns in a slightly different shape because the system around the model has not changed. The useful reframe is simple:</p>
+<p>The instinct after each failure is to reach for a stronger model. Sometimes that helps a little. More often, the failure returns in a slightly different shape because the system around the model has not changed. The reframe:</p>
 <p><strong>Agent = model + harness</strong></p>
-<p>The model is the reasoning engine. The harness is the system the model lives inside. Models get swapped, cheaper, and faster. The harness carries the team’s accumulated understanding of how to make the agent reliable. For production agents, the harness is the product.</p>
+<p>The model is the reasoning engine; the harness is the system the model lives inside. Models get swapped, cheaper, and faster. The harness carries the team’s accumulated understanding of how to make the agent reliable. For production agents, the harness is the product.</p>
 <section id="prompts-guide.-harnesses-constrain." class="level2">
 <h2 class="anchored" data-anchor-id="prompts-guide.-harnesses-constrain.">Prompts guide. Harnesses constrain.</h2>
-<p>A prompt tells the model what behavior you want. A harness decides what behavior the system permits.</p>
+<p>A prompt tells the model what behavior you want; a harness decides what behavior the system permits.</p>
 <p>The difference is concrete:</p>
 <ul>
 <li><strong>Refunds:</strong> a prompt can say, “Do not issue refunds.” A harness can make the refund tool unavailable.</li>
@@ -1182,7 +1182,7 @@ The agent harness
 <li><strong>Docs Q&amp;A:</strong> a prompt can say, “Use only the retrieved documents.” A harness can require every final claim to map to a cited passage.</li>
 <li><strong>Retries:</strong> a prompt can say, “Be careful with retries.” A harness can enforce one write attempt, require an idempotency key, and route ambiguous timeouts to verification.</li>
 </ul>
-<p>The prompt shapes one model call. The harness controls the workflow around that call. It makes some failures impossible to commit and makes the rest easier to detect.</p>
+<p>The prompt shapes one model call; the harness controls the workflow around that call. It makes some failures impossible to commit and makes the rest easier to detect.</p>
 <p>That is the shift from prompt engineering to harness engineering.</p>
 </section>
 <section id="scope-is-the-first-harness-decision" class="level2">
@@ -1251,7 +1251,7 @@ Figure&nbsp;2: Three nested levels of engineering. Each level encompasses the pr
 <h2 class="anchored" data-anchor-id="which-parts-of-the-harness-age">Which parts of the harness age?</h2>
 <p>Some harness pieces get lighter as models improve. Tool-selection scaffolding matters less when models choose tools reliably. Format validators matter less when structured output becomes dependable. Long prompt chains matter less when models handle more reasoning in one call. These pieces compensate for model limitations, so stronger models reduce their importance.</p>
 <p>Other harness pieces remain necessary because they control product risk. A smarter model still cannot unsend a calendar invite, undo a payment, or reconstruct last month’s behavior without traces. It still needs runtime boundaries around tools, writes, permissions, and user-visible actions.</p>
-<p>The pieces that age are scaffolding around weak model behavior. The pieces that stay are tied to reliability: state, tool contracts, gates, verification, recovery, traces, and tests.</p>
+<p>The pieces that age are scaffolding around weak model behavior, while the pieces that stay are tied to reliability: state, tool contracts, gates, verification, recovery, traces, and tests.</p>
 
 
 </section>
@@ -1259,7 +1259,7 @@ Figure&nbsp;2: Three nested levels of engineering. Each level encompasses the pr
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/02-harness-is-the-product/</guid>
-  <pubDate>Thu, 23 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Thu, 23 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Why AI agent demos break in production</title>
@@ -1395,7 +1395,7 @@ background-color: null;
 font-style: inherit;">2</span>,</span>
 <span id="cb3-11">    },</span>
 <span id="cb3-12">}</span></code></pre></div></div>
-<p>Now the agent reads <code>plan_tier = enterprise</code> instead of rediscovering it from the transcript. The transcript records what the user said. State records what the system can rely on. <a href="../../../../posts/series/the-agent-harness/03-state-not-transcript/index.html">State, not transcript, is agent memory</a> goes deeper into that distinction.</p>
+<p>Now the agent reads <code>plan_tier = enterprise</code> instead of rediscovering it from the transcript. The transcript records what the user said; state records what the system can rely on. <a href="../../../../posts/series/the-agent-harness/03-state-not-transcript/index.html">State, not transcript, is agent memory</a> goes deeper into that distinction.</p>
 <ul>
 <li><strong>Visible failure:</strong> the model forgot.</li>
 <li><strong>Deeper failure:</strong> the system treated the conversation transcript as memory.</li>
@@ -1448,7 +1448,7 @@ font-style: inherit;">"confirmed"</span>,</span>
 <li><strong>Visible failure:</strong> the agent gave a wrong answer.</li>
 <li><strong>Deeper failure:</strong> the system never tracked which claims were supported by which evidence.</li>
 </ul>
-<p>Groundedness is a system property. Polished prose does not make an answer grounded.</p>
+<p>Groundedness is a system property; polished prose does not make an answer grounded.</p>
 </section>
 <section id="failure-5-the-agent-repeats-a-side-effect" class="level2">
 <h2 class="anchored" data-anchor-id="failure-5-the-agent-repeats-a-side-effect">Failure 5: The agent repeats a side effect</h2>
@@ -1486,7 +1486,7 @@ font-style: inherit;">"idempotency_key"</span>: <span class="st" style="color: #
 background-color: null;
 font-style: inherit;">"run_847_step_3"</span>,</span>
 <span id="cb7-5">}</span></code></pre></div></div>
-<p>After an ambiguous timeout, the agent should check the calendar before retrying. Verify first, retry second.</p>
+<p>After an ambiguous timeout, the agent should check the calendar before retrying.</p>
 <ul>
 <li><strong>Visible failure:</strong> the meeting update happened twice.</li>
 <li><strong>Deeper failure:</strong> the system treated reads and writes as equivalent tool calls.</li>
@@ -1546,7 +1546,7 @@ Figure&nbsp;1: Six failure shapes mapped to the control surfaces that should hav
 <li><strong>Step logging:</strong> logs that say what happened do not explain why it happened. A useful trace records state, decisions, tool inputs, tool outputs, verification results, and version information.</li>
 <li><strong>Random-failure framing:</strong> most failures are recurring shapes. Once the category is visible, the team can engineer against it.</li>
 </ul>
-<p>Reliable agents do not come from prompts alone. They come from moving the right responsibilities into the harness: state, workflow, gates, tools, verification, traces, and tests.</p>
+<p>Reliable agents come from moving the right responsibilities into the harness rather than from prompts alone: state, workflow, gates, tools, verification, traces, and tests.</p>
 
 
 </section>
@@ -1554,7 +1554,7 @@ Figure&nbsp;1: Six failure shapes mapped to the control surfaces that should hav
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/01-demos-break/</guid>
-  <pubDate>Sat, 18 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sat, 18 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>

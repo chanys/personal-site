@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -41,14 +41,14 @@ ul.task-list li input[type="checkbox"] {
 <script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d5cc8be5113747845e6a8f301e2f5216.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-84d2a07a02d80bd473282a08374b6e76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-fe40ab8e643ad6158d4e6e7f87defb9b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -465,12 +465,12 @@ Figure&nbsp;1: Design the dataset on two axes. Coverage is what situations the s
 <li><strong>Hard cases:</strong> the system often fails. These show the frontier.</li>
 <li><strong>Safety cases:</strong> the system must refuse, escalate, or avoid forbidden behavior.</li>
 </ul>
-<p>Too easy and the dataset saturates; too hard and it doesn’t show progress. Aim for a visible mix so the team can tell what actually improved.</p>
+<p>A dataset that is too easy saturates, and one that is too hard fails to show progress, so aim for a visible mix that tells the team what actually improved.</p>
 <p><a href="../../../../posts/series/llm-evaluation-honestly/05-scores-are-samples/index.html">Eval scores are samples, not truth</a> returns to sample size and uncertainty. If a slice matters, include it deliberately and track it separately.</p>
 </section>
 <section id="when-you-dont-have-production-data" class="level2">
 <h2 class="anchored" data-anchor-id="when-you-dont-have-production-data">When you don’t have production data</h2>
-<p>Before launch, the dataset has to come from somewhere other than production. The key rule: generate inputs, not outputs. Let the real system produce the responses, and label the resulting traces like any other trace.</p>
+<p>Before launch, the dataset has to come from somewhere other than production. Generate the inputs and let the real system produce the responses, then label the resulting traces like any other trace.</p>
 <p>Two sources work well in combination.</p>
 <p><strong>Persona-based generation.</strong> Define three to five user personas that match the product (for the scheduling assistant: a time-zone-confused product manager, an executive with overlapping calendars, an IC handling forwarded meeting threads). For each persona, generate eight to twelve plausible queries.</p>
 <p><strong>Expert elicitation.</strong> Sit with someone who has done this product’s work before: a customer success lead, a power user from a prior product, a domain expert. Ask: <em>“What is the worst question someone could ask this?”</em> and <em>“Where do you expect this to fail?”</em> The answers encode failure intuition the team doesn’t yet have from data, including the high-risk cases the coverage section calls out.</p>

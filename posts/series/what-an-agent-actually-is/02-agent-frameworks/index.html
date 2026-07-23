@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -76,14 +76,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d5cc8be5113747845e6a8f301e2f5216.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-84d2a07a02d80bd473282a08374b6e76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-fe40ab8e643ad6158d4e6e7f87defb9b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -534,7 +534,7 @@ What an agent actually is
 <span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    },</span>
 <span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The framework’s <code>@function_tool</code> decorator generates this from the Pydantic model and the docstring at import time. Without the framework you write it by hand for every tool, and keep it in sync when the function signature changes.</p>
-<p>One thing worth knowing now, because it determines how well the agent works: <strong>the schema is part of the prompt the model sees during generation.</strong> Vague parameter descriptions weaken the agent more than people expect. Treat schemas with the same care you’d treat a system prompt.</p>
+<p>One thing worth knowing now, because it determines how well the agent works: the schema is part of the prompt the model sees during generation. Vague parameter descriptions weaken the agent more than people expect. Treat schemas with the same care you’d treat a system prompt.</p>
 <p>The schema can also constrain values, but only for constraints you actually put in. If <code>style</code> should only be one of three strings, use an enum:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Without enum: model can emit any string for "style"</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">"style"</span>: {<span class="st">"type"</span>: <span class="st">"string"</span>, <span class="st">"description"</span>: <span class="st">"'professional', 'engaging', or 'concise'"</span>}</span>
@@ -559,7 +559,7 @@ What an agent actually is
 <span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
 <span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span><span class="ot">]</span></span>
 <span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The model didn’t emit <code>&lt;tool_call&gt;...&lt;/tool_call&gt;</code> tags as plain text. It produced output that the API surfaces in a typed <code>tool_calls</code> field, with <code>content: null</code> because the model didn’t generate any text alongside.</p>
+<p>The API surfaces this output in a typed <code>tool_calls</code> field, with <code>content: null</code> because the model didn’t generate any text alongside.</p>
 </section>
 <section id="the-messages-array" class="level3">
 <h3 class="anchored" data-anchor-id="the-messages-array">3. The messages array</h3>
@@ -587,7 +587,7 @@ What an agent actually is
 <li><code>length</code>: generation hit the token limit. Response is truncated.</li>
 <li><code>content_filter</code>: the API’s safety filter intervened.</li>
 </ul>
-<p><code>finish_reason</code> is the API’s label for what just happened, not a decision the model made. The model emits tokens; the API examines what was emitted and applies the label. If the output ended with structured tool-call tokens, the API labels it <code>tool_calls</code>. If the budget was hit mid-generation, the API labels it <code>length</code>. Knowing which layer the signal comes from is the first move in debugging.</p>
+<p><code>finish_reason</code> is the API’s label for what just happened. The model emits tokens; the API examines what was emitted and applies the label. If the output ended with structured tool-call tokens, the API labels it <code>tool_calls</code>. If the budget was hit mid-generation, the API labels it <code>length</code>. Knowing which layer the signal comes from is the first move in debugging.</p>
 </section>
 <section id="the-loop-itself" class="level3">
 <h3 class="anchored" data-anchor-id="the-loop-itself">5. The loop itself</h3>
@@ -646,7 +646,7 @@ Figure&nbsp;1: One iteration of the agentic loop. Three layers do work; the mess
 <pre><code>{"role": "tool", "tool_call_id": "call_001", "content": "Subject: Streamlining your Q4 operations\n\nDear..."}</code></pre>
 <p>The messages array now has six entries: <code>system</code>, <code>user</code>, <code>assistant</code> (with three tool calls), <code>tool</code>, <code>tool</code>, <code>tool</code>.</p>
 <p><strong>Loop 2.</strong> Second API call. The model is now seeing the system prompt, the user query, the three tool calls it made, and the three emails the tools produced. It evaluates them, the professional one is generic, the engaging one too casual, the concise one lacks credibility, and emits two new <code>generate_email</code> calls with <code>include_data=true</code> and adjusted lengths. The model didn’t “remember” anything between loops; models are stateless. The continuity is your code’s responsibility, sitting in the messages array that gets re-sent each iteration.</p>
-<p><strong>Loop 3.</strong> Your code dispatches the two retries. By now the array contains ten entries and five emails worth of text. Every loop iteration re-sends the entire array, so by Loop 3 you’re paying input tokens on the system prompt, the user query, three full email texts from Loop 1, two more from Loop 2, and the assistant messages tying them together. Server-managed state via <code>previous_response_id</code> avoids the physical re-upload, but the conceptual cost is the same: the model attends to all accumulated history on every step, and the token bill reflects that. This is one of the main reasons production agents trim, summarize, or compress their context as it grows. The framework hides the loop but it doesn’t hide the bill.</p>
+<p><strong>Loop 3.</strong> Your code dispatches the two retries. By now the array contains ten entries and five emails worth of text. Every loop iteration re-sends the entire array, so by Loop 3 you’re paying input tokens on the system prompt, the user query, three full email texts from Loop 1, two more from Loop 2, and the assistant messages tying them together. Server-managed state via <code>previous_response_id</code> avoids the physical re-upload, but the conceptual cost is the same: the model attends to all accumulated history on every step, and the token bill reflects that. This is one of the main reasons production agents trim, summarize, or compress their context as it grows. The framework hides the loop, but the token cost stays yours.</p>
 <p><strong>Loops 4-5.</strong> The pattern repeats. The model sees the five emails, picks the strongest, and emits a single <code>send_email</code> call. Your code dispatches it. The next API call has nothing left to do; the model generates a brief confirmation in plain text, no tool calls, and the API sets <code>finish_reason="stop"</code>. Your code returns the assistant message and exits.</p>
 <p>Five loops, multiple API round trips, tool executions, one cold sales email sent. The framework’s <code>Runner.run()</code> collapses all of that into one line.</p>
 </section>
@@ -677,7 +677,7 @@ Figure&nbsp;1: One iteration of the agentic loop. Three layers do work; the mess
 <li><strong>Did the API parse and return the tool call correctly?</strong> Almost always yes for tool-call shape, since structured output is constrained at the API boundary. But <code>finish_reason</code> values come from the API and tell you why generation stopped (<code>length</code>, <code>content_filter</code>, etc.), not what the model decided.</li>
 <li><strong>Did your code dispatch the tool, append the result, and continue the loop correctly?</strong> This is where most bugs in a manual implementation live, and where <a href="../../../../posts/series/the-agent-harness/05-traces/index.html">most bugs in a framework implementation are hidden behind abstractions you can’t see</a>. Drop down to the API call directly when in doubt; the framework can be a fog over what the model is actually emitting.</li>
 </ul>
-<p>The useful mental model is short: <strong>the model emits, the API parses, your code dispatches and loops.</strong> Frameworks are convenience layered over those three steps.</p>
+<p>The model emits, the API parses, your code dispatches and loops. Frameworks are convenience layered over those three steps.</p>
 
 
 </section>

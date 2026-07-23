@@ -14,8 +14,8 @@
 <title>What an agent actually is — series</title>
 <link>https://yeesengchan.com/posts/series/what-an-agent-actually-is/</link>
 </image>
-<generator>quarto-1.9.37</generator>
-<lastBuildDate>Tue, 14 Apr 2026 04:00:00 GMT</lastBuildDate>
+<generator>quarto-1.9.38</generator>
+<lastBuildDate>Tue, 14 Apr 2026 00:00:00 GMT</lastBuildDate>
 <item>
   <title>Behind the scenes of AI agent frameworks</title>
   <dc:creator>Yee Seng Chan</dc:creator>
@@ -279,7 +279,7 @@ font-style: inherit;">"style"</span>],</span>
 <span id="cb2-15">    },</span>
 <span id="cb2-16">}</span></code></pre></div></div>
 <p>The framework’s <code>@function_tool</code> decorator generates this from the Pydantic model and the docstring at import time. Without the framework you write it by hand for every tool, and keep it in sync when the function signature changes.</p>
-<p>One thing worth knowing now, because it determines how well the agent works: <strong>the schema is part of the prompt the model sees during generation.</strong> Vague parameter descriptions weaken the agent more than people expect. Treat schemas with the same care you’d treat a system prompt.</p>
+<p>One thing worth knowing now, because it determines how well the agent works: the schema is part of the prompt the model sees during generation. Vague parameter descriptions weaken the agent more than people expect. Treat schemas with the same care you’d treat a system prompt.</p>
 <p>The schema can also constrain values, but only for constraints you actually put in. If <code>style</code> should only be one of three strings, use an enum:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
@@ -419,7 +419,7 @@ font-style: inherit;">]</span></span>
 <span id="cb4-12"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">}</span></span></code></pre></div></div>
-<p>The model didn’t emit <code>&lt;tool_call&gt;...&lt;/tool_call&gt;</code> tags as plain text. It produced output that the API surfaces in a typed <code>tool_calls</code> field, with <code>content: null</code> because the model didn’t generate any text alongside.</p>
+<p>The API surfaces this output in a typed <code>tool_calls</code> field, with <code>content: null</code> because the model didn’t generate any text alongside.</p>
 </section>
 <section id="the-messages-array" class="level3">
 <h3 class="anchored" data-anchor-id="the-messages-array">3. The messages array</h3>
@@ -465,7 +465,7 @@ font-style: inherit;">"Send a cold sales email"</span>},</span>
 <li><code>length</code>: generation hit the token limit. Response is truncated.</li>
 <li><code>content_filter</code>: the API’s safety filter intervened.</li>
 </ul>
-<p><code>finish_reason</code> is the API’s label for what just happened, not a decision the model made. The model emits tokens; the API examines what was emitted and applies the label. If the output ended with structured tool-call tokens, the API labels it <code>tool_calls</code>. If the budget was hit mid-generation, the API labels it <code>length</code>. Knowing which layer the signal comes from is the first move in debugging.</p>
+<p><code>finish_reason</code> is the API’s label for what just happened. The model emits tokens; the API examines what was emitted and applies the label. If the output ended with structured tool-call tokens, the API labels it <code>tool_calls</code>. If the budget was hit mid-generation, the API labels it <code>length</code>. Knowing which layer the signal comes from is the first move in debugging.</p>
 </section>
 <section id="the-loop-itself" class="level3">
 <h3 class="anchored" data-anchor-id="the-loop-itself">5. The loop itself</h3>
@@ -700,7 +700,7 @@ font-style: inherit;">}"</span>}}</span>
 <pre><code>{"role": "tool", "tool_call_id": "call_001", "content": "Subject: Streamlining your Q4 operations\n\nDear..."}</code></pre>
 <p>The messages array now has six entries: <code>system</code>, <code>user</code>, <code>assistant</code> (with three tool calls), <code>tool</code>, <code>tool</code>, <code>tool</code>.</p>
 <p><strong>Loop 2.</strong> Second API call. The model is now seeing the system prompt, the user query, the three tool calls it made, and the three emails the tools produced. It evaluates them, the professional one is generic, the engaging one too casual, the concise one lacks credibility, and emits two new <code>generate_email</code> calls with <code>include_data=true</code> and adjusted lengths. The model didn’t “remember” anything between loops; models are stateless. The continuity is your code’s responsibility, sitting in the messages array that gets re-sent each iteration.</p>
-<p><strong>Loop 3.</strong> Your code dispatches the two retries. By now the array contains ten entries and five emails worth of text. Every loop iteration re-sends the entire array, so by Loop 3 you’re paying input tokens on the system prompt, the user query, three full email texts from Loop 1, two more from Loop 2, and the assistant messages tying them together. Server-managed state via <code>previous_response_id</code> avoids the physical re-upload, but the conceptual cost is the same: the model attends to all accumulated history on every step, and the token bill reflects that. This is one of the main reasons production agents trim, summarize, or compress their context as it grows. The framework hides the loop but it doesn’t hide the bill.</p>
+<p><strong>Loop 3.</strong> Your code dispatches the two retries. By now the array contains ten entries and five emails worth of text. Every loop iteration re-sends the entire array, so by Loop 3 you’re paying input tokens on the system prompt, the user query, three full email texts from Loop 1, two more from Loop 2, and the assistant messages tying them together. Server-managed state via <code>previous_response_id</code> avoids the physical re-upload, but the conceptual cost is the same: the model attends to all accumulated history on every step, and the token bill reflects that. This is one of the main reasons production agents trim, summarize, or compress their context as it grows. The framework hides the loop, but the token cost stays yours.</p>
 <p><strong>Loops 4-5.</strong> The pattern repeats. The model sees the five emails, picks the strongest, and emits a single <code>send_email</code> call. Your code dispatches it. The next API call has nothing left to do; the model generates a brief confirmation in plain text, no tool calls, and the API sets <code>finish_reason="stop"</code>. Your code returns the assistant message and exits.</p>
 <p>Five loops, multiple API round trips, tool executions, one cold sales email sent. The framework’s <code>Runner.run()</code> collapses all of that into one line.</p>
 </section>
@@ -765,7 +765,7 @@ font-style: inherit;"># dict</span></span></code></pre></div></div>
 <li><strong>Did the API parse and return the tool call correctly?</strong> Almost always yes for tool-call shape, since structured output is constrained at the API boundary. But <code>finish_reason</code> values come from the API and tell you why generation stopped (<code>length</code>, <code>content_filter</code>, etc.), not what the model decided.</li>
 <li><strong>Did your code dispatch the tool, append the result, and continue the loop correctly?</strong> This is where most bugs in a manual implementation live, and where <a href="../../../../posts/series/the-agent-harness/05-traces/index.html">most bugs in a framework implementation are hidden behind abstractions you can’t see</a>. Drop down to the API call directly when in doubt; the framework can be a fog over what the model is actually emitting.</li>
 </ul>
-<p>The useful mental model is short: <strong>the model emits, the API parses, your code dispatches and loops.</strong> Frameworks are convenience layered over those three steps.</p>
+<p>The model emits, the API parses, your code dispatches and loops. Frameworks are convenience layered over those three steps.</p>
 
 
 </section>
@@ -773,7 +773,7 @@ font-style: inherit;"># dict</span></span></code></pre></div></div>
  ]]></description>
   <category>What an agent actually is</category>
   <guid>https://yeesengchan.com/posts/series/what-an-agent-actually-is/02-agent-frameworks/</guid>
-  <pubDate>Tue, 14 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 14 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>What the heck is an AI agent?</title>
@@ -807,7 +807,7 @@ What an agent actually is
 </ol>
 </div>
 <p>“Agent” has become the most overloaded word in AI engineering. Vendors apply it to everything from a single tool-use LLM call to systems that run autonomously for days. The definitions in serious use don’t agree with each other, and the disagreement isn’t going to resolve.</p>
-<p>The right move isn’t to pick a winner. It’s to refuse the question. Stop asking whether something is an agent. Ask how much autonomy it has, and whether that’s the right amount for the task.</p>
+<p>Rather than pick a winner, stop asking whether something is an agent. Ask how much autonomy it has, and whether that’s the right amount for the task.</p>
 <section id="stop-asking-for-one-definition" class="level2">
 <h2 class="anchored" data-anchor-id="stop-asking-for-one-definition">Stop asking for one definition</h2>
 <p>The definitions across the field vary, and the variation is real:</p>
@@ -818,7 +818,7 @@ What an agent actually is
 <li><p><strong>Cameron Wolfe</strong> <span class="citation" data-cites="wolfe_2025">(Wolfe 2025)</span> builds the idea from first principles: standard LLMs, tool usage, decomposing problems, reasoning models, and more autonomous systems. He frames agents as lying on a spectrum of capabilities rather than drawing one hard threshold for what counts as a “real” agent.</p></li>
 <li><p><strong>McKinsey’s 2025 enterprise survey</strong> <span class="citation" data-cites="mckinsey_2025">(McKinsey &amp; Company 2025)</span> frames AI agents as systems based on foundation models that act in the real world and are capable of autonomously planning and executing multiple steps in a workflow. This is a more autonomy-heavy enterprise framing than Lambert’s tool-use baseline.</p></li>
 </ul>
-<p>These definitions do not fully agree. That is why the better question is not “is this an agent?” but “how much autonomy does it have, and is that the right amount for the task?”</p>
+<p>These definitions do not fully agree.</p>
 </section>
 <section id="the-autonomy-spectrum" class="level2">
 <h2 class="anchored" data-anchor-id="the-autonomy-spectrum">The autonomy spectrum</h2>
@@ -861,7 +861,7 @@ What an agent actually is
 <p><strong>+ Tools</strong> is the first place the word “agent” gets applied, and where the definition fight starts. A model that emits one tool call and synthesizes the result is doing more than text generation, but calling it autonomous is a stretch. Wolfe calls this Level 1; Lambert calls it the entry point to the spectrum.</p>
 <p><strong>+ Loop</strong> is where “agentic” becomes a defensible label. The model can chain operations: search, read a result, refine the query, search again, synthesize. ReAct <span class="citation" data-cites="yao_etal_2023">(Yao et al. 2023)</span> formalized this early (alternating reasoning and action steps until the model decides it’s done) and it’s still the canonical pattern. The loop is also where <a href="../../../../posts/series/the-agent-harness/01-demos-break/index.html">things fail in interesting ways</a>: the model can loop without converging, hallucinate tool calls, or decide the task is done when it isn’t.</p>
 <p><strong>+ Autonomy</strong> is the regime Anthropic reserves the word “agent” for, and it’s where the failure modes get expensive.</p>
-<p>Each step adds capability and removes a constraint. Each one is also a deliberate engineering choice. More autonomy isn’t better; it’s different. A task that would be well served by a fixed workflow doesn’t improve when you add a planning loop, and a task that genuinely needs open-ended exploration isn’t solved by a single tool call.</p>
+<p>Each step adds capability and removes a constraint. Each one is also a deliberate engineering choice. More autonomy is different, not better. A task that would be well served by a fixed workflow doesn’t improve when you add a planning loop, and a task that genuinely needs open-ended exploration isn’t solved by a single tool call.</p>
 <p>To make this concrete, take a customer-support refund task. A standard LLM can’t handle it at all. With no access to the order record, the best it can do is draft a generic reply that pretends to. With tools, it can look up the order and draft a real one. With a loop, it can ask for missing information and retry. With reasoning, it can handle edge cases: orders past the policy window, partial refunds, conflicts with prior tickets. With autonomy, it decides whether to issue the refund or escalate.</p>
 <div id="fig-agent-spectrum" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A horizontal spectrum diagram for the word agent. The left end is labeled with a single tool call, the simplest case. Moving right, the points increase in autonomy and scope through multi-step tool use and longer task loops. The right end is labeled with systems that run without human input for extended periods. The figure frames agent as this whole range rather than one fixed point on it.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -884,13 +884,13 @@ Figure&nbsp;1: "Agent" does not pick out a single artifact; it picks out a range
 <li><strong>Memory.</strong> What’s available across loop iterations and across sessions.</li>
 <li><strong>Control flow.</strong> Decides which path through the system gets taken; via explicit code, or implicit in the model’s reasoning.</li>
 </ul>
-<p>The proportions and complexity vary; the components don’t.</p>
-<p>This is also why agents aren’t a fundamentally new paradigm. A modern agent is a tool-use LLM in a loop with structured control flow, and each component has been around for years: Toolformer <span class="citation" data-cites="schick_etal_2023">(Schick et al. 2023)</span> for tool use, ReAct <span class="citation" data-cites="yao_etal_2023">(Yao et al. 2023)</span> for the reasoning-and-action loop, and the broader control-flow patterns Anthropic documented in late 2024. The novelty isn’t the architecture. It’s that the underlying language models are finally good enough at instruction-following, structured output, and reasoning that the architecture works in production.</p>
+<p>The proportions and complexity vary, but the components stay the same.</p>
+<p>This is also why agents aren’t a fundamentally new paradigm. A modern agent is a tool-use LLM in a loop with structured control flow, and each component has been around for years: Toolformer <span class="citation" data-cites="schick_etal_2023">(Schick et al. 2023)</span> for tool use, ReAct <span class="citation" data-cites="yao_etal_2023">(Yao et al. 2023)</span> for the reasoning-and-action loop, and the broader control-flow patterns Anthropic documented in late 2024. The novelty is in the models, not the architecture: the underlying language models are finally good enough at instruction-following, structured output, and reasoning that the architecture works in production.</p>
 <p>Frameworks like LangChain, LangGraph, and the OpenAI Agents SDK abstract these primitives into higher-level constructs. That’s often useful, as they handle schema generation, message management, tool dispatch, retry logic. But the abstraction has a cost. Anthropic’s recommendation is worth taking seriously: start with direct API calls so you understand the mechanics, then reach for frameworks once the cost of not using one is clear. The <a href="../../../../posts/series/what-an-agent-actually-is/02-agent-frameworks/index.html">next article</a> goes deep and looks at what tool calls look like at the token level, how the loop is implemented, and what frameworks save you versus what they hide.</p>
 </section>
 <section id="more-autonomy-is-not-always-better" class="level2">
 <h2 class="anchored" data-anchor-id="more-autonomy-is-not-always-better">More autonomy is not always better</h2>
-<p>If you read AI marketing in 2026, the implicit definition of an agent is the right end of the spectrum: a system that operates without human input, makes decisions, takes actions, plans across long horizons. That’s the picture. It’s also a small slice of what’s actually deployed.</p>
+<p>If you read AI marketing in 2026, the implicit definition of an agent is the right end of the spectrum: a system that operates without human input, makes decisions, takes actions, plans across long horizons. That’s the picture, but it’s a small slice of what’s actually deployed.</p>
 <p>Anthropic’s engineering team has been direct about this. Their observation, after working with dozens of teams building production systems: the most successful implementations weren’t using complex frameworks or specialized libraries. They were building with simple, composable patterns. The systems delivering value in production are mostly workflows with LLM calls in them, not open-ended autonomous agents.</p>
 <p>Two systems I’ve built sit at different points on the spectrum. The clinical-documentation pipeline is a workflow: code routes a series of LLM calls that <a href="../../../../posts/series/research-foundations-of-modern-llms/05-information-extraction/index.html">extract problems, labs, and physical-exam findings into note sections</a>. The LLM is the labor; the control flow is fixed, and that’s what makes the system shippable. The deep research agent I built sits further right. Query formulation, how deeply to read each source, and when to stop are all the model’s calls, with a controller-enforced budget on top so the agency stays bounded.</p>
 <p>This isn’t a temporary state that resolves when the models get better. It reflects a permanent engineering reality: predictability is valuable. A workflow with fixed control flow is easier to debug, evaluate, and ship. An autonomous agent that decides its own path is harder on every axis. For most production tasks, the cost of that flexibility has to be balanced against its benefit. McKinsey’s 2025 survey found only about 10% of enterprises have agents running in production in even a single department, despite vendor messaging suggesting far wider adoption.</p>
@@ -925,7 +925,7 @@ Yao, Shunyu, Jeffrey Zhao, Dian Yu, et al. 2023. <span>“ReAct: Synergizing Rea
 </div></section></div> ]]></description>
   <category>What an agent actually is</category>
   <guid>https://yeesengchan.com/posts/series/what-an-agent-actually-is/01-what-is-an-agent/</guid>
-  <pubDate>Sat, 11 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sat, 11 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>

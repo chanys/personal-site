@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -76,14 +76,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d5cc8be5113747845e6a8f301e2f5216.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-84d2a07a02d80bd473282a08374b6e76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-fe40ab8e643ad6158d4e6e7f87defb9b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -458,9 +458,9 @@ LLM evaluation, honestly
 </ol>
 </div>
 <p>Most bad LLM judges are doing a simpler evaluator’s job. They are asked whether JSON is valid. Whether a required field is present. Whether a tool was called. Whether a prohibited phrase appears in the final answer. Whether a handoff record contains an order ID.</p>
-<p>That is not judgment. That is checking.</p>
+<p>That is checking, not judgment.</p>
 <p>When a team asks an LLM judge to do what code could have checked, it gets the worst of both worlds: slower, noisier, more expensive, and harder to debug.</p>
-<p>LLM judges are useful when the evaluator needs to understand meaning in context. They are wasted when the failure has a structural shape. If the failure can be detected with code, use code. Save judges for failures that require understanding meaning.</p>
+<p>LLM judges are useful when the evaluator needs to understand meaning in context, and wasted when the failure has a structural shape. If the failure can be detected with code, use code.</p>
 <section id="start-with-the-failure-mode" class="level2">
 <h2 class="anchored" data-anchor-id="start-with-the-failure-mode">Start with the failure mode</h2>
 <p>The wrong question is <em>“Should we use an LLM judge here?”</em> The right question is <em>“What exactly are we trying to detect?”</em></p>
@@ -480,7 +480,7 @@ LLM evaluation, honestly
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Score(passed<span class="op">=</span><span class="va">False</span>, reason<span class="op">=</span><span class="ss">f"Missing fields: </span><span class="sc">{</span>missing<span class="sc">}</span><span class="ss">"</span>)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Score(passed<span class="op">=</span><span class="va">True</span>, reason<span class="op">=</span><span class="st">"Handoff record well-formed"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Five lines. Runs in milliseconds. Deterministic: same input, same output, every time. Debuggable: when it fails, the reason tells you exactly what to look at. Free: no API calls, no token costs, no rate limits. Runs on every trace, on every CI build, on every production trace if you want.</p>
-<p>Code and judges aren’t always alternatives. <strong>Sometimes they’re layers.</strong> A regex check for refund-promise language catches explicit cases (<em>“Your refund has been approved”</em>); it misses subtler implications (<em>“We’ll make sure you get your money back”</em>). The fix isn’t to abandon the regex for a judge. Run the cheap regex on every trace; run a more expensive judge only when the trace involves a refund request and the regex didn’t fire. The principle: run cheap checks broadly, run judges where they add value.</p>
+<p>Code and judges aren’t always alternatives. Sometimes they’re layers. A regex check for refund-promise language catches explicit cases (<em>“Your refund has been approved”</em>); it misses subtler implications (<em>“We’ll make sure you get your money back”</em>). The fix isn’t to abandon the regex for a judge. Run the cheap regex on every trace; run a more expensive judge only when the trace involves a refund request and the regex didn’t fire. Run cheap checks broadly, and run judges where they add value.</p>
 </section>
 <section id="use-llm-judges-for-semantic-failures" class="level2">
 <h2 class="anchored" data-anchor-id="use-llm-judges-for-semantic-failures">Use LLM judges for semantic failures</h2>
@@ -489,7 +489,7 @@ LLM evaluation, honestly
 </section>
 <section id="keep-each-evaluator-narrow" class="level2">
 <h2 class="anchored" data-anchor-id="keep-each-evaluator-narrow">Keep each evaluator narrow</h2>
-<p>The mistake is building one big judge called <code>quality_judge_v3</code> and asking it to score everything: tone, helpfulness, schema validity, routing. That judge produces a number. It does not produce a diagnosis.</p>
+<p>The mistake is building one big judge called <code>quality_judge_v3</code> and asking it to score everything: tone, helpfulness, schema validity, routing. That judge produces a number, not a diagnosis.</p>
 <p>It’s the same reason you don’t write a single function called <code>is_correct()</code> in production code. Composite signals are harder to act on, harder to debug, and harder to improve.</p>
 <p>Suppose the intake agent’s “overall quality” judge drops from 87% to 81% over a release. What changed? Tone got worse? Helpfulness got worse? Grounding got worse? Some combination? The composite verdict can’t tell you. You read failures by hand, you guess, and you propose a fix without knowing which dimension you’re targeting.</p>
 <p>Specialized evaluators fix this. The tone judge tracks tone. The redundant-question judge tracks redundancy. When tone scores drop and redundancy scores hold steady, you know what changed. When you fix the tone issue, the tone judge tells you whether the fix worked.</p>
@@ -561,7 +561,7 @@ Figure&nbsp;1: One number can’t tell you what broke. The composite quality_jud
 </section>
 <section id="code-first-judges-when-you-need-them" class="level2">
 <h2 class="anchored" data-anchor-id="code-first-judges-when-you-need-them">Code first, judges when you need them</h2>
-<p><a href="../../../../posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.html">Your LLM judge is a classifier</a> covers the next layer: making judges trustworthy when you do need them. A judge that produces verdicts in the right format isn’t the same as a judge that produces correct verdicts.</p>
+<p><a href="../../../../posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.html">Your LLM judge is a classifier</a> covers the next layer: making judges trustworthy when you do need them. A judge that produces verdicts in the right format doesn’t necessarily produce correct ones.</p>
 <p>The next time someone proposes a judge, first ask: <em>could code answer this?</em></p>
 
 

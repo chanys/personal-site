@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -76,14 +76,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d5cc8be5113747845e6a8f301e2f5216.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-84d2a07a02d80bd473282a08374b6e76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-fe40ab8e643ad6158d4e6e7f87defb9b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -458,12 +458,12 @@ The agent harness
 </div>
 <p>A stronger model does not automatically give you a reliable agent.</p>
 <p>The <a href="../../../../posts/series/the-agent-harness/01-demos-break/index.html">previous article</a> catalogued six ways agent demos break in production. The intake agent forgot a fact the user gave it on turn 2. The scheduling assistant double-booked a meeting after an ambiguous timeout. The docs Q&amp;A agent gave a confident, well-formed, wrong answer.</p>
-<p>The instinct after each failure is to reach for a stronger model. Sometimes that helps a little. More often, the failure returns in a slightly different shape because the system around the model has not changed. The useful reframe is simple:</p>
+<p>The instinct after each failure is to reach for a stronger model. Sometimes that helps a little. More often, the failure returns in a slightly different shape because the system around the model has not changed. The reframe:</p>
 <p><strong>Agent = model + harness</strong></p>
-<p>The model is the reasoning engine. The harness is the system the model lives inside. Models get swapped, cheaper, and faster. The harness carries the team’s accumulated understanding of how to make the agent reliable. For production agents, the harness is the product.</p>
+<p>The model is the reasoning engine; the harness is the system the model lives inside. Models get swapped, cheaper, and faster. The harness carries the team’s accumulated understanding of how to make the agent reliable. For production agents, the harness is the product.</p>
 <section id="prompts-guide.-harnesses-constrain." class="level2">
 <h2 class="anchored" data-anchor-id="prompts-guide.-harnesses-constrain.">Prompts guide. Harnesses constrain.</h2>
-<p>A prompt tells the model what behavior you want. A harness decides what behavior the system permits.</p>
+<p>A prompt tells the model what behavior you want; a harness decides what behavior the system permits.</p>
 <p>The difference is concrete:</p>
 <ul>
 <li><strong>Refunds:</strong> a prompt can say, “Do not issue refunds.” A harness can make the refund tool unavailable.</li>
@@ -471,7 +471,7 @@ The agent harness
 <li><strong>Docs Q&amp;A:</strong> a prompt can say, “Use only the retrieved documents.” A harness can require every final claim to map to a cited passage.</li>
 <li><strong>Retries:</strong> a prompt can say, “Be careful with retries.” A harness can enforce one write attempt, require an idempotency key, and route ambiguous timeouts to verification.</li>
 </ul>
-<p>The prompt shapes one model call. The harness controls the workflow around that call. It makes some failures impossible to commit and makes the rest easier to detect.</p>
+<p>The prompt shapes one model call; the harness controls the workflow around that call. It makes some failures impossible to commit and makes the rest easier to detect.</p>
 <p>That is the shift from prompt engineering to harness engineering.</p>
 </section>
 <section id="scope-is-the-first-harness-decision" class="level2">
@@ -540,7 +540,7 @@ Figure&nbsp;2: Three nested levels of engineering. Each level encompasses the pr
 <h2 class="anchored" data-anchor-id="which-parts-of-the-harness-age">Which parts of the harness age?</h2>
 <p>Some harness pieces get lighter as models improve. Tool-selection scaffolding matters less when models choose tools reliably. Format validators matter less when structured output becomes dependable. Long prompt chains matter less when models handle more reasoning in one call. These pieces compensate for model limitations, so stronger models reduce their importance.</p>
 <p>Other harness pieces remain necessary because they control product risk. A smarter model still cannot unsend a calendar invite, undo a payment, or reconstruct last month’s behavior without traces. It still needs runtime boundaries around tools, writes, permissions, and user-visible actions.</p>
-<p>The pieces that age are scaffolding around weak model behavior. The pieces that stay are tied to reliability: state, tool contracts, gates, verification, recovery, traces, and tests.</p>
+<p>The pieces that age are scaffolding around weak model behavior, while the pieces that stay are tied to reliability: state, tool contracts, gates, verification, recovery, traces, and tests.</p>
 
 
 </section>

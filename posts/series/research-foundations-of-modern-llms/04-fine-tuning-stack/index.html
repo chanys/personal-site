@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -60,14 +60,14 @@ div.csl-indent {
 <script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d5cc8be5113747845e6a8f301e2f5216.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-84d2a07a02d80bd473282a08374b6e76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-fe40ab8e643ad6158d4e6e7f87defb9b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -470,7 +470,7 @@ Research foundations of modern LLMs
 </ol>
 </div>
 <p>The standard story about post-pretraining is: first supervised fine-tuning (often called instruction tuning), then alignment with RLHF or DPO. Two stages, presented as several distinct techniques because the SFT stage has gone by many names: supervised fine-tuning, instruction tuning, distilled SFT, chat tuning. Mechanically, they’re the same operation.</p>
-<p>Here’s the thesis: SFT shares its loss function with pretraining. They’re both next-token cross-entropy, differing only in what data goes in and which tokens contribute to the loss. Preference optimization is the only stage that introduces a genuinely new loss family.</p>
+<p>SFT shares its loss function with pretraining. They’re both next-token cross-entropy, differing only in what data goes in and which tokens contribute to the loss. Preference optimization is the only stage that introduces a genuinely new loss family.</p>
 <section id="two-loss-families-across-three-stages" class="level2">
 <h2 class="anchored" data-anchor-id="two-loss-families-across-three-stages">Two loss families across three stages</h2>
 <div id="fig-three-jobs" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A diagram of three training stages grouped by loss family. Pretraining and supervised fine-tuning are bracketed together as one group because both use next-token cross-entropy; the diagram contrasts them only by their input data and by which tokens contribute to the loss. Preference optimization sits in a separate group, labeled as the only stage that introduces a different loss family.">
@@ -521,7 +521,7 @@ Figure&nbsp;2: LoRA decomposes the fine-tuning update into two small matrices B 
 </figcaption>
 </figure>
 </div>
-<p><a href="https://chanys.github.io/lora/">LoRA</a> <span class="citation" data-cites="hu_etal_2022">(<a href="#ref-hu_etal_2022" role="doc-biblioref">Hu et al. 2022</a>)</span> trains a small low-rank adapter on top of a frozen base model. The premise: full fine-tuning is overkill for most tasks because fine-tuning updates have low intrinsic rank. The base already knows grammar, world facts, and reasoning patterns; fine-tuning is usually a <em>nudge</em>, not a rewrite. LoRA replaces the full update <span class="math inline">\(\Delta W\)</span> with the product of two much smaller matrices <span class="math inline">\(BA\)</span>, where the rank <span class="math inline">\(r\)</span> is much smaller than the original matrix dimensions. The base <span class="math inline">\(W_0\)</span> stays frozen; only the small <span class="math inline">\(B\)</span> and <span class="math inline">\(A\)</span> are trained. The phrase to remember: LoRA works because fine-tuning is usually steering, not rebuilding.</p>
+<p><a href="https://chanys.github.io/lora/">LoRA</a> <span class="citation" data-cites="hu_etal_2022">(<a href="#ref-hu_etal_2022" role="doc-biblioref">Hu et al. 2022</a>)</span> trains a small low-rank adapter on top of a frozen base model. The premise: full fine-tuning is overkill for most tasks because fine-tuning updates have low intrinsic rank. The base already knows grammar, world facts, and reasoning patterns; fine-tuning is usually a <em>nudge</em>, not a rewrite. LoRA replaces the full update <span class="math inline">\(\Delta W\)</span> with the product of two much smaller matrices <span class="math inline">\(BA\)</span>, where the rank <span class="math inline">\(r\)</span> is much smaller than the original matrix dimensions. The base <span class="math inline">\(W_0\)</span> stays frozen; only the small <span class="math inline">\(B\)</span> and <span class="math inline">\(A\)</span> are trained.</p>
 <p><a href="https://chanys.github.io/qlora/">QLoRA</a> <span class="citation" data-cites="dettmers_etal_2023">(<a href="#ref-dettmers_etal_2023" role="doc-biblioref">Dettmers et al. 2023</a>)</span> keeps LoRA’s structure but quantizes the frozen base to 4 bits while leaving the adapter in 16-bit. The QLoRA mechanics (NF4 quantization, double quantization of scale constants, paged optimizers for memory spikes) are covered in the <a href="https://chanys.github.io/qlora/">QLoRA deep-dive post</a>; they’re what makes the memory math work but they’re orthogonal to the article’s thesis.</p>
 <p>Almost all open-source fine-tuning in 2024-2026 uses LoRA or QLoRA. Full fine-tuning still happens for frontier-scale base-model training, but downstream specialization is overwhelmingly LoRA-based. The wave of fine-tuned open-source models from late 2023 onward is downstream of this.</p>
 </section>

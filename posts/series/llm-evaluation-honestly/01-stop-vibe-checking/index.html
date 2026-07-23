@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -76,14 +76,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d5cc8be5113747845e6a8f301e2f5216.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-84d2a07a02d80bd473282a08374b6e76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-fe40ab8e643ad6158d4e6e7f87defb9b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -462,7 +462,7 @@ LLM evaluation, honestly
 <section id="what-eval-is-for" class="level2">
 <h2 class="anchored" data-anchor-id="what-eval-is-for">What eval is for</h2>
 <p>A score is useful only if it changes what the team does next. Eval supports different decisions at different stages: during development, whether a new prompt is better; before merge, whether old failures came back; in production, whether new failure patterns are emerging.</p>
-<p>The operational test for any metric: <em>When this number moves, what decision changes?</em> If the answer is merge, hold, investigate, roll back, or add a regression case, the metric is useful. If the answer is “nothing,” it does not belong on the dashboard.</p>
+<p>The operational test for any metric: <em>When this number moves, what decision changes?</em> If the answer is merge, hold, investigate, roll back, or add a regression case, the metric is useful; if the answer is “nothing,” it does not belong on the dashboard.</p>
 </section>
 <section id="the-minimum-viable-eval-loop" class="level2">
 <h2 class="anchored" data-anchor-id="the-minimum-viable-eval-loop">The minimum viable eval loop</h2>
@@ -495,7 +495,7 @@ Figure&nbsp;2: The final answer hides the first bad move. A final-answer check s
 </section>
 <section id="labels" class="level3">
 <h3 class="anchored" data-anchor-id="labels">2. Labels</h3>
-<p>A label is a human judgment attached to a trace: pass or fail, plus a short critique. For example: <em>“Failed: agent routed the case as billing instead of refund at turn three; downstream handoff omitted refund-request status.”</em> That critique tells the team what failed, where, and what to watch for. A score of 3 out of 5 does not.</p>
+<p>A label is a human judgment attached to a trace: pass or fail, plus a short critique. For example: <em>“Failed: agent routed the case as billing instead of refund at turn three; downstream handoff omitted refund-request status.”</em> That critique tells the team what failed, where, and what to watch for; a score of 3 out of 5 does not.</p>
 </section>
 <section id="failure-modes" class="level3">
 <h3 class="anchored" data-anchor-id="failure-modes">3. Failure modes</h3>
@@ -545,7 +545,7 @@ Figure&nbsp;3: Check or judge? A check is a deterministic function with no LLM c
 <section id="review-and-decisions" class="level3">
 <h3 class="anchored" data-anchor-id="review-and-decisions">6. Review and decisions</h3>
 <p>The loop only matters if it changes what the team does. A failed check blocks a merge, a spike in redundant-question failures triggers investigation, a new production failure becomes a regression case, a judge disagreement becomes a calibration example.</p>
-<p>Pull a small sample of recent failures regularly, read them end-to-end, and ask whether they reveal a pattern the current dataset misses. The habit is simple: new failures feed back into the eval loop instead of disappearing into Slack.</p>
+<p>Pull a small sample of recent failures regularly, read them end-to-end, and ask whether they reveal a pattern the current dataset misses. New failures feed back into the eval loop instead of disappearing into Slack.</p>
 <p><a href="../../../../posts/series/llm-evaluation-honestly/07-eval-drift/index.html">Your eval system also drifts</a> returns to this production loop: how new failures from real usage become new eval cases, alerts, and hardening work.</p>
 </section>
 <section id="a-concrete-first-version" class="level3">
@@ -589,13 +589,13 @@ Figure&nbsp;3: Check or judge? A check is a deterministic function with no LLM c
 </tr>
 </tbody>
 </table>
-<p>The numbers are illustrative. The shape matters: start small, use real failures, make every new failure feed back into the loop.</p>
+<p>The numbers are illustrative; the shape is what matters: start small, use real failures, make every new failure feed back into the loop.</p>
 </section>
 </section>
 <section id="the-smallest-useful-promise" class="level2">
 <h2 class="anchored" data-anchor-id="the-smallest-useful-promise">The smallest useful promise</h2>
 <p>Having a minimal eval loop in place is enough to change how the team builds. “Does v2 feel better?” becomes “Which failure modes improved, which regressed, and do we trust the measurement?” Eval stops being a side research exercise and becomes part of the engineering loop.</p>
-<p><strong>The harness made the agent’s behavior observable, the eval system turns that behavior into evidence, and the hardening loop turns evidence into a system harder to break.</strong></p>
+<p>The harness made the agent’s behavior observable, the eval system turns that behavior into evidence, and the hardening loop turns evidence into a system harder to break.</p>
 <p>The <a href="../../../../posts/series/llm-evaluation-honestly/02-eval-dataset/index.html">next article</a> goes one layer deeper: the eval dataset.</p>
 
 

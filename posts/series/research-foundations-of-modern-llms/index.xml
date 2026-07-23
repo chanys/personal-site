@@ -14,8 +14,8 @@
 <title>Research foundations of modern LLMs — series</title>
 <link>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/</link>
 </image>
-<generator>quarto-1.9.37</generator>
-<lastBuildDate>Sun, 05 Apr 2026 04:00:00 GMT</lastBuildDate>
+<generator>quarto-1.9.38</generator>
+<lastBuildDate>Sun, 05 Apr 2026 00:00:00 GMT</lastBuildDate>
 <item>
   <title>Information extraction didn’t disappear. It moved inside the workflow.</title>
   <dc:creator>Yee Seng Chan</dc:creator>
@@ -52,8 +52,8 @@ Research foundations of modern LLMs
 </div>
 <p>For thirty years, information extraction was a real subfield of NLP. Named entity recognition, relation extraction, event extraction, coreference resolution, slot filling, knowledge-base population. Annotated corpora: ACE, OntoNotes, KBP, TAC. A shared-task culture at every major conference. An entire industry of vendors and government-funded R&amp;D organizations whose product was, essentially, structured records pulled out of unstructured text.</p>
 <p>By 2024, the center of gravity had shifted.</p>
-<p>The standard story is that LLMs replaced IE. The truer claim is that IE didn’t disappear. It moved inside the workflow. Where the pre-LLM IE pipeline was the <em>product</em> (extract entities, link them, populate a knowledge base, ship the KB), modern IE is the <em>structured layer</em> between raw text and downstream generation or action.</p>
-<p>What changed wasn’t the existence of the work. It was the labor model. Pre-LLM IE meant labeling thousands of examples per task, engineering features, training task-specific classifiers, and tuning a pipeline. LLM-era IE means designing a JSON schema, writing a prompt, and evaluating the result. Both are real engineering. They are not the same engineering.</p>
+<p>The standard story is that LLMs replaced IE. What actually happened is that IE moved inside the workflow. Where the pre-LLM IE pipeline was the <em>product</em> (extract entities, link them, populate a knowledge base, ship the KB), modern IE is the <em>structured layer</em> between raw text and downstream generation or action.</p>
+<p>The work still exists. What changed is the labor model. Pre-LLM IE required labeling thousands of examples per task, engineering features, training task-specific classifiers, and tuning a pipeline. LLM-era IE requires designing a JSON schema, writing a prompt, and evaluating the result. Both require real engineering of different kinds.</p>
 <p>I worked across all three eras the article traces: pre-BERT IE during a postdoc, BERT-era production IE through the late 2010s, and LLM-era workflow IE now.</p>
 <div id="fig-three-eras" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three stacked panels for three eras of information extraction. The pre-BERT and BERT panels show the same left-to-right pipeline of identical boxes, with only the contents of each box changing between them, hand-built features in the first and learned BERT representations in the second. The LLM panel replaces the linear pipeline with a workflow: several extraction calls run in parallel and emit structured frames that flow into a downstream system. A side label contrasts the labor profile, shifting from data annotation and feature engineering in the earlier eras to schema design, prompt engineering, and evaluation in the LLM era.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -78,7 +78,7 @@ Figure&nbsp;1: The three eras of information extraction. The pipeline shape is u
 <p>Each of these was its own subfield. Each had its own datasets: CoNLL-2003 <span class="citation" data-cites="sang_demeulder_2003">(Tjong Kim Sang and Meulder 2003)</span> for NER, ACE-2005 <span class="citation" data-cites="walker_etal_2006">(Walker et al. 2006)</span> for events and relations, OntoNotes <span class="citation" data-cites="hovy_etal_2006">(Hovy et al. 2006)</span> for coreference, the TAC KBP datasets <span class="citation" data-cites="ji_grishman_2011">(Ji and Grishman 2011)</span> for end-to-end knowledge-base construction. Each had its own modeling tradition: HMMs and CRFs for sequence labeling, structured-prediction for relation classification, ILP-based joint inference for combining extractions.</p>
 <p>The labor was substantial and concentrated on the input side. To build an NER system for a new entity type, you collected text, annotated mentions (typically thousands per type), engineered features (word identity, POS, gazetteer match, dependency context), and trained a classifier. Relation extraction added another annotation pass per relation type. Event extraction added another for triggers and another for each argument role.</p>
 <p>I worked in this regime during my postdoc. The published work from that period is on relation extraction <span class="citation" data-cites="chan_roth_2010 chan_roth_2011">(Chan and Roth 2010, 2011)</span> and minimally-supervised event causality <span class="citation" data-cites="do_etal_2011">(Do et al. 2011)</span>. The relation-extraction setup was typical for the era: a feature engineering pass over syntactic and semantic structures (constituency parses, dependency paths, semantic roles, Wikipedia categories as background knowledge), then a structured classifier.</p>
-<p>The defining property of pre-BERT IE wasn’t any particular model. It was the labor model. Every new task, every new domain, every new ontology required a fresh labeling effort, a fresh feature-engineering pass, and a fresh trained model. Performance was decent on benchmarks and worse in domain transfer. Adapting to a new domain typically meant starting over.</p>
+<p>The defining property of pre-BERT IE was the labor model, not any particular architecture. Every new task, every new domain, every new ontology required a fresh labeling effort, a fresh feature-engineering pass, and a fresh trained model. Performance was decent on benchmarks and worse in domain transfer. Adapting to a new domain typically meant starting over.</p>
 </section>
 <section id="bert-made-ie-better-not-cheaper" class="level2">
 <h2 class="anchored" data-anchor-id="bert-made-ie-better-not-cheaper">BERT made IE better, not cheaper</h2>
@@ -98,7 +98,7 @@ Figure&nbsp;1: The three eras of information extraction. The pipeline shape is u
 </section>
 <section id="llms-changed-the-labor-model" class="level2">
 <h2 class="anchored" data-anchor-id="llms-changed-the-labor-model">LLMs changed the labor model</h2>
-<p>What changed with LLMs wasn’t that you could finally do IE. You could already do IE. What changed was the cost structure.</p>
+<p>IE was already possible before LLMs. What they changed was the cost structure.</p>
 <p>A frontier LLM with structured-output support can solve most NER, RE, and slot-filling tasks zero-shot or few-shot from a prompt and a JSON schema. Quality is task-dependent:</p>
 <ul>
 <li>On standard benchmarks like CoNLL-2003, a well-prompted frontier LLM lands within a few F1 points of fine-tuned baselines.</li>
@@ -139,7 +139,7 @@ Figure&nbsp;2: Three modern IE patterns. They differ in where the LLM sits and w
 <li><strong>Metadata on each extracted item.</strong> Temporal status (past / present / future), source and stance (patient-reported vs clinician-assessed), section affinity.</li>
 <li><strong>Downstream routing.</strong> Present-tense problem details go to HPI; clinician assessment and treatment plans go to A&amp;P; past resolved history goes to medical history.</li>
 </ul>
-<p>This is the modern form of IE I see most often: not an extractor that ships as the product, but a structured control layer that lets the rest of the workflow behave reliably. The product is the clinical note; the extractions are what the downstream system builds it from.</p>
+<p>This is the modern form of IE I see most often: a structured control layer that lets the rest of the workflow behave reliably. The product is the clinical note; the extractions are what the downstream system builds it from.</p>
 <p>The pattern isn’t unique. SpecialtyScribe <span class="citation" data-cites="goyal_etal_2025">(Goyal et al. 2025)</span> and GENIE <span class="citation" data-cites="ying_etal_2025">(Ying et al. 2025)</span> are published instances of the same idea: IE as the structured intermediate layer of a workflow, with the extraction done by a frontier LLM, a fine-tuned smaller specialist, or a mix.</p>
 <p>GraphRAG <span class="citation" data-cites="edge_etal_2024">(Edge et al. 2024)</span> is another version of the same move: use IE to turn documents into entities, relations, and summaries, then run retrieval and reasoning over that structure rather than over raw chunks. These are entity extraction, relation extraction, and light coreference, with the graph as the structured layer they feed.</p>
 </section>
@@ -206,7 +206,7 @@ font-style: inherit;">}</span></span></code></pre></div></div>
 <li><strong>Workflow orchestration</strong>: how extractions compose, how frames are routed, where metadata gates decisions.</li>
 <li><strong>Cost control</strong>: which calls run on a frontier model, which on a smaller specialist, which can be batched or cached.</li>
 </ul>
-<p>The old labor was annotation, feature engineering, and per-task model training. The new labor is schema, prompts, eval, and orchestration. The label changed, but the work did not vanish. It moved from model training into workflow design.</p>
+<p>None of this is less work than before. It moved from model training into workflow design.</p>
 </section>
 <section id="when-classical-ie-still-wins" class="level2">
 <h2 class="anchored" data-anchor-id="when-classical-ie-still-wins">When classical IE still wins</h2>
@@ -237,9 +237,8 @@ font-style: inherit;">}</span></span></code></pre></div></div>
 </section>
 <section id="closing" class="level2">
 <h2 class="anchored" data-anchor-id="closing">Closing</h2>
-<p>For decades, information extraction was a product: annotate, train, extract, ship the knowledge base. BERT made the models better but left the labor model intact; every new domain still cost an annotation effort. LLMs didn’t make IE possible. IE was already possible. They made it low-startup-cost enough that it stopped being a product and became infrastructure: the structured layer between raw text and whatever the system does next.</p>
-<p>The work didn’t disappear. The annotation-and-feature-engineering labor became schema-and-eval labor.</p>
-<p><strong>The extractor stopped being the deliverable and became workflow state.</strong></p>
+<p>For decades, information extraction was a product: annotate, train, extract, ship the knowledge base. BERT made the models better but left the labor model intact; every new domain still cost an annotation effort. LLMs did not make IE possible; it already was. They made it low-startup-cost enough that it stopped being a product and became infrastructure: the structured layer between raw text and whatever the system does next.</p>
+<p>The extractor now serves as workflow state rather than the final deliverable.</p>
 <p>The papers on the hard research problems (coreference, cross-document linking, strict argument-role constraints) are still being written; they’re just no longer where most production IE work happens. The next time someone says their system “doesn’t do information extraction,” it’s worth asking what the JSON between their LLM calls is.</p>
 
 
@@ -310,7 +309,7 @@ Zhang, Zikun, Wei You, Tongtao Wu, Xiaolong Wang, Jianxin Li, and Min Zhang. 202
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/05-information-extraction/</guid>
-  <pubDate>Sun, 05 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sun, 05 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>The fine-tuning stack: one loss, different data</title>
@@ -347,7 +346,7 @@ Research foundations of modern LLMs
 </ol>
 </div>
 <p>The standard story about post-pretraining is: first supervised fine-tuning (often called instruction tuning), then alignment with RLHF or DPO. Two stages, presented as several distinct techniques because the SFT stage has gone by many names: supervised fine-tuning, instruction tuning, distilled SFT, chat tuning. Mechanically, they’re the same operation.</p>
-<p>Here’s the thesis: SFT shares its loss function with pretraining. They’re both next-token cross-entropy, differing only in what data goes in and which tokens contribute to the loss. Preference optimization is the only stage that introduces a genuinely new loss family.</p>
+<p>SFT shares its loss function with pretraining. They’re both next-token cross-entropy, differing only in what data goes in and which tokens contribute to the loss. Preference optimization is the only stage that introduces a genuinely new loss family.</p>
 <section id="two-loss-families-across-three-stages" class="level2">
 <h2 class="anchored" data-anchor-id="two-loss-families-across-three-stages">Two loss families across three stages</h2>
 <div id="fig-three-jobs" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A diagram of three training stages grouped by loss family. Pretraining and supervised fine-tuning are bracketed together as one group because both use next-token cross-entropy; the diagram contrasts them only by their input data and by which tokens contribute to the loss. Preference optimization sits in a separate group, labeled as the only stage that introduces a different loss family.">
@@ -398,7 +397,7 @@ Figure&nbsp;2: LoRA decomposes the fine-tuning update into two small matrices B 
 </figcaption>
 </figure>
 </div>
-<p><a href="https://chanys.github.io/lora/">LoRA</a> <span class="citation" data-cites="hu_etal_2022">(Hu et al. 2022)</span> trains a small low-rank adapter on top of a frozen base model. The premise: full fine-tuning is overkill for most tasks because fine-tuning updates have low intrinsic rank. The base already knows grammar, world facts, and reasoning patterns; fine-tuning is usually a <em>nudge</em>, not a rewrite. LoRA replaces the full update <img src="https://latex.codecogs.com/png.latex?%5CDelta%20W"> with the product of two much smaller matrices <img src="https://latex.codecogs.com/png.latex?BA">, where the rank <img src="https://latex.codecogs.com/png.latex?r"> is much smaller than the original matrix dimensions. The base <img src="https://latex.codecogs.com/png.latex?W_0"> stays frozen; only the small <img src="https://latex.codecogs.com/png.latex?B"> and <img src="https://latex.codecogs.com/png.latex?A"> are trained. The phrase to remember: LoRA works because fine-tuning is usually steering, not rebuilding.</p>
+<p><a href="https://chanys.github.io/lora/">LoRA</a> <span class="citation" data-cites="hu_etal_2022">(Hu et al. 2022)</span> trains a small low-rank adapter on top of a frozen base model. The premise: full fine-tuning is overkill for most tasks because fine-tuning updates have low intrinsic rank. The base already knows grammar, world facts, and reasoning patterns; fine-tuning is usually a <em>nudge</em>, not a rewrite. LoRA replaces the full update <img src="https://latex.codecogs.com/png.latex?%5CDelta%20W"> with the product of two much smaller matrices <img src="https://latex.codecogs.com/png.latex?BA">, where the rank <img src="https://latex.codecogs.com/png.latex?r"> is much smaller than the original matrix dimensions. The base <img src="https://latex.codecogs.com/png.latex?W_0"> stays frozen; only the small <img src="https://latex.codecogs.com/png.latex?B"> and <img src="https://latex.codecogs.com/png.latex?A"> are trained.</p>
 <p><a href="https://chanys.github.io/qlora/">QLoRA</a> <span class="citation" data-cites="dettmers_etal_2023">(Dettmers et al. 2023)</span> keeps LoRA’s structure but quantizes the frozen base to 4 bits while leaving the adapter in 16-bit. The QLoRA mechanics (NF4 quantization, double quantization of scale constants, paged optimizers for memory spikes) are covered in the <a href="https://chanys.github.io/qlora/">QLoRA deep-dive post</a>; they’re what makes the memory math work but they’re orthogonal to the article’s thesis.</p>
 <p>Almost all open-source fine-tuning in 2024-2026 uses LoRA or QLoRA. Full fine-tuning still happens for frontier-scale base-model training, but downstream specialization is overwhelmingly LoRA-based. The wave of fine-tuned open-source models from late 2023 onward is downstream of this.</p>
 </section>
@@ -469,7 +468,7 @@ Zhou, Chunting, Pengfei Liu, Puxin Xu, et al. 2023. <span>“LIMA: Less Is More 
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/04-fine-tuning-stack/</guid>
-  <pubDate>Tue, 31 Mar 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 31 Mar 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Retrieval is older than RAG: from DPR to end-to-end</title>
@@ -621,7 +620,7 @@ Figure&nbsp;2: The production RAG pipeline. Top: offline indexing. Bottom: onlin
 </section>
 <section id="closing" class="level2">
 <h2 class="anchored" data-anchor-id="closing">Closing</h2>
-<p>The retrieval lineage from DPR through RA-DIT is a story of escalating sophistication: bi-encoder dense retrieval, then joint training with a frozen index, then joint training with an updating index, then a two-stage practical compromise. Production RAG, meanwhile, mostly stopped at step one. That’s not a critique. The simpler pattern works well for most use cases, and the engineering cost of going further is real.</p>
+<p>The retrieval lineage from DPR through RA-DIT is a story of escalating sophistication: bi-encoder dense retrieval, then joint training with a frozen index, then joint training with an updating index, then a two-stage practical compromise. Production RAG, meanwhile, mostly stopped at step one. The simpler pattern works well for most use cases, and the engineering cost of going further is real.</p>
 <p>But the gap is worth knowing. When the off-the-shelf pipeline isn’t working on your data, the next step isn’t to swap embedding models or try another vector database. It’s to figure out where in the pipeline the loss is happening, and whether the answer is a configuration change, a fine-tune, or the more ambitious territory the original RAG paper was actually about.</p>
 
 
@@ -659,7 +658,7 @@ Siriwardhana, Shamane, Rivindu Weerasekera, Elliott Wen, Tharindu Kaluarachchi, 
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/03-retrieval/</guid>
-  <pubDate>Fri, 27 Mar 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 27 Mar 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>The encoder didn’t die. It became the embedding model</title>
@@ -698,7 +697,7 @@ Research foundations of modern LLMs
 <p>The LLM story is usually told as a generation story: GPT scaling, instruction tuning, RLHF, chat, agents.</p>
 <p>But most LLM-powered systems also depend on a quieter model running in the background: an embedding model. RAG, semantic search, reranking, clustering, recommendation, deduplication, and classification all depend on embeddings. The generator gets the headlines, but the embedding model often decides what the generator gets to see.</p>
 <p>This is where encoders went.</p>
-<p>The <a href="../../../../posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/index.html">previous article</a> argued that decoder-only models won the general-purpose generation interface. This article makes the complementary argument: encoders didn’t die. They became the default architecture for turning text into reusable vectors.</p>
+<p>The <a href="../../../../posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/index.html">previous article</a> argued that decoder-only models won the general-purpose generation interface. This article makes the complementary argument: encoders became the default architecture for turning text into reusable vectors.</p>
 <p>More precisely, the embedding role was won by encoder-style machinery: bidirectional attention, pooled output representations, and contrastive fine-tuning. Even modern decoder-based embedders often move in this direction during fine-tuning, relaxing causal attention and training the model to produce reusable vectors.</p>
 <p>I have been circling this topic for a while. Since late 2022, I have written separate deep dives on <a href="https://chanys.github.io/sbert/">SBERT</a>, <a href="https://chanys.github.io/sgpt/">SGPT</a>, <a href="https://chanys.github.io/mteb-dataset/">MTEB</a>, <a href="https://chanys.github.io/mpnet/">MPNet</a>, <a href="https://chanys.github.io/plm/">PLM/XLNet</a>, <a href="https://chanys.github.io/knowledge-distillation/">knowledge distillation and DistilBERT</a>, and the relevant <a href="https://chanys.github.io/loss-functions/">loss functions</a> and <a href="https://chanys.github.io/knn/">KNN search</a> over at <a href="https://chanys.github.io" class="uri">https://chanys.github.io</a>. Those posts covered the individual papers and techniques; this article steps back from them to make the broader point.</p>
 <p>It is also a bridge between those older paper notes and the <a href="https://github.com/chanys/tnlp">TNLP codebase</a>: the paper trail explains the ideas, and the code shows what they look like when implemented.</p>
@@ -762,7 +761,7 @@ Figure&nbsp;1: Three architectures for similarity scoring. Bi-encoders encode in
 <p>The early version of this idea was <a href="https://chanys.github.io/sgpt/">SGPT</a> <span class="citation" data-cites="muennighoff_2022">(Muennighoff 2022)</span>: take a GPT-style decoder-only model, pool token representations with a position-weighted mean, and contrastively fine-tune for semantic search. It worked, but it was expensive relative to encoder-based alternatives.</p>
 <p>The current generation is stronger. Large decoder backbones (Llama, Mistral) can be turned into embedders that compete at the top of MTEB <span class="citation" data-cites="muennighoff_etal_2022">(Muennighoff et al. 2022)</span>, especially on retrieval and reranking. But notice the recipe they converge on: take a strong decoder-only LLM, relax or replace causal attention during fine-tuning, pool the output representations, and contrastively fine-tune on a large mix of data.</p>
 <p>That recipe looks encoder-like. Bidirectional access, pooled output, contrastive geometry. The starting weights may come from a decoder-only LLM, but the embedding behavior is built by the fine-tuning stage.</p>
-<p>So “decoders caught up” is only half right. The better framing is that large decoder backbones can be adapted into strong embedders when the fine-tuning recipe starts to look encoder-like. For most production systems, small encoder-based embedders remain attractive because they are fast and cheap. For highest-quality retrieval where compute is available, large decoder-based embedders are now real competitors.</p>
+<p>So “decoders caught up” is only half right. Large decoder backbones can be adapted into strong embedders when the fine-tuning recipe starts to look encoder-like. For most production systems, small encoder-based embedders remain attractive because they are fast and cheap. For highest-quality retrieval where compute is available, large decoder-based embedders are now real competitors.</p>
 </section>
 <section id="closing" class="level2">
 <h2 class="anchored" data-anchor-id="closing">Closing</h2>
@@ -800,7 +799,7 @@ Wang, Liang, Nan Yang, Xiaolong Huang, et al. 2022. <span>“Text Embeddings by 
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/02-encoder-embeddings/</guid>
-  <pubDate>Mon, 23 Mar 2026 04:00:00 GMT</pubDate>
+  <pubDate>Mon, 23 Mar 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Pretraining objectives: why decoder-only won</title>
@@ -837,8 +836,8 @@ Research foundations of modern LLMs
 </ol>
 </div>
 <p>The standard tutorial story: “BERT was bidirectional, T5 was sequence-to-sequence, GPT was autoregressive, and decoder-only won because it was simpler.” Sometimes “scaling worked better.” Sometimes “instruction-tuning needed it.”</p>
-<p>I think this story is shallow. The objective didn’t win; the paradigm did.</p>
-<p>I’ve been writing about these architectures individually since late 2022: deep-dives on <a href="https://chanys.github.io/transformer-architecture/">transformer architecture</a>, <a href="https://chanys.github.io/bert/">BERT</a>, <a href="https://chanys.github.io/roberta/">RoBERTa</a>, <a href="https://chanys.github.io/t5/">T5</a>, <a href="https://chanys.github.io/gpt1/">GPT-1</a>, <a href="https://chanys.github.io/electra/">ELECTRA</a>, <a href="https://chanys.github.io/deberta/">DeBERTa</a>, <a href="https://chanys.github.io/deberta-v3/">DeBERTa-v3</a>, <a href="https://chanys.github.io/ul2/">UL2</a>, <a href="https://chanys.github.io/flan-palm/">FLAN</a>, and <a href="https://chanys.github.io/llama2/">LLaMA-2</a> over at <a href="https://chanys.github.io" class="uri">https://chanys.github.io</a>. This article steps back from those individual treatments to make an argument those posts don’t make explicitly: the field’s reasons for converging on decoder-only are often misstated. Decoder-only did not win because causal language modeling was magically superior. It won because the decoder-only paradigm made pretraining, prompting, generation, inference, and deployment all line up.</p>
+<p>I think this story is shallow. Decoder-only won because of the paradigm, not the objective.</p>
+<p>I’ve been writing about these architectures individually since late 2022: deep-dives on <a href="https://chanys.github.io/transformer-architecture/">transformer architecture</a>, <a href="https://chanys.github.io/bert/">BERT</a>, <a href="https://chanys.github.io/roberta/">RoBERTa</a>, <a href="https://chanys.github.io/t5/">T5</a>, <a href="https://chanys.github.io/gpt1/">GPT-1</a>, <a href="https://chanys.github.io/electra/">ELECTRA</a>, <a href="https://chanys.github.io/deberta/">DeBERTa</a>, <a href="https://chanys.github.io/deberta-v3/">DeBERTa-v3</a>, <a href="https://chanys.github.io/ul2/">UL2</a>, <a href="https://chanys.github.io/flan-palm/">FLAN</a>, and <a href="https://chanys.github.io/llama2/">LLaMA-2</a> over at <a href="https://chanys.github.io" class="uri">https://chanys.github.io</a>. This article steps back from those individual treatments to make an argument those posts don’t make explicitly: the field’s reasons for converging on decoder-only are often misstated. Decoder-only won because the paradigm made pretraining, prompting, generation, inference, and deployment all line up, not because causal language modeling was magically superior.</p>
 <section id="a-short-tour-of-the-pretraining-objectives" class="level2">
 <h2 class="anchored" data-anchor-id="a-short-tour-of-the-pretraining-objectives">A short tour of the pretraining objectives</h2>
 <p>The objectives that defined the pretraining era can be characterized cleanly by what they hold out, what they leave visible, and which architectural family they imply. Throughout, let <img src="https://latex.codecogs.com/png.latex?x%20=%20(x_1,%20%5Cldots,%20x_n)"> be a sequence of tokens.</p>
@@ -925,7 +924,7 @@ Figure&nbsp;2: Attention masks across the three transformer families. Filled cel
 <p>This matters because some capabilities that look architecture-specific can be recovered by changing the data layout. Prefix-LM gives a decoder-style model bidirectional access to a prefix before generating a continuation. Fill-in-the-middle gives a decoder-only model infilling behavior by rearranging the sequence into prefix, suffix, then middle. Span corruption can be viewed similarly: decide what is visible, decide what is hidden, then train the model to predict the missing text.</p>
 <p>So the important question is not simply, “Which objective is best?” The better question is: Which training setup gives the most useful capabilities per unit of data, compute, and deployment complexity?</p>
 <p>From that angle, decoder-only models had a major advantage. They could absorb many task formats into a single pattern: put context in the prefix, then generate the continuation.</p>
-<p>The claim is not that CLM is theoretically superior to every denoising objective. The claim is that decoder-only made the fewest assumptions about the shape of the task. Once everything can be represented as context followed by continuation, the same model can support pretraining, instruction following, few-shot prompting, chat, tool use, and long-form generation without changing architecture.</p>
+<p>The claim is not that CLM is theoretically superior to every denoising objective, but that decoder-only made the fewest assumptions about the shape of the task. Once everything can be represented as context followed by continuation, the same model can support pretraining, instruction following, few-shot prompting, chat, tool use, and long-form generation without changing architecture.</p>
 </section>
 <section id="at-small-scale-objective-matters-more" class="level2">
 <h2 class="anchored" data-anchor-id="at-small-scale-objective-matters-more">At small scale, objective matters more</h2>
@@ -938,12 +937,12 @@ Figure&nbsp;2: Attention masks across the three transformer families. Filled cel
 </section>
 <section id="the-actual-reason-decoder-only-won-unification" class="level2">
 <h2 class="anchored" data-anchor-id="the-actual-reason-decoder-only-won-unification">The actual reason decoder-only won: unification</h2>
-<p>Decoder-only did not win because MLM was “wrong” or span corruption was “worse.” It won because the field moved from many specialized NLP tasks toward one general-purpose modeling interface.</p>
+<p>Decoder-only won because the field moved from many specialized NLP tasks toward one general-purpose modeling interface, not because MLM was “wrong” or span corruption was “worse.”</p>
 <p>BERT-style models were excellent for classification, sequence labeling, span extraction, and retrieval. But each task usually required a specific setup: a head, a pooling strategy, a masking scheme, or a fine-tuned output format.</p>
 <p>Decoder-only models made the interface much simpler: <em>Put the context in the prefix, then generate the continuation.</em></p>
 <p>That one pattern absorbs many tasks. Classification becomes completion. Question answering becomes completion. Dialogue becomes completion. Code generation becomes completion. Tool use becomes completion over an action-observation trace.</p>
 <p>So the deeper reason decoder-only won is unification: many task formats became one modeling problem: context in, continuation out.</p>
-<p><strong>1. One interface for many tasks.</strong> Decoder-only models turn many tasks into the same pattern: put the task description, examples, prior turns, or tool outputs in the prefix, then generate the continuation. Classification, QA, dialogue, code generation, and tool use all become variations of completion.</p>
+<p><strong>1. One interface for many tasks.</strong> Decoder-only models turn many tasks into the same pattern: put the task description, examples, prior turns, or tool outputs in the prefix, then generate the continuation.</p>
 <p><strong>2. Flexible training data.</strong> CLM trains directly on raw token sequences. No masking, span sampling, task-specific heads, or encoder-decoder split. Documents, code, conversations, transcripts, math, and structured text can all be modeled in the same format.</p>
 <p><strong>3. Training matches inference.</strong> Modern LLM use is generative: chat, instruction following, summarization, code generation, agents, and tool use. Decoder-only models are trained in the same mode in which they are used: condition on previous tokens, then generate the next ones. Encoders remain excellent representation learners, but open-ended generation is not their native mode.</p>
 <p><strong>4. New capabilities become formatting problems.</strong> Decoder-only models can absorb behaviors that once looked like they required specialized objectives. Fill-in-the-middle reframes span filling as autoregressive prediction over rearranged data. Instruction tuning, chat formatting, tool traces, and preference tuning follow the same pattern: keep the architecture fixed, change the data format and training signal.</p>
@@ -1011,7 +1010,7 @@ Tay, Yi, Mostafa Dehghani, Vinh Q. Tran, et al. 2023. <span>“UL2: Unifying Lan
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/</guid>
-  <pubDate>Wed, 18 Mar 2026 04:00:00 GMT</pubDate>
+  <pubDate>Wed, 18 Mar 2026 00:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>

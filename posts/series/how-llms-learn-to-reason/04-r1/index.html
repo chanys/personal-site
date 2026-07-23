@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -60,14 +60,14 @@ div.csl-indent {
 <script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d5cc8be5113747845e6a8f301e2f5216.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-84d2a07a02d80bd473282a08374b6e76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-fe40ab8e643ad6158d4e6e7f87defb9b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -441,7 +441,6 @@ How LLMs learn to reason
 <li><a href="../05-tool-use/">How reasoning models learn to use tools</a></li>
 </ol>
 </div>
-<p>R1-Zero is the conceptual result. R1 is the engineering wrapping around it.</p>
 <p>A reasoning model’s trace looks structurally different from a standard LLM’s. The model works through a problem, gets partway, says <em>wait, that’s not quite right</em>, backs up, tries a different approach, checks the result against the constraints, notices the check failed, revises again, then commits. Thousands of tokens of exploration, self-correction, and hypothesis revision before the boxed answer.</p>
 <p>Nobody wrote down the rule “if your first approach looks wrong, say <em>wait</em> and try a different one.” Nobody curated a corpus of reasoning traces with backtracking and trained on them via SFT. The behavior consolidates out of a simple training procedure.</p>
 <section id="r1-zero-is-the-result.-everything-else-is-interpretation." class="level2">
@@ -476,13 +475,13 @@ Figure&nbsp;1: Average response length of DeepSeek-R1-Zero grows monotonically o
 </section>
 <section id="what-r1-zero-shows" class="level3">
 <h3 class="anchored" data-anchor-id="what-r1-zero-shows">What R1-Zero shows</h3>
-<p>R1-Zero establishes an important claim: GRPO with rule-based verifiable rewards, on a sufficiently strong pretrained base model, consolidates latent reasoning behavior into a reliable long-CoT policy.</p>
-<p><em>Consolidates</em> is doing the work. Recent work on chain-of-thought decoding <span class="citation" data-cites="wang_zhou_2024">(<a href="#ref-wang_zhou_2024" role="doc-biblioref">Wang and Zhou 2024</a>)</span> shows that reasoning traces, including backtracking and self-correction, are already present in pretrained models, just not at rank one in the next-token distribution. R1-Zero doesn’t create reasoning behavior from nothing. It surfaces latent capability as a consistent policy, with trace lengths scaling up as the model discovers what gets rewarded.</p>
+<p>R1-Zero establishes that GRPO with rule-based verifiable rewards, on a sufficiently strong pretrained base model, consolidates latent reasoning behavior into a reliable long-CoT policy.</p>
+<p><em>Consolidates</em> is doing the work. Recent work on chain-of-thought decoding <span class="citation" data-cites="wang_zhou_2024">(<a href="#ref-wang_zhou_2024" role="doc-biblioref">Wang and Zhou 2024</a>)</span> shows that reasoning traces, including backtracking and self-correction, are already present in pretrained models, just not at rank one in the next-token distribution. R1-Zero surfaces latent capability as a consistent policy rather than creating reasoning behavior from nothing, with trace lengths scaling up as the model discovers what gets rewarded.</p>
 </section>
 </section>
 <section id="r1-is-what-you-build-when-the-policy-needs-to-be-a-product" class="level2">
 <h2 class="anchored" data-anchor-id="r1-is-what-you-build-when-the-policy-needs-to-be-a-product">R1 is what you build when the policy needs to be a product</h2>
-<p>R1’s contribution is different from R1-Zero’s. It’s the recipe for taking the raw reasoning behavior and making it a deployable assistant.</p>
+<p>R1’s contribution is the recipe for taking the raw reasoning behavior and making it a deployable assistant.</p>
 <section id="why-r1-zero-isnt-a-product" class="level3">
 <h3 class="anchored" data-anchor-id="why-r1-zero-isnt-a-product">Why R1-Zero isn’t a product</h3>
 <p>R1-Zero mixes Chinese and English mid-trace and can produce correct math in prose so messy a user can’t tell. The reasoning policy was optimized for one thing (getting the answer right under verification) and it shows.</p>
@@ -509,7 +508,7 @@ Figure&nbsp;1: Average response length of DeepSeek-R1-Zero grows monotonically o
 <h2 class="anchored" data-anchor-id="verifiable-rewards-are-the-source-and-the-boundary">Verifiable rewards are the source and the boundary</h2>
 <p>Every successful application of this recipe shares a common feature: outcomes can be checked cheaply and unambiguously. Math problems with deterministic final answers. Coding problems with executable test suites. Formal theorem proving with proof checkers.</p>
 <p>Reasoning behavior consolidates in R1-Zero because GRPO can attribute reward credit reliably across thousands of tokens based on a single end-of-trace check. The trace is long, the signal is sparse, the per-step contribution is invisible. None of that matters as long as the final-answer check is trustworthy. You compare trajectories, reward the ones that ended right, and over enough samples the policy gradient finds whatever in the middle of the trace was helping. Self-correction phrases, hypothesis exploration, longer length all win the comparison on average, when verification is reliable.</p>
-<p>Run the same recipe with a learned reward model (say, a neural judge trained on human preferences for “good reasoning”) and the signal becomes noisy and gameable under optimization pressure. Rule-based rewards on verifiable domains don’t.</p>
+<p>Run the same recipe with a learned reward model (say, a neural judge trained on human preferences for “good reasoning”) and the signal becomes noisy and gameable under optimization pressure, whereas rule-based rewards on verifiable domains do not.</p>
 <section id="the-limits-of-the-recipe" class="level3">
 <h3 class="anchored" data-anchor-id="the-limits-of-the-recipe">The limits of the recipe</h3>
 <p>“Verifiable” is narrower than it sounds. Math has answer checking. Competition coding has test cases. But real software engineering, where “correct” includes design, readability, maintainability, and integration, is not verifiable in the R1 sense. The R1 recipe reaches the verifiable subset of code, not coding as a practice.</p>

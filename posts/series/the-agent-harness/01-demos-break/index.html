@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -76,14 +76,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d5cc8be5113747845e6a8f301e2f5216.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-84d2a07a02d80bd473282a08374b6e76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-fe40ab8e643ad6158d4e6e7f87defb9b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -511,7 +511,7 @@ The agent harness
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">"source_turn"</span>: <span class="dv">2</span>,</span>
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    },</span>
 <span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Now the agent reads <code>plan_tier = enterprise</code> instead of rediscovering it from the transcript. The transcript records what the user said. State records what the system can rely on. <a href="../../../../posts/series/the-agent-harness/03-state-not-transcript/index.html">State, not transcript, is agent memory</a> goes deeper into that distinction.</p>
+<p>Now the agent reads <code>plan_tier = enterprise</code> instead of rediscovering it from the transcript. The transcript records what the user said; state records what the system can rely on. <a href="../../../../posts/series/the-agent-harness/03-state-not-transcript/index.html">State, not transcript, is agent memory</a> goes deeper into that distinction.</p>
 <ul>
 <li><strong>Visible failure:</strong> the model forgot.</li>
 <li><strong>Deeper failure:</strong> the system treated the conversation transcript as memory.</li>
@@ -550,7 +550,7 @@ The agent harness
 <li><strong>Visible failure:</strong> the agent gave a wrong answer.</li>
 <li><strong>Deeper failure:</strong> the system never tracked which claims were supported by which evidence.</li>
 </ul>
-<p>Groundedness is a system property. Polished prose does not make an answer grounded.</p>
+<p>Groundedness is a system property; polished prose does not make an answer grounded.</p>
 </section>
 <section id="failure-5-the-agent-repeats-a-side-effect" class="level2">
 <h2 class="anchored" data-anchor-id="failure-5-the-agent-repeats-a-side-effect">Failure 5: The agent repeats a side effect</h2>
@@ -566,7 +566,7 @@ The agent harness
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"new_time"</span>: <span class="st">"2026-05-12T14:00"</span>,</span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"idempotency_key"</span>: <span class="st">"run_847_step_3"</span>,</span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>After an ambiguous timeout, the agent should check the calendar before retrying. Verify first, retry second.</p>
+<p>After an ambiguous timeout, the agent should check the calendar before retrying.</p>
 <ul>
 <li><strong>Visible failure:</strong> the meeting update happened twice.</li>
 <li><strong>Deeper failure:</strong> the system treated reads and writes as equivalent tool calls.</li>
@@ -626,7 +626,7 @@ Figure&nbsp;1: Six failure shapes mapped to the control surfaces that should hav
 <li><strong>Step logging:</strong> logs that say what happened do not explain why it happened. A useful trace records state, decisions, tool inputs, tool outputs, verification results, and version information.</li>
 <li><strong>Random-failure framing:</strong> most failures are recurring shapes. Once the category is visible, the team can engineer against it.</li>
 </ul>
-<p>Reliable agents do not come from prompts alone. They come from moving the right responsibilities into the harness: state, workflow, gates, tools, verification, traces, and tests.</p>
+<p>Reliable agents come from moving the right responsibilities into the harness rather than from prompts alone: state, workflow, gates, tools, verification, traces, and tests.</p>
 
 
 </section>

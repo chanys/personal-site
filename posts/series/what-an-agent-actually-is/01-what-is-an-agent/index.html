@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -60,14 +60,14 @@ div.csl-indent {
 <script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d5cc8be5113747845e6a8f301e2f5216.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-84d2a07a02d80bd473282a08374b6e76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-fe40ab8e643ad6158d4e6e7f87defb9b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -436,7 +436,7 @@ What an agent actually is
 </ol>
 </div>
 <p>“Agent” has become the most overloaded word in AI engineering. Vendors apply it to everything from a single tool-use LLM call to systems that run autonomously for days. The definitions in serious use don’t agree with each other, and the disagreement isn’t going to resolve.</p>
-<p>The right move isn’t to pick a winner. It’s to refuse the question. Stop asking whether something is an agent. Ask how much autonomy it has, and whether that’s the right amount for the task.</p>
+<p>Rather than pick a winner, stop asking whether something is an agent. Ask how much autonomy it has, and whether that’s the right amount for the task.</p>
 <section id="stop-asking-for-one-definition" class="level2">
 <h2 class="anchored" data-anchor-id="stop-asking-for-one-definition">Stop asking for one definition</h2>
 <p>The definitions across the field vary, and the variation is real:</p>
@@ -447,7 +447,7 @@ What an agent actually is
 <li><p><strong>Cameron Wolfe</strong> <span class="citation" data-cites="wolfe_2025">(<a href="#ref-wolfe_2025" role="doc-biblioref">Wolfe 2025</a>)</span> builds the idea from first principles: standard LLMs, tool usage, decomposing problems, reasoning models, and more autonomous systems. He frames agents as lying on a spectrum of capabilities rather than drawing one hard threshold for what counts as a “real” agent.</p></li>
 <li><p><strong>McKinsey’s 2025 enterprise survey</strong> <span class="citation" data-cites="mckinsey_2025">(<a href="#ref-mckinsey_2025" role="doc-biblioref">McKinsey &amp; Company 2025</a>)</span> frames AI agents as systems based on foundation models that act in the real world and are capable of autonomously planning and executing multiple steps in a workflow. This is a more autonomy-heavy enterprise framing than Lambert’s tool-use baseline.</p></li>
 </ul>
-<p>These definitions do not fully agree. That is why the better question is not “is this an agent?” but “how much autonomy does it have, and is that the right amount for the task?”</p>
+<p>These definitions do not fully agree.</p>
 </section>
 <section id="the-autonomy-spectrum" class="level2">
 <h2 class="anchored" data-anchor-id="the-autonomy-spectrum">The autonomy spectrum</h2>
@@ -490,7 +490,7 @@ What an agent actually is
 <p><strong>+ Tools</strong> is the first place the word “agent” gets applied, and where the definition fight starts. A model that emits one tool call and synthesizes the result is doing more than text generation, but calling it autonomous is a stretch. Wolfe calls this Level 1; Lambert calls it the entry point to the spectrum.</p>
 <p><strong>+ Loop</strong> is where “agentic” becomes a defensible label. The model can chain operations: search, read a result, refine the query, search again, synthesize. ReAct <span class="citation" data-cites="yao_etal_2023">(<a href="#ref-yao_etal_2023" role="doc-biblioref">Yao et al. 2023</a>)</span> formalized this early (alternating reasoning and action steps until the model decides it’s done) and it’s still the canonical pattern. The loop is also where <a href="../../../../posts/series/the-agent-harness/01-demos-break/index.html">things fail in interesting ways</a>: the model can loop without converging, hallucinate tool calls, or decide the task is done when it isn’t.</p>
 <p><strong>+ Autonomy</strong> is the regime Anthropic reserves the word “agent” for, and it’s where the failure modes get expensive.</p>
-<p>Each step adds capability and removes a constraint. Each one is also a deliberate engineering choice. More autonomy isn’t better; it’s different. A task that would be well served by a fixed workflow doesn’t improve when you add a planning loop, and a task that genuinely needs open-ended exploration isn’t solved by a single tool call.</p>
+<p>Each step adds capability and removes a constraint. Each one is also a deliberate engineering choice. More autonomy is different, not better. A task that would be well served by a fixed workflow doesn’t improve when you add a planning loop, and a task that genuinely needs open-ended exploration isn’t solved by a single tool call.</p>
 <p>To make this concrete, take a customer-support refund task. A standard LLM can’t handle it at all. With no access to the order record, the best it can do is draft a generic reply that pretends to. With tools, it can look up the order and draft a real one. With a loop, it can ask for missing information and retry. With reasoning, it can handle edge cases: orders past the policy window, partial refunds, conflicts with prior tickets. With autonomy, it decides whether to issue the refund or escalate.</p>
 <div id="fig-agent-spectrum" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A horizontal spectrum diagram for the word agent. The left end is labeled with a single tool call, the simplest case. Moving right, the points increase in autonomy and scope through multi-step tool use and longer task loops. The right end is labeled with systems that run without human input for extended periods. The figure frames agent as this whole range rather than one fixed point on it.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -513,13 +513,13 @@ Figure&nbsp;1: "Agent" does not pick out a single artifact; it picks out a range
 <li><strong>Memory.</strong> What’s available across loop iterations and across sessions.</li>
 <li><strong>Control flow.</strong> Decides which path through the system gets taken; via explicit code, or implicit in the model’s reasoning.</li>
 </ul>
-<p>The proportions and complexity vary; the components don’t.</p>
-<p>This is also why agents aren’t a fundamentally new paradigm. A modern agent is a tool-use LLM in a loop with structured control flow, and each component has been around for years: Toolformer <span class="citation" data-cites="schick_etal_2023">(<a href="#ref-schick_etal_2023" role="doc-biblioref">Schick et al. 2023</a>)</span> for tool use, ReAct <span class="citation" data-cites="yao_etal_2023">(<a href="#ref-yao_etal_2023" role="doc-biblioref">Yao et al. 2023</a>)</span> for the reasoning-and-action loop, and the broader control-flow patterns Anthropic documented in late 2024. The novelty isn’t the architecture. It’s that the underlying language models are finally good enough at instruction-following, structured output, and reasoning that the architecture works in production.</p>
+<p>The proportions and complexity vary, but the components stay the same.</p>
+<p>This is also why agents aren’t a fundamentally new paradigm. A modern agent is a tool-use LLM in a loop with structured control flow, and each component has been around for years: Toolformer <span class="citation" data-cites="schick_etal_2023">(<a href="#ref-schick_etal_2023" role="doc-biblioref">Schick et al. 2023</a>)</span> for tool use, ReAct <span class="citation" data-cites="yao_etal_2023">(<a href="#ref-yao_etal_2023" role="doc-biblioref">Yao et al. 2023</a>)</span> for the reasoning-and-action loop, and the broader control-flow patterns Anthropic documented in late 2024. The novelty is in the models, not the architecture: the underlying language models are finally good enough at instruction-following, structured output, and reasoning that the architecture works in production.</p>
 <p>Frameworks like LangChain, LangGraph, and the OpenAI Agents SDK abstract these primitives into higher-level constructs. That’s often useful, as they handle schema generation, message management, tool dispatch, retry logic. But the abstraction has a cost. Anthropic’s recommendation is worth taking seriously: start with direct API calls so you understand the mechanics, then reach for frameworks once the cost of not using one is clear. The <a href="../../../../posts/series/what-an-agent-actually-is/02-agent-frameworks/index.html">next article</a> goes deep and looks at what tool calls look like at the token level, how the loop is implemented, and what frameworks save you versus what they hide.</p>
 </section>
 <section id="more-autonomy-is-not-always-better" class="level2">
 <h2 class="anchored" data-anchor-id="more-autonomy-is-not-always-better">More autonomy is not always better</h2>
-<p>If you read AI marketing in 2026, the implicit definition of an agent is the right end of the spectrum: a system that operates without human input, makes decisions, takes actions, plans across long horizons. That’s the picture. It’s also a small slice of what’s actually deployed.</p>
+<p>If you read AI marketing in 2026, the implicit definition of an agent is the right end of the spectrum: a system that operates without human input, makes decisions, takes actions, plans across long horizons. That’s the picture, but it’s a small slice of what’s actually deployed.</p>
 <p>Anthropic’s engineering team has been direct about this. Their observation, after working with dozens of teams building production systems: the most successful implementations weren’t using complex frameworks or specialized libraries. They were building with simple, composable patterns. The systems delivering value in production are mostly workflows with LLM calls in them, not open-ended autonomous agents.</p>
 <p>Two systems I’ve built sit at different points on the spectrum. The clinical-documentation pipeline is a workflow: code routes a series of LLM calls that <a href="../../../../posts/series/research-foundations-of-modern-llms/05-information-extraction/index.html">extract problems, labs, and physical-exam findings into note sections</a>. The LLM is the labor; the control flow is fixed, and that’s what makes the system shippable. The deep research agent I built sits further right. Query formulation, how deeply to read each source, and when to stop are all the model’s calls, with a controller-enforced budget on top so the agency stays bounded.</p>
 <p>This isn’t a temporary state that resolves when the models get better. It reflects a permanent engineering reality: predictability is valuable. A workflow with fixed control flow is easier to debug, evaluate, and ship. An autonomous agent that decides its own path is harder on every axis. For most production tasks, the cost of that flexibility has to be balanced against its benefit. McKinsey’s 2025 survey found only about 10% of enterprises have agents running in production in even a single department, despite vendor messaging suggesting far wider adoption.</p>

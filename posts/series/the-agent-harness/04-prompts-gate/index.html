@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -76,14 +76,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d5cc8be5113747845e6a8f301e2f5216.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-84d2a07a02d80bd473282a08374b6e76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-fe40ab8e643ad6158d4e6e7f87defb9b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -448,10 +448,10 @@ The agent harness
 <li><a href="../05-traces/">Traces are how agents get better</a></li>
 </ol>
 </div>
-<p>A prompt can guide behavior. It cannot enforce behavior.</p>
+<p>A prompt can guide behavior but cannot enforce it.</p>
 <p>The scheduling assistant’s prompt says, “Always confirm the target meeting before making any changes.” A user asks it to move “my Tuesday review with Priya” to Thursday afternoon. The model calls <code>reschedule_event(description="Tuesday review with Priya", new_time="Thursday afternoon")</code>; the API matches a different recurring meeting with Priya; the agent replies, “I’ve moved it, and I’ll keep an eye on it going forward.”</p>
-<p>The failure is not the wording of the prompt. The runtime allowed an unsafe action. A gate should have blocked <code>reschedule_event</code> until the target event was uniquely confirmed, non-recurring, and represented by a specific event ID.</p>
-<p>Prompts shape behavior. Gates enforce behavior.</p>
+<p>The failure was not the wording of the prompt; the runtime allowed an unsafe action. A gate should have blocked <code>reschedule_event</code> until the target event was uniquely confirmed, non-recurring, and represented by a specific event ID.</p>
+<p>Prompts shape behavior; gates enforce it.</p>
 <p>The <a href="../../../../posts/series/the-agent-harness/03-state-not-transcript/index.html">previous article</a> established that state holds the system’s beliefs. This article is about the runtime checks that decide whether the system can act on those beliefs.</p>
 <section id="why-prompt-only-control-breaks" class="level2">
 <h2 class="anchored" data-anchor-id="why-prompt-only-control-breaks">Why prompt-only control breaks</h2>
@@ -499,7 +499,7 @@ The agent harness
 <li>Does this response give advice outside the agent’s role?</li>
 </ul>
 <p>These checks usually require model judgment. They are slower and more expensive than hard gates, so use them when the risk is semantic and code cannot capture it.</p>
-<p>Use hard gates for crisp conditions. Use semantic gates for judgment calls.</p>
+<p>Use hard gates for crisp conditions and semantic gates for judgment calls.</p>
 </section>
 </section>
 <section id="the-tool-executes" class="level2">
@@ -523,8 +523,8 @@ The agent harness
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">    Requires a specific event_id, not a free-text description.</span></span>
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The second tool removes unsafe paths. It requires a specific <code>event_id</code>, which forces the workflow to identify the target before the call. It requires an idempotency key. It does not expose a broad <code>field</code> parameter that could update anything.</p>
-<p>Tool contracts should also distinguish reads from writes. Reads can usually be retried after a timeout. Writes need more care. A write should carry an idempotency key, and an ambiguous timeout should route to verification before retry.</p>
-<p>Broad tools push hidden responsibility onto the model. Narrow tools move more of that responsibility into the harness.</p>
+<p>Tool contracts should also distinguish reads from writes. Reads can usually be retried after a timeout; writes need more care. A write should carry an idempotency key, and an ambiguous timeout should route to verification before retry.</p>
+<p>Broad tools push hidden responsibility onto the model; narrow tools move more of it into the harness.</p>
 </section>
 </section>
 <section id="the-harness-verifies-and-routes" class="level2">
@@ -553,12 +553,12 @@ The agent harness
 <span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"human_summary"</span>: <span class="st">"Move Tuesday 2pm with Priya to Wednesday 10am"</span>,</span>
 <span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Before execution, the runtime checks that the approval has not expired and that the relevant state has not changed. If the target event, user request, or proposed action changed, the packet is stale and should not execute.</p>
-<p>Humans approve specific actions, not summaries of actions.</p>
+<p>Humans should approve the exact action rather than a summary of it.</p>
 </section>
 </section>
 <section id="gate-where-failure-matters" class="level2">
 <h2 class="anchored" data-anchor-id="gate-where-failure-matters">Gate where failure matters</h2>
-<p>Gate the actions where failure matters most. Do not gate everything.</p>
+<p>Gate the actions where failure matters most, not every action.</p>
 <p>Heavy gates belong around actions that change the outside world, affect another person, are hard to undo, depend on weak evidence, or may require human escalation. Keep the path light for harmless clarifying questions, read-only lookups, and low-stakes summaries.</p>
 <p>The goal is appropriate gating, not maximum gating. A gate that fires on every action becomes a gate the team learns to ignore.</p>
 </section>

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -60,14 +60,14 @@ div.csl-indent {
 <script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d5cc8be5113747845e6a8f301e2f5216.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-84d2a07a02d80bd473282a08374b6e76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-fe40ab8e643ad6158d4e6e7f87defb9b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -470,8 +470,8 @@ Research foundations of modern LLMs
 </ol>
 </div>
 <p>The standard tutorial story: “BERT was bidirectional, T5 was sequence-to-sequence, GPT was autoregressive, and decoder-only won because it was simpler.” Sometimes “scaling worked better.” Sometimes “instruction-tuning needed it.”</p>
-<p>I think this story is shallow. The objective didn’t win; the paradigm did.</p>
-<p>I’ve been writing about these architectures individually since late 2022: deep-dives on <a href="https://chanys.github.io/transformer-architecture/">transformer architecture</a>, <a href="https://chanys.github.io/bert/">BERT</a>, <a href="https://chanys.github.io/roberta/">RoBERTa</a>, <a href="https://chanys.github.io/t5/">T5</a>, <a href="https://chanys.github.io/gpt1/">GPT-1</a>, <a href="https://chanys.github.io/electra/">ELECTRA</a>, <a href="https://chanys.github.io/deberta/">DeBERTa</a>, <a href="https://chanys.github.io/deberta-v3/">DeBERTa-v3</a>, <a href="https://chanys.github.io/ul2/">UL2</a>, <a href="https://chanys.github.io/flan-palm/">FLAN</a>, and <a href="https://chanys.github.io/llama2/">LLaMA-2</a> over at <a href="https://chanys.github.io" class="uri">https://chanys.github.io</a>. This article steps back from those individual treatments to make an argument those posts don’t make explicitly: the field’s reasons for converging on decoder-only are often misstated. Decoder-only did not win because causal language modeling was magically superior. It won because the decoder-only paradigm made pretraining, prompting, generation, inference, and deployment all line up.</p>
+<p>I think this story is shallow. Decoder-only won because of the paradigm, not the objective.</p>
+<p>I’ve been writing about these architectures individually since late 2022: deep-dives on <a href="https://chanys.github.io/transformer-architecture/">transformer architecture</a>, <a href="https://chanys.github.io/bert/">BERT</a>, <a href="https://chanys.github.io/roberta/">RoBERTa</a>, <a href="https://chanys.github.io/t5/">T5</a>, <a href="https://chanys.github.io/gpt1/">GPT-1</a>, <a href="https://chanys.github.io/electra/">ELECTRA</a>, <a href="https://chanys.github.io/deberta/">DeBERTa</a>, <a href="https://chanys.github.io/deberta-v3/">DeBERTa-v3</a>, <a href="https://chanys.github.io/ul2/">UL2</a>, <a href="https://chanys.github.io/flan-palm/">FLAN</a>, and <a href="https://chanys.github.io/llama2/">LLaMA-2</a> over at <a href="https://chanys.github.io" class="uri">https://chanys.github.io</a>. This article steps back from those individual treatments to make an argument those posts don’t make explicitly: the field’s reasons for converging on decoder-only are often misstated. Decoder-only won because the paradigm made pretraining, prompting, generation, inference, and deployment all line up, not because causal language modeling was magically superior.</p>
 <section id="a-short-tour-of-the-pretraining-objectives" class="level2">
 <h2 class="anchored" data-anchor-id="a-short-tour-of-the-pretraining-objectives">A short tour of the pretraining objectives</h2>
 <p>The objectives that defined the pretraining era can be characterized cleanly by what they hold out, what they leave visible, and which architectural family they imply. Throughout, let <span class="math inline">\(x = (x_1, \ldots, x_n)\)</span> be a sequence of tokens.</p>
@@ -566,7 +566,7 @@ Figure&nbsp;2: Attention masks across the three transformer families. Filled cel
 <p>This matters because some capabilities that look architecture-specific can be recovered by changing the data layout. Prefix-LM gives a decoder-style model bidirectional access to a prefix before generating a continuation. Fill-in-the-middle gives a decoder-only model infilling behavior by rearranging the sequence into prefix, suffix, then middle. Span corruption can be viewed similarly: decide what is visible, decide what is hidden, then train the model to predict the missing text.</p>
 <p>So the important question is not simply, “Which objective is best?” The better question is: Which training setup gives the most useful capabilities per unit of data, compute, and deployment complexity?</p>
 <p>From that angle, decoder-only models had a major advantage. They could absorb many task formats into a single pattern: put context in the prefix, then generate the continuation.</p>
-<p>The claim is not that CLM is theoretically superior to every denoising objective. The claim is that decoder-only made the fewest assumptions about the shape of the task. Once everything can be represented as context followed by continuation, the same model can support pretraining, instruction following, few-shot prompting, chat, tool use, and long-form generation without changing architecture.</p>
+<p>The claim is not that CLM is theoretically superior to every denoising objective, but that decoder-only made the fewest assumptions about the shape of the task. Once everything can be represented as context followed by continuation, the same model can support pretraining, instruction following, few-shot prompting, chat, tool use, and long-form generation without changing architecture.</p>
 </section>
 <section id="at-small-scale-objective-matters-more" class="level2">
 <h2 class="anchored" data-anchor-id="at-small-scale-objective-matters-more">At small scale, objective matters more</h2>
@@ -579,12 +579,12 @@ Figure&nbsp;2: Attention masks across the three transformer families. Filled cel
 </section>
 <section id="the-actual-reason-decoder-only-won-unification" class="level2">
 <h2 class="anchored" data-anchor-id="the-actual-reason-decoder-only-won-unification">The actual reason decoder-only won: unification</h2>
-<p>Decoder-only did not win because MLM was “wrong” or span corruption was “worse.” It won because the field moved from many specialized NLP tasks toward one general-purpose modeling interface.</p>
+<p>Decoder-only won because the field moved from many specialized NLP tasks toward one general-purpose modeling interface, not because MLM was “wrong” or span corruption was “worse.”</p>
 <p>BERT-style models were excellent for classification, sequence labeling, span extraction, and retrieval. But each task usually required a specific setup: a head, a pooling strategy, a masking scheme, or a fine-tuned output format.</p>
 <p>Decoder-only models made the interface much simpler: <em>Put the context in the prefix, then generate the continuation.</em></p>
 <p>That one pattern absorbs many tasks. Classification becomes completion. Question answering becomes completion. Dialogue becomes completion. Code generation becomes completion. Tool use becomes completion over an action-observation trace.</p>
 <p>So the deeper reason decoder-only won is unification: many task formats became one modeling problem: context in, continuation out.</p>
-<p><strong>1. One interface for many tasks.</strong> Decoder-only models turn many tasks into the same pattern: put the task description, examples, prior turns, or tool outputs in the prefix, then generate the continuation. Classification, QA, dialogue, code generation, and tool use all become variations of completion.</p>
+<p><strong>1. One interface for many tasks.</strong> Decoder-only models turn many tasks into the same pattern: put the task description, examples, prior turns, or tool outputs in the prefix, then generate the continuation.</p>
 <p><strong>2. Flexible training data.</strong> CLM trains directly on raw token sequences. No masking, span sampling, task-specific heads, or encoder-decoder split. Documents, code, conversations, transcripts, math, and structured text can all be modeled in the same format.</p>
 <p><strong>3. Training matches inference.</strong> Modern LLM use is generative: chat, instruction following, summarization, code generation, agents, and tool use. Decoder-only models are trained in the same mode in which they are used: condition on previous tokens, then generate the next ones. Encoders remain excellent representation learners, but open-ended generation is not their native mode.</p>
 <p><strong>4. New capabilities become formatting problems.</strong> Decoder-only models can absorb behaviors that once looked like they required specialized objectives. Fill-in-the-middle reframes span filling as autoregressive prediction over rearranged data. Instruction tuning, chat formatting, tool traces, and preference tuning follow the same pattern: keep the architecture fixed, change the data format and training signal.</p>

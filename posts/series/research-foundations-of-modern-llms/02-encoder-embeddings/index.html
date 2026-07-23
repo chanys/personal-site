@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -60,14 +60,14 @@ div.csl-indent {
 <script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d5cc8be5113747845e6a8f301e2f5216.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-84d2a07a02d80bd473282a08374b6e76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-fe40ab8e643ad6158d4e6e7f87defb9b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -443,7 +443,7 @@ Research foundations of modern LLMs
 <p>The LLM story is usually told as a generation story: GPT scaling, instruction tuning, RLHF, chat, agents.</p>
 <p>But most LLM-powered systems also depend on a quieter model running in the background: an embedding model. RAG, semantic search, reranking, clustering, recommendation, deduplication, and classification all depend on embeddings. The generator gets the headlines, but the embedding model often decides what the generator gets to see.</p>
 <p>This is where encoders went.</p>
-<p>The <a href="../../../../posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/index.html">previous article</a> argued that decoder-only models won the general-purpose generation interface. This article makes the complementary argument: encoders didn’t die. They became the default architecture for turning text into reusable vectors.</p>
+<p>The <a href="../../../../posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/index.html">previous article</a> argued that decoder-only models won the general-purpose generation interface. This article makes the complementary argument: encoders became the default architecture for turning text into reusable vectors.</p>
 <p>More precisely, the embedding role was won by encoder-style machinery: bidirectional attention, pooled output representations, and contrastive fine-tuning. Even modern decoder-based embedders often move in this direction during fine-tuning, relaxing causal attention and training the model to produce reusable vectors.</p>
 <p>I have been circling this topic for a while. Since late 2022, I have written separate deep dives on <a href="https://chanys.github.io/sbert/">SBERT</a>, <a href="https://chanys.github.io/sgpt/">SGPT</a>, <a href="https://chanys.github.io/mteb-dataset/">MTEB</a>, <a href="https://chanys.github.io/mpnet/">MPNet</a>, <a href="https://chanys.github.io/plm/">PLM/XLNet</a>, <a href="https://chanys.github.io/knowledge-distillation/">knowledge distillation and DistilBERT</a>, and the relevant <a href="https://chanys.github.io/loss-functions/">loss functions</a> and <a href="https://chanys.github.io/knn/">KNN search</a> over at <a href="https://chanys.github.io" class="uri">https://chanys.github.io</a>. Those posts covered the individual papers and techniques; this article steps back from them to make the broader point.</p>
 <p>It is also a bridge between those older paper notes and the <a href="https://github.com/chanys/tnlp">TNLP codebase</a>: the paper trail explains the ideas, and the code shows what they look like when implemented.</p>
@@ -507,7 +507,7 @@ Figure&nbsp;1: Three architectures for similarity scoring. Bi-encoders encode in
 <p>The early version of this idea was <a href="https://chanys.github.io/sgpt/">SGPT</a> <span class="citation" data-cites="muennighoff_2022">(<a href="#ref-muennighoff_2022" role="doc-biblioref">Muennighoff 2022</a>)</span>: take a GPT-style decoder-only model, pool token representations with a position-weighted mean, and contrastively fine-tune for semantic search. It worked, but it was expensive relative to encoder-based alternatives.</p>
 <p>The current generation is stronger. Large decoder backbones (Llama, Mistral) can be turned into embedders that compete at the top of MTEB <span class="citation" data-cites="muennighoff_etal_2022">(<a href="#ref-muennighoff_etal_2022" role="doc-biblioref">Muennighoff et al. 2022</a>)</span>, especially on retrieval and reranking. But notice the recipe they converge on: take a strong decoder-only LLM, relax or replace causal attention during fine-tuning, pool the output representations, and contrastively fine-tune on a large mix of data.</p>
 <p>That recipe looks encoder-like. Bidirectional access, pooled output, contrastive geometry. The starting weights may come from a decoder-only LLM, but the embedding behavior is built by the fine-tuning stage.</p>
-<p>So “decoders caught up” is only half right. The better framing is that large decoder backbones can be adapted into strong embedders when the fine-tuning recipe starts to look encoder-like. For most production systems, small encoder-based embedders remain attractive because they are fast and cheap. For highest-quality retrieval where compute is available, large decoder-based embedders are now real competitors.</p>
+<p>So “decoders caught up” is only half right. Large decoder backbones can be adapted into strong embedders when the fine-tuning recipe starts to look encoder-like. For most production systems, small encoder-based embedders remain attractive because they are fast and cheap. For highest-quality retrieval where compute is available, large decoder-based embedders are now real competitors.</p>
 </section>
 <section id="closing" class="level2">
 <h2 class="anchored" data-anchor-id="closing">Closing</h2>

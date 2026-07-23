@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -76,14 +76,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d5cc8be5113747845e6a8f301e2f5216.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-84d2a07a02d80bd473282a08374b6e76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-fe40ab8e643ad6158d4e6e7f87defb9b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -474,7 +474,7 @@ The agent harness
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"source"</span>: <span class="st">"user_turn_2"</span>,</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>That field lets the agent skip a redundant plan-tier question, lets the handoff writer emit <code>plan_tier: enterprise</code>, and lets a required-field check decide whether the handoff is ready.</p>
-<p>State also records reliability. If a user first says, “I think it might be the migration,” and later says, “Support confirmed it was the migration,” state should mark one claim as uncertain and the other as confirmed. The transcript preserves both sentences, but state tells the system how to use them.</p>
+<p>State also records reliability. If a user first says, “I think it might be the migration,” and later says, “Support confirmed it was the migration,” state should mark one claim as uncertain and the other as confirmed. The transcript preserves both sentences; state tells the system how to use them.</p>
 <p>The same issue appears in handoff readiness. If the handoff requires <code>plan_tier</code>, <code>affected_feature</code>, and <code>confirmed_root_cause</code>, state should show which fields are filled, which are uncertain, and which still need follow-up. The agent can then read state instead of reconstructing the situation from the transcript every turn.</p>
 </section>
 <section id="state-turns-remembered-facts-into-usable-facts" class="level2">
@@ -635,7 +635,7 @@ The agent harness
 <li>What stage of the workflow are we in?</li>
 </ol>
 <p>These questions expose whether state is usable. Without those fields, the model has to reconstruct the situation from raw history. It may treat guesses as facts, skip required questions, or advance the workflow too early.</p>
-<p>State gives the model and runtime stable fields to read. The model uses state to decide what to say next. The runtime uses state to decide what is allowed next.</p>
+<p>State gives the model and runtime stable fields to read. The model uses state to decide what to say next; the runtime uses state to decide what is allowed next.</p>
 </section>
 <section id="state-changes-as-the-workflow-runs" class="level2">
 <h2 class="anchored" data-anchor-id="state-changes-as-the-workflow-runs">State changes as the workflow runs</h2>
@@ -667,7 +667,7 @@ Figure&nbsp;1: The four-step loop operates on state. Every Understand step reads
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> state[<span class="st">"facts"</span>][<span class="st">"plan_tier"</span>][<span class="st">"confidence"</span>] <span class="op">==</span> <span class="st">"confirmed"</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> state[<span class="st">"facts"</span>][<span class="st">"affected_feature"</span>][<span class="st">"confidence"</span>] <span class="op">==</span> <span class="st">"confirmed"</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> state[<span class="st">"ready_for_handoff"</span>] <span class="kw">is</span> <span class="va">True</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Prompts suggest behavior. Runtime checks enforce it.</p>
+<p>Prompts suggest behavior; runtime checks enforce it.</p>
 </section>
 <section id="common-mistakes" class="level2">
 <h2 class="anchored" data-anchor-id="common-mistakes">Common mistakes</h2>
@@ -683,7 +683,7 @@ Figure&nbsp;1: The four-step loop operates on state. Every Understand step reads
 </section>
 <section id="state-is-the-systems-memory" class="level2">
 <h2 class="anchored" data-anchor-id="state-is-the-systems-memory">State is the system’s memory</h2>
-<p>The transcript records what was said. State records what the system can rely on.</p>
+<p>The transcript records what was said; state records what the system can rely on.</p>
 <p>The intake agent needed to store two confirmed facts: the user was on the enterprise plan, and the dashboard was the affected feature. Once those facts became state, later steps could use them. The agent could avoid a redundant question, produce a better handoff, and expose unresolved fields before claiming the workflow was ready.</p>
 <p>State gives gates, tools, verification steps, and traces concrete fields to read and update. Runtime control reads state before acting. Gates and tool contracts decide what the system is allowed to do with that memory.</p>
 

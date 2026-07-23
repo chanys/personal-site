@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -95,14 +95,14 @@ div.csl-indent {
 <script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d5cc8be5113747845e6a8f301e2f5216.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-84d2a07a02d80bd473282a08374b6e76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-fe40ab8e643ad6158d4e6e7f87defb9b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -537,7 +537,7 @@ How LLMs learn to reason
 <p>The trajectory contains tokens the model didn’t write: the retrieved Wikipedia passages between <code>&lt;information&gt;</code> tags. Run the policy gradient over every token, and you’re training the model to assign higher probability to those passages too. That’s nonsense as a learning signal. The model didn’t choose those tokens, and the retrieved text isn’t even consistent across rollouts of the same prompt.</p>
 <p>The fix is to mask retrieved tokens out of the loss. Only update on tokens the model actually generated. The full PPO/GRPO objective is more involved, but the core idea is an indicator in front of each token’s contribution:</p>
 <p><span class="math display">\[\text{Loss} \;=\; -\sum_{t=1}^{|y|} I(y_t) \,\cdot\, [\,\text{policy-gradient signal at token } t\,]\]</span></p>
-<p>where <span class="math inline">\(I(y_t) = 1\)</span> if the model generated token <span class="math inline">\(y_t\)</span>, and <span class="math inline">\(I(y_t) = 0\)</span> if the token came from a retrieved passage. Without the indicator, retrieved tokens contribute to the gradient and pull the policy toward whatever was in the search results. With it, only tokens the model actually chose contribute.</p>
+<p>where <span class="math inline">\(I(y_t) = 1\)</span> if the model generated token <span class="math inline">\(y_t\)</span>, and <span class="math inline">\(I(y_t) = 0\)</span> if the token came from a retrieved passage. Without the indicator, retrieved tokens contribute to the gradient and pull the policy toward whatever was in the search results; with it, only tokens the model actually chose contribute.</p>
 <p>Without the mask, the same model gets 34% average accuracy. With it, 43%. Nine points from one indicator function.</p>
 <p>The principle generalizes. Anytime your RL setup includes tokens from outside the model (search results, tool outputs, environment state, function returns), you have to be careful which ones enter the gradient. Get it wrong and the model regresses toward whatever distribution those external tokens come from.</p>
 </section>
@@ -590,9 +590,9 @@ How LLMs learn to reason
 </tbody>
 </table>
 <p>The length rewards work. The traces visibly get longer. But accuracy gets worse, not better.</p>
-<p>This reshapes how to think about the R1 piece. In math and code, longer reasoning traces meant more exploration before commitment, which translated cleanly into accuracy. In tool use, the same instinct backfires. The model about to commit to a tool call doesn’t always benefit from talking itself through one more time. It can talk itself out of the right call, or elaborate a wrong call into a worse one.</p>
-<p>Thinking helps when the structure of the task rewards thinking. Math problems reward exploration before commitment. Tool use rewards picking the right tool, getting the arguments right, and getting on with it.</p>
-<p>You can see hints of this in production models. Claude and GPT-4 produce different amounts of reasoning depending on whether you’ve asked them to do math or look up a fact. The faster response on a tool-use task isn’t laziness, it’s efficiency. Optimal trace length is task-shaped.</p>
+<p>This reshapes how to think about the R1 piece. In math and code, longer reasoning traces meant more exploration before commitment, which translated cleanly into accuracy; in tool use, the same instinct backfires. The model about to commit to a tool call doesn’t always benefit from talking itself through one more time. It can talk itself out of the right call, or elaborate a wrong call into a worse one.</p>
+<p>Thinking helps when the structure of the task rewards thinking. Math problems reward exploration before commitment; tool use rewards picking the right tool, getting the arguments right, and getting on with it.</p>
+<p>You can see hints of this in production models. Claude and GPT-4 produce different amounts of reasoning depending on whether you’ve asked them to do math or look up a fact. The faster response on a tool-use task is efficiency, not laziness. Optimal trace length is task-shaped.</p>
 </section>
 </section>
 <section id="what-this-means-for-the-models-you-use" class="level2">

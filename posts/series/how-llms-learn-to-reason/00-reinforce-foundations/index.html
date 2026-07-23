@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -76,14 +76,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d5cc8be5113747845e6a8f301e2f5216.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-84d2a07a02d80bd473282a08374b6e76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-fe40ab8e643ad6158d4e6e7f87defb9b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -494,7 +494,7 @@ How LLMs learn to reason
 <li><a href="../05-tool-use/">How reasoning models learn to use tools</a></li>
 </ol>
 </div>
-<p>These notes walk through REINFORCE end-to-end. This first half builds the conceptual world the algorithm lives in: what RL is, what an MDP is, what value functions are, what trajectories are, where the objective <span class="math inline">\(J(\theta)\)</span> comes from, and what every piece of notation in it means. The <a href="../../../../posts/series/how-llms-learn-to-reason/00-reinforce-gradient/index.html">second half</a> derives the gradient that actually drives training. Both halves are needed: one tells you <em>what</em> you’re maximizing, the other tells you <em>how</em> gradient descent accomplishes it.</p>
+<p>These notes walk through REINFORCE end-to-end. This first half builds the conceptual world the algorithm lives in: what RL is, what an MDP is, what value functions are, what trajectories are, where the objective <span class="math inline">\(J(\theta)\)</span> comes from, and what every piece of notation in it means. The <a href="../../../../posts/series/how-llms-learn-to-reason/00-reinforce-gradient/index.html">second half</a> derives the gradient that actually drives training. Both halves are needed: one tells you <em>what</em> you’re maximizing, the other <em>how</em> gradient descent accomplishes it.</p>
 <section id="rl-is-a-different-kind-of-learning-problem" class="level2">
 <h2 class="anchored" data-anchor-id="rl-is-a-different-kind-of-learning-problem">1. RL is a different kind of learning problem</h2>
 <p>In supervised learning, you have a dataset of inputs and labels, and you train a model to map one to the other. Reinforcement learning has no dataset. You have:</p>
@@ -528,7 +528,7 @@ How LLMs learn to reason
 <section id="where-rewards-come-from" class="level3">
 <h3 class="anchored" data-anchor-id="where-rewards-come-from">Where rewards come from</h3>
 <p>The reward function <span class="math inline">\(R(s, a)\)</span> deserves a closer look, because it’s the silent partner in the whole RL story.</p>
-<p>The reward function is a <strong>fixed property of the environment</strong>, defined before training begins. It’s not learned. It’s not a parameter. The agent never modifies it. When the agent takes action <span class="math inline">\(a\)</span> from state <span class="math inline">\(s\)</span> and the environment returns reward <span class="math inline">\(r_t\)</span>, the agent simply observes that number. It doesn’t see the rule that produced it.</p>
+<p>The reward function is a <strong>fixed property of the environment</strong>, defined before training begins. It’s not learned. It’s not a parameter. The agent never modifies it. When the agent takes action <span class="math inline">\(a\)</span> from state <span class="math inline">\(s\)</span> and the environment returns reward <span class="math inline">\(r_t\)</span>, the agent simply observes that number without seeing the rule that produced it.</p>
 <p>In the grid world, you (the designer) wrote the rules: <span class="math inline">\(+5\)</span> at one terminal, <span class="math inline">\(+4\)</span> at another, <span class="math inline">\(-1\)</span> at the “penalty”, <span class="math inline">\(-1\)</span> for every step taken. That table is the reward function. The agent will spend its entire training experiencing that table’s outputs without ever being told the table exists.</p>
 <p>This means <strong>defining the reward function is how you specify the task</strong>. Change the reward function, and you change the problem:</p>
 <ul>
@@ -536,7 +536,7 @@ How LLMs learn to reason
 <li>Reward <span class="math inline">\(+1\)</span> for staying alive each step → agent learns to survive.</li>
 <li>Reward <span class="math inline">\(-1\)</span> everywhere → agent learns to terminate as fast as possible, possibly by walking into the “penalty”.</li>
 </ul>
-<p>Same environment, same states, same actions, but completely different behavior, because the reward function is different. This is why reward design is famously tricky: a poorly-specified reward gives you an agent that solves the wrong problem. (The classic example is a boat-racing agent that learned to drive in circles hitting respawning power-ups instead of finishing the race, because that gave more points.)</p>
+<p>The environment, states, and actions are the same; only the reward function differs, and that changes the behavior completely. This is why reward design is famously tricky: a poorly-specified reward gives you an agent that solves the wrong problem. (The classic example is a boat-racing agent that learned to drive in circles hitting respawning power-ups instead of finishing the race, because that gave more points.)</p>
 </section>
 </section>
 <section id="trajectories-and-returns" class="level2">
@@ -561,8 +561,8 @@ How LLMs learn to reason
 <li><span class="math inline">\(G_2 = -1 + 5 = 4\)</span></li>
 <li><span class="math inline">\(G_3 = 5\)</span></li>
 </ul>
-<p>Notice: <span class="math inline">\(r_0 = -1\)</span> but <span class="math inline">\(G_0 = 2\)</span>. They’re not the same number, and they’re not measuring the same thing.</p>
-<p>Earlier timesteps had to pay more fuel costs before reaching the <span class="math inline">\(+5\)</span>, so their returns are smaller. From <span class="math inline">\((2,1)\)</span> at the end, the agent is one step from the reward; from <span class="math inline">\((0,0)\)</span> at the start, it had to walk all the way there.</p>
+<p>Notice: <span class="math inline">\(r_0 = -1\)</span> but <span class="math inline">\(G_0 = 2\)</span>. They’re not the same number, and they measure different things.</p>
+<p>Earlier timesteps had to pay more fuel costs before reaching the <span class="math inline">\(+5\)</span>, so their returns are smaller. From <span class="math inline">\((2,1)\)</span> at the end, the agent is one step from the reward, whereas from <span class="math inline">\((0,0)\)</span> at the start it had to walk all the way there.</p>
 <div id="fig-grid-world" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A 4 by 4 grid world. The agent starts at the bottom-left cell and moves right, then up, then right, then right into a green plus-five goal cell, which is terminal. A red minus-one penalty cell and a green plus-four terminal cell sit in the top row, off the path. Each of the first three moves earns a reward of minus one (a fuel cost); the final move into the goal earns plus five. The return shown at each visited cell is 2, 3, 4, then 5: returns are larger for steps closer to the goal, because earlier steps pay more fuel before reaching the plus-five.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-grid-world-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -577,7 +577,7 @@ Figure&nbsp;1: The worked trajectory τ on the 4×4 grid world. Every move costs
 <section id="why-g_t-and-not-r_t-is-what-matters" class="level3">
 <h3 class="anchored" data-anchor-id="why-g_t-and-not-r_t-is-what-matters">Why <span class="math inline">\(G_t\)</span> and not <span class="math inline">\(r_t\)</span> is what matters</h3>
 <p>Anticipating where REINFORCE is going: the gradient updates will weight each action by a return, not by an immediate reward. The reason is that the immediate reward <span class="math inline">\(r_t\)</span> doesn’t tell you whether the action you took was <em>good</em> in any meaningful sense. In the grid world, every step has reward <span class="math inline">\(-1\)</span> regardless of which direction you moved. The single-step reward gives you no information about whether you moved <em>toward</em> the <span class="math inline">\(+5\)</span> or <em>away</em> from it.</p>
-<p>What does carry that information? The total reward you collected after taking the action. If you took action <span class="math inline">\(a_t\)</span> and ultimately got to the <span class="math inline">\(+5\)</span>, then <span class="math inline">\(a_t\)</span> was probably part of a good plan. If you took action <span class="math inline">\(a_t\)</span> and ended up at the “penalty”, then <span class="math inline">\(a_t\)</span> was probably a bad choice.</p>
+<p>What does carry that information? The total reward you collected after taking the action. If <span class="math inline">\(a_t\)</span> ultimately got you to the <span class="math inline">\(+5\)</span>, it was probably part of a good plan; if it ended up at the “penalty”, it was probably a bad choice.</p>
 <p><span class="math inline">\(G_t\)</span> captures this. It’s the agent’s verdict on “how did things go after I took action <span class="math inline">\(a_t\)</span>?”, which is exactly the right signal for deciding whether to make <span class="math inline">\(a_t\)</span> more or less likely in the future. We’ll come back to this when we form the objective.</p>
 </section>
 <section id="the-credit-assignment-problem" class="level3">
@@ -585,7 +585,7 @@ Figure&nbsp;1: The worked trajectory τ on the 4×4 grid world. Every move costs
 <p>There’s a deeper problem hiding behind this design choice, and it has a name worth knowing.</p>
 <p>Suppose the agent finally gets a <span class="math inline">\(+5\)</span> reward at step 20. <em>Which of the 20 actions deserves credit?</em> The action right before the reward? The one 15 steps earlier that put the agent on the right path? All of them? Some combination?</p>
 <p>This is called the <strong>credit assignment problem</strong>, and it’s the central difficulty of reinforcement learning. In supervised learning, every input has its own label, so credit is unambiguous: image <span class="math inline">\(x_i\)</span> goes with label <span class="math inline">\(y_i\)</span>. In RL, rewards are often sparse and delayed: you take many actions before learning whether any of them were good, and there’s no per-step label telling you which actions worked.</p>
-<p><span class="math inline">\(G_t\)</span>’s answer is brutally simple: assign every action the credit of <em>everything that came after it</em>. The action at step 15 gets credit for the <span class="math inline">\(+5\)</span> reward at step 20, because that reward is part of <span class="math inline">\(G_{15}\)</span>. So does the action at step 1, because <span class="math inline">\(G_1\)</span> also includes that reward. This is unfair on a per-action basis because some of those early actions probably didn’t matter, but it averages out across many trajectories. Actions that <em>consistently</em> precede good outcomes will accumulate positive updates over many rollouts; actions that don’t, won’t. The noise washes out; the signal accumulates.</p>
+<p><span class="math inline">\(G_t\)</span>’s answer is brutally simple: assign every action the credit of <em>everything that came after it</em>. The action at step 15 gets credit for the <span class="math inline">\(+5\)</span> reward at step 20, because that reward is part of <span class="math inline">\(G_{15}\)</span>. So does the action at step 1, because <span class="math inline">\(G_1\)</span> also includes that reward. This is unfair on a per-action basis because some of those early actions probably didn’t matter, but it averages out across many trajectories. Actions that <em>consistently</em> precede good outcomes will accumulate positive updates over many rollouts; actions that don’t, won’t. The noise washes out while the signal accumulates.</p>
 <p>This is why REINFORCE needs lots of samples to work. Each individual trajectory gives you a noisy, unfair credit assignment. Only across many trajectories does the right policy emerge.</p>
 </section>
 </section>
@@ -651,7 +651,7 @@ Figure&nbsp;1: The worked trajectory τ on the 4×4 grid world. Every move costs
 <p>One number per state-action pair. With 4 actions, <span class="math inline">\(Q((2, 3), \cdot)\)</span> is four numbers, one for each action you might take from <span class="math inline">\((2, 3)\)</span>.</p>
 <p>The two are related. <span class="math inline">\(V\)</span> is what you get when you average <span class="math inline">\(Q\)</span> over the actions the policy would take:</p>
 <p><span class="math display">\[V(s) = \sum_a \pi(a \mid s) \, Q(s, a).\]</span></p>
-<p>If the policy is greedy (always picks the best action), this collapses to <span class="math inline">\(V(s) = \max_a Q(s, a)\)</span>. So <span class="math inline">\(V\)</span> is the summary, <span class="math inline">\(Q\)</span> is the breakdown.</p>
+<p>If the policy is greedy (always picks the best action), this collapses to <span class="math inline">\(V(s) = \max_a Q(s, a)\)</span>. So <span class="math inline">\(V\)</span> is the summary and <span class="math inline">\(Q\)</span> is the breakdown.</p>
 <p>Why does this matter? Because <span class="math inline">\(Q\)</span> is more useful for <em>acting</em>. Suppose you have a value function and you need to choose an action.</p>
 <ul>
 <li><strong>With <span class="math inline">\(V\)</span>:</strong> you’d need to look ahead one step for each candidate action, see what state you’d land in, and check the value there. This requires knowing the environment dynamics.</li>
@@ -661,7 +661,7 @@ Figure&nbsp;1: The worked trajectory τ on the 4×4 grid world. Every move costs
 </section>
 <section id="why-neural-networks" class="level2">
 <h2 class="anchored" data-anchor-id="why-neural-networks">7. Why neural networks?</h2>
-<p>Iterating Bellman across a 16-square grid is fine. Iterating across the state space of Go, which has more positions than there are atoms in the universe, is not. You can’t store one number per state, let alone visit each state repeatedly to update it.</p>
+<p>Iterating Bellman across a 16-square grid is fine, but iterating across the state space of Go, which has more positions than there are atoms in the universe, is not. You can’t store one number per state, let alone visit each state repeatedly to update it.</p>
 <p>The fix is to use a neural network as a <strong>function approximator</strong> in place of a giant lookup table. The network takes a state as input and outputs either:</p>
 <ul>
 <li>a <strong>value estimate</strong> (<span class="math inline">\(V\)</span> or <span class="math inline">\(Q\)</span>): “from this state, you can expect roughly this much return,” or</li>
@@ -708,7 +708,7 @@ Figure&nbsp;1: The worked trajectory τ on the 4×4 grid world. Every move costs
 <p><span class="math display">\[\theta \;\longrightarrow\; \pi_\theta(\cdot \mid s) \;\longrightarrow\; \text{action sampled} \;\longrightarrow\; \text{environment responds} \;\longrightarrow\; \text{reward + next state}.\]</span></p>
 <p>The policy controls the second arrow. Everything downstream is the environment doing its thing. But by setting up that arrow well, i.e.&nbsp;assigning high probability to good actions in each state, the policy biases what happens in the rest of the chain toward outcomes we want.</p>
 <p>This is also why the gradient mechanics in Part II are expressed in terms of <span class="math inline">\(\nabla_\theta \log \pi_\theta(a \mid s)\)</span>. The only thing the agent can adjust is action probabilities. The only thing the gradient can affect is which actions get sampled.</p>
-<p>A useful contrast to hold in mind: a <strong>value function</strong> (<span class="math inline">\(V\)</span> or <span class="math inline">\(Q\)</span>) tells you <em>how good</em> states are. It doesn’t tell you what to do. A <strong>policy</strong> tells you <em>what to do</em>. It doesn’t predict return. REINFORCE trains the policy directly, without ever learning a value function: the trajectories themselves provide the feedback signal.</p>
+<p>A useful contrast: a <strong>value function</strong> (<span class="math inline">\(V\)</span> or <span class="math inline">\(Q\)</span>) tells you <em>how good</em> states are rather than what to do, while a <strong>policy</strong> tells you <em>what to do</em> rather than predicting return. REINFORCE trains the policy directly, without ever learning a value function: the trajectories themselves provide the feedback signal.</p>
 </section>
 </section>
 <section id="the-objective-from-a-single-trajectory" class="level2">
@@ -742,7 +742,7 @@ Figure&nbsp;1: The worked trajectory τ on the 4×4 grid world. Every move costs
 <section id="what-does-that-number-mean" class="level3">
 <h3 class="anchored" data-anchor-id="what-does-that-number-mean">What does that number mean?</h3>
 <p>On its own, the absolute value isn’t very meaningful. What matters is how the sum <em>changes</em> as <span class="math inline">\(\theta\)</span> changes.</p>
-<p>Here’s the intuition for why this particular form is what we want to maximize. Each term <span class="math inline">\(G_t \log \pi_\theta(a_t \mid s_t)\)</span> is doing something specific:</p>
+<p>Each term <span class="math inline">\(G_t \log \pi_\theta(a_t \mid s_t)\)</span> is doing something specific:</p>
 <ul>
 <li><p><strong>If <span class="math inline">\(G_t\)</span> is large and positive</strong> (the trajectory after this timestep was good), then <span class="math inline">\(G_t \log \pi_\theta(a_t \mid s_t)\)</span> is a large negative number that gets <em>less negative</em> if <span class="math inline">\(\pi_\theta(a_t \mid s_t)\)</span> increases. So the sum increases when the policy raises the probability of <span class="math inline">\(a_t\)</span>.</p></li>
 <li><p><strong>If <span class="math inline">\(G_t\)</span> is negative</strong> (things went badly after this timestep), then <span class="math inline">\(G_t \log \pi_\theta(a_t \mid s_t)\)</span> is positive, and it <em>increases</em> when <span class="math inline">\(\pi_\theta(a_t \mid s_t)\)</span> decreases. So the sum increases when the policy lowers the probability of <span class="math inline">\(a_t\)</span>.</p></li>

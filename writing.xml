@@ -9,8 +9,8 @@
 <link>https://yeesengchan.com/writing.html</link>
 <atom:link href="https://yeesengchan.com/writing.xml" rel="self" type="application/rss+xml"/>
 <description>Essays on how modern language models work, and on building and evaluating the systems around them.</description>
-<generator>quarto-1.9.37</generator>
-<lastBuildDate>Fri, 05 Jun 2026 04:00:00 GMT</lastBuildDate>
+<generator>quarto-1.9.38</generator>
+<lastBuildDate>Fri, 05 Jun 2026 00:00:00 GMT</lastBuildDate>
 <item>
   <title>Your eval system also drifts</title>
   <dc:creator>Yee Seng Chan</dc:creator>
@@ -51,7 +51,7 @@ LLM evaluation, honestly
 <p>The running example is the docs Q&amp;A agent from <a href="../../../../posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.html">the judge calibration</a> and <a href="../../../../posts/series/llm-evaluation-honestly/06-rag-evaluation/index.html">RAG evaluation</a> articles. It answers retention-policy questions. At launch, the eval stack looks solid: retrieval checks, faithfulness judges, answer relevance judges, and answerability tests.</p>
 <p>Six months later, the dashboard is still green. That only means the agent still passes the old eval.</p>
 <p>Suppose the retention policy changes. Trial accounts used to retain data for 90 days. Now they retain data for 120 days. The docs are updated, and the agent correctly answers “120 days.” The eval set still expects “90 days,” so the dashboard reports a regression.</p>
-<p>The agent did not regress. The eval system became stale.</p>
+<p>The agent did not regress; the eval system became stale.</p>
 <p>The fix is eval maintenance:</p>
 <ul>
 <li><strong>Update the active case:</strong> the current expected answer is now 120 days.</li>
@@ -75,7 +75,7 @@ LLM evaluation, honestly
 </section>
 <section id="production-traces-keep-the-eval-current" class="level2">
 <h2 class="anchored" data-anchor-id="production-traces-keep-the-eval-current">Production traces keep the eval current</h2>
-<p>A locked eval set protects known failures. It does not discover new ones.</p>
+<p>A locked eval set protects known failures but does not discover new ones.</p>
 <p>Production traces show what users are asking now, what the agent is retrieving now, and which answers are failing now. Sample them regularly and feed the important cases back into the eval set.</p>
 <p>Use a small sampling plan:</p>
 <ul>
@@ -101,8 +101,8 @@ LLM evaluation, honestly
 <h2 class="anchored" data-anchor-id="the-eval-system-is-part-of-the-product">The eval system is part of the product</h2>
 <p>A dashboard is useful only if the eval still matches the product.</p>
 <p>The eval system has to track current policies, current documents, current traffic, judge validity, and the team’s standard for correctness. Production traces become labels. Labels become failure modes. Failure modes become checks, judges, and regression cases. Incidents update the suite.</p>
-<p>Teams that treat eval as first-class code version, review, monitor, and maintain it. Teams that do not eventually read numbers they can no longer trust.</p>
-<p>The next time someone reports “the eval system says we’re at 87%,” ask: <em>when did we last check that the eval system is still telling the truth?</em></p>
+<p>Teams that treat eval as first-class code version, review, monitor, and maintain it; teams that do not eventually read numbers they can no longer trust.</p>
+<p>A reading like “the eval system says we’re at 87%” is only worth trusting if you know when the eval system was last checked to confirm it still tells the truth.</p>
 
 
 </section>
@@ -110,7 +110,7 @@ LLM evaluation, honestly
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/07-eval-drift/</guid>
-  <pubDate>Fri, 05 Jun 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 05 Jun 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Your RAG score hides the diagnosis</title>
@@ -232,7 +232,7 @@ Figure&nbsp;1: One bad answer, five different bugs. The same wrong answer (“30
 </section>
 <section id="what-comes-next" class="level2">
 <h2 class="anchored" data-anchor-id="what-comes-next">What comes next</h2>
-<p>A composite RAG score is fine as a summary, but it can’t drive debugging. The next time someone reports <em>RAG quality is 84%</em>, ask: <em>which part is 84%, and what would we fix if it dropped?</em></p>
+<p>A composite RAG score is fine as a summary, but it can’t drive debugging. A report of <em>RAG quality is 84%</em> only becomes actionable once you know which part is 84% and what you would fix if it dropped.</p>
 <p><a href="../../../../posts/series/llm-evaluation-honestly/07-eval-drift/index.html">The next article</a> closes the series on the eval system itself: judges go stale, traffic shifts, documents change, and old eval cases stop representing the current product. The agent isn’t the only thing that drifts.</p>
 
 
@@ -241,7 +241,7 @@ Figure&nbsp;1: One bad answer, five different bugs. The same wrong answer (“30
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/06-rag-evaluation/</guid>
-  <pubDate>Mon, 01 Jun 2026 04:00:00 GMT</pubDate>
+  <pubDate>Mon, 01 Jun 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Eval scores are samples, not truth</title>
@@ -363,8 +363,8 @@ Figure&nbsp;1: The signal is in the disagreements. Running v7 and v8 on the same
 </section>
 <section id="step-3-convert-standard-deviation-into-standard-error" class="level3">
 <h3 class="anchored" data-anchor-id="step-3-convert-standard-deviation-into-standard-error">Step 3: Convert standard deviation into standard error</h3>
-<p>The standard deviation tells us how much individual trace outcomes vary. The standard error tells us how much the average improvement would vary across repeated eval samples.</p>
-<p>A useful way to remember it:</p>
+<p>The standard deviation tells us how much individual trace outcomes vary; the standard error tells us how much the average improvement would vary across repeated eval samples.</p>
+<p>The standard error is:</p>
 <p><img src="https://latex.codecogs.com/png.latex?%0A%5Cmathrm%7BSE%7D%20=%20%5Cfrac%7B%5Cmathrm%7BSD%7D%7D%7B%5Csqrt%7BN%7D%7D%0A"></p>
 <p>Here:</p>
 <p><img src="https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Baligned%7D%0A%5Cmathrm%7BSE%7D%0A&amp;=%20%5Cfrac%7B0.384%7D%7B%5Csqrt%7B300%7D%7D%20%5C%5C%0A&amp;%5Capprox%200.022%0A%5Cend%7Baligned%7D%0A"></p>
@@ -418,7 +418,7 @@ Figure&nbsp;2: Overlap is the wrong test. Top (the wrong test): v7’s pass-rate
 <p>To get 80% power, the true effect needs some extra margin beyond the 95% significance cutoff. Under the normal approximation, that extra margin is about <img src="https://latex.codecogs.com/png.latex?0.84%20%5Ctimes%20%5Cmathrm%7BSE%7D">.</p>
 <p>So the rough detectable improvement is:</p>
 <p><img src="https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Baligned%7D%0A%5Ctext%7Bdetectable%20improvement%7D%0A&amp;%5Capprox%20(1.96%20+%200.84)%20%5Ctimes%20%5Cmathrm%7BSE%7D%20%5C%5C%0A&amp;%5Capprox%202.8%20%5Ctimes%20%5Cmathrm%7BSE%7D%0A%5Cend%7Baligned%7D%0A"></p>
-<p>In plain English: the improvement should be large enough not merely to look significant in one lucky eval run, but to be detected reliably across repeated eval samples.</p>
+<p>The improvement should be large enough to be detected reliably across repeated eval samples, not just to look significant in one lucky eval run.</p>
 <p>In the example above:</p>
 <p><img src="https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Baligned%7D%0A%5Ctext%7Bdetectable%20improvement%7D%0A&amp;%5Capprox%202.8%20%5Ctimes%202.2%5C%25%20%5C%5C%0A&amp;%5Capprox%206.2%5C%25%0A%5Cend%7Baligned%7D%0A"></p>
 <p>So this 300-trace eval can reliably detect improvements around 6 percentage points under this disagreement pattern. The observed improvement is 5 points. v8 is probably better, but the evidence is borderline.</p>
@@ -439,7 +439,7 @@ Figure&nbsp;3: Small eval sets can’t see small gains. The smallest improvement
 </figure>
 </div>
 <p>The exact numbers change with the disagreement rate, but the lesson is stable: small eval sets cannot reliably detect tiny improvements.</p>
-<p>If v8 improves by 2 points on a small eval set, the honest conclusion is usually not <em>“v8 is better.”</em> It is <em>“directionally positive, but too small to trust on this eval set.”</em></p>
+<p>If v8 improves by 2 points on a small eval set, the honest conclusion is usually not <em>“v8 is better”</em> but <em>“directionally positive, but too small to trust on this eval set.”</em></p>
 </section>
 <section id="the-same-paired-logic-works-for-scored-ratings" class="level2">
 <h2 class="anchored" data-anchor-id="the-same-paired-logic-works-for-scored-ratings">The same paired logic works for scored ratings</h2>
@@ -472,7 +472,7 @@ Figure&nbsp;3: Small eval sets can’t see small gains. The smallest improvement
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/05-scores-are-samples/</guid>
-  <pubDate>Fri, 29 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 29 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Your LLM judge is a classifier</title>
@@ -601,13 +601,13 @@ F1 on FAIL            = (2 * P * R) / (P + R) = 41%</code></pre>
 </section>
 <section id="revalidate-when-things-change" class="level2">
 <h2 class="anchored" data-anchor-id="revalidate-when-things-change">Revalidate when things change</h2>
-<p>The judge agrees with humans on the held-out set today. That doesn’t mean it will agree in six months. Foundation models update, the agent’s failure distribution shifts, and new failure types appear. Calibration is a snapshot: true at measurement time, increasingly stale afterward.</p>
+<p>The judge agrees with humans on the held-out set today. That doesn’t mean it will agree in six months. Foundation models update, the agent’s failure distribution shifts, and new failure types appear. Calibration is a snapshot that is accurate when measured and grows stale afterward.</p>
 <p><a href="../../../../posts/series/llm-evaluation-honestly/07-eval-drift/index.html">Your eval system also drifts</a> covers what to do about it: re-validate against fresh labels on a schedule and monitor agreement rates over time. Large drift in those agreement rates is usually a signal that the failure distribution itself has changed.</p>
 <p>Every deployed judge should carry a short record of what it was validated on: the domain, the trace types, the test-set size, the date, and what it’s allowed to be used for. Without that record, judges get re-used on data the original validation doesn’t cover, and the team trusts a number that no longer applies.</p>
 </section>
 <section id="the-judge-is-part-of-the-system" class="level2">
 <h2 class="anchored" data-anchor-id="the-judge-is-part-of-the-system">The judge is part of the system</h2>
-<p>An LLM judge is not an oracle. It is a model component that needs the same discipline as any other classifier: held-out labels, a confusion matrix, precision and recall on the class that matters, and periodic revalidation.</p>
+<p>An LLM judge is a model component that needs the same discipline as any other classifier: held-out labels, a confusion matrix, precision and recall on the class that matters, and periodic revalidation.</p>
 <p>Once the judge is validated, there is still one more question: how much should we trust movement in the score? A judge may report that v2 improved by two points, but that movement may be real or may be noise. <a href="../../../../posts/series/llm-evaluation-honestly/05-scores-are-samples/index.html">The next article</a> covers that next layer: uncertainty, sample size, and when an eval result is large enough to act on.</p>
 
 
@@ -616,7 +616,7 @@ F1 on FAIL            = (2 * P * R) / (P + R) = 41%</code></pre>
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/04-judge-is-classifier/</guid>
-  <pubDate>Tue, 26 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 26 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Don’t ask an LLM judge what code can check</title>
@@ -655,9 +655,9 @@ LLM evaluation, honestly
 </ol>
 </div>
 <p>Most bad LLM judges are doing a simpler evaluator’s job. They are asked whether JSON is valid. Whether a required field is present. Whether a tool was called. Whether a prohibited phrase appears in the final answer. Whether a handoff record contains an order ID.</p>
-<p>That is not judgment. That is checking.</p>
+<p>That is checking, not judgment.</p>
 <p>When a team asks an LLM judge to do what code could have checked, it gets the worst of both worlds: slower, noisier, more expensive, and harder to debug.</p>
-<p>LLM judges are useful when the evaluator needs to understand meaning in context. They are wasted when the failure has a structural shape. If the failure can be detected with code, use code. Save judges for failures that require understanding meaning.</p>
+<p>LLM judges are useful when the evaluator needs to understand meaning in context, and wasted when the failure has a structural shape. If the failure can be detected with code, use code.</p>
 <section id="start-with-the-failure-mode" class="level2">
 <h2 class="anchored" data-anchor-id="start-with-the-failure-mode">Start with the failure mode</h2>
 <p>The wrong question is <em>“Should we use an LLM judge here?”</em> The right question is <em>“What exactly are we trying to detect?”</em></p>
@@ -731,7 +731,7 @@ font-style: inherit;">=</span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Handoff record well-formed"</span>)</span></code></pre></div></div>
 <p>Five lines. Runs in milliseconds. Deterministic: same input, same output, every time. Debuggable: when it fails, the reason tells you exactly what to look at. Free: no API calls, no token costs, no rate limits. Runs on every trace, on every CI build, on every production trace if you want.</p>
-<p>Code and judges aren’t always alternatives. <strong>Sometimes they’re layers.</strong> A regex check for refund-promise language catches explicit cases (<em>“Your refund has been approved”</em>); it misses subtler implications (<em>“We’ll make sure you get your money back”</em>). The fix isn’t to abandon the regex for a judge. Run the cheap regex on every trace; run a more expensive judge only when the trace involves a refund request and the regex didn’t fire. The principle: run cheap checks broadly, run judges where they add value.</p>
+<p>Code and judges aren’t always alternatives. Sometimes they’re layers. A regex check for refund-promise language catches explicit cases (<em>“Your refund has been approved”</em>); it misses subtler implications (<em>“We’ll make sure you get your money back”</em>). The fix isn’t to abandon the regex for a judge. Run the cheap regex on every trace; run a more expensive judge only when the trace involves a refund request and the regex didn’t fire. Run cheap checks broadly, and run judges where they add value.</p>
 </section>
 <section id="use-llm-judges-for-semantic-failures" class="level2">
 <h2 class="anchored" data-anchor-id="use-llm-judges-for-semantic-failures">Use LLM judges for semantic failures</h2>
@@ -740,7 +740,7 @@ font-style: inherit;">"Handoff record well-formed"</span>)</span></code></pre></
 </section>
 <section id="keep-each-evaluator-narrow" class="level2">
 <h2 class="anchored" data-anchor-id="keep-each-evaluator-narrow">Keep each evaluator narrow</h2>
-<p>The mistake is building one big judge called <code>quality_judge_v3</code> and asking it to score everything: tone, helpfulness, schema validity, routing. That judge produces a number. It does not produce a diagnosis.</p>
+<p>The mistake is building one big judge called <code>quality_judge_v3</code> and asking it to score everything: tone, helpfulness, schema validity, routing. That judge produces a number, not a diagnosis.</p>
 <p>It’s the same reason you don’t write a single function called <code>is_correct()</code> in production code. Composite signals are harder to act on, harder to debug, and harder to improve.</p>
 <p>Suppose the intake agent’s “overall quality” judge drops from 87% to 81% over a release. What changed? Tone got worse? Helpfulness got worse? Grounding got worse? Some combination? The composite verdict can’t tell you. You read failures by hand, you guess, and you propose a fix without knowing which dimension you’re targeting.</p>
 <p>Specialized evaluators fix this. The tone judge tracks tone. The redundant-question judge tracks redundancy. When tone scores drop and redundancy scores hold steady, you know what changed. When you fix the tone issue, the tone judge tells you whether the fix worked.</p>
@@ -812,7 +812,7 @@ Figure&nbsp;1: One number can’t tell you what broke. The composite quality_jud
 </section>
 <section id="code-first-judges-when-you-need-them" class="level2">
 <h2 class="anchored" data-anchor-id="code-first-judges-when-you-need-them">Code first, judges when you need them</h2>
-<p><a href="../../../../posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.html">Your LLM judge is a classifier</a> covers the next layer: making judges trustworthy when you do need them. A judge that produces verdicts in the right format isn’t the same as a judge that produces correct verdicts.</p>
+<p><a href="../../../../posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.html">Your LLM judge is a classifier</a> covers the next layer: making judges trustworthy when you do need them. A judge that produces verdicts in the right format doesn’t necessarily produce correct ones.</p>
 <p>The next time someone proposes a judge, first ask: <em>could code answer this?</em></p>
 
 
@@ -821,7 +821,7 @@ Figure&nbsp;1: One number can’t tell you what broke. The composite quality_jud
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/03-judge-vs-code/</guid>
-  <pubDate>Fri, 22 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 22 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Read traces before you write the labeling guide</title>
@@ -902,12 +902,12 @@ Figure&nbsp;1: Design the dataset on two axes. Coverage is what situations the s
 <li><strong>Hard cases:</strong> the system often fails. These show the frontier.</li>
 <li><strong>Safety cases:</strong> the system must refuse, escalate, or avoid forbidden behavior.</li>
 </ul>
-<p>Too easy and the dataset saturates; too hard and it doesn’t show progress. Aim for a visible mix so the team can tell what actually improved.</p>
+<p>A dataset that is too easy saturates, and one that is too hard fails to show progress, so aim for a visible mix that tells the team what actually improved.</p>
 <p><a href="../../../../posts/series/llm-evaluation-honestly/05-scores-are-samples/index.html">Eval scores are samples, not truth</a> returns to sample size and uncertainty. If a slice matters, include it deliberately and track it separately.</p>
 </section>
 <section id="when-you-dont-have-production-data" class="level2">
 <h2 class="anchored" data-anchor-id="when-you-dont-have-production-data">When you don’t have production data</h2>
-<p>Before launch, the dataset has to come from somewhere other than production. The key rule: generate inputs, not outputs. Let the real system produce the responses, and label the resulting traces like any other trace.</p>
+<p>Before launch, the dataset has to come from somewhere other than production. Generate the inputs and let the real system produce the responses, then label the resulting traces like any other trace.</p>
 <p>Two sources work well in combination.</p>
 <p><strong>Persona-based generation.</strong> Define three to five user personas that match the product (for the scheduling assistant: a time-zone-confused product manager, an executive with overlapping calendars, an IC handling forwarded meeting threads). For each persona, generate eight to twelve plausible queries.</p>
 <p><strong>Expert elicitation.</strong> Sit with someone who has done this product’s work before: a customer success lead, a power user from a prior product, a domain expert. Ask: <em>“What is the worst question someone could ask this?”</em> and <em>“Where do you expect this to fail?”</em> The answers encode failure intuition the team doesn’t yet have from data, including the high-risk cases the coverage section calls out.</p>
@@ -923,7 +923,7 @@ Figure&nbsp;1: Design the dataset on two axes. Coverage is what situations the s
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/02-eval-dataset/</guid>
-  <pubDate>Tue, 19 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 19 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Stop vibe-checking your agent</title>
@@ -968,7 +968,7 @@ LLM evaluation, honestly
 <section id="what-eval-is-for" class="level2">
 <h2 class="anchored" data-anchor-id="what-eval-is-for">What eval is for</h2>
 <p>A score is useful only if it changes what the team does next. Eval supports different decisions at different stages: during development, whether a new prompt is better; before merge, whether old failures came back; in production, whether new failure patterns are emerging.</p>
-<p>The operational test for any metric: <em>When this number moves, what decision changes?</em> If the answer is merge, hold, investigate, roll back, or add a regression case, the metric is useful. If the answer is “nothing,” it does not belong on the dashboard.</p>
+<p>The operational test for any metric: <em>When this number moves, what decision changes?</em> If the answer is merge, hold, investigate, roll back, or add a regression case, the metric is useful; if the answer is “nothing,” it does not belong on the dashboard.</p>
 </section>
 <section id="the-minimum-viable-eval-loop" class="level2">
 <h2 class="anchored" data-anchor-id="the-minimum-viable-eval-loop">The minimum viable eval loop</h2>
@@ -1001,7 +1001,7 @@ Figure&nbsp;2: The final answer hides the first bad move. A final-answer check s
 </section>
 <section id="labels" class="level3">
 <h3 class="anchored" data-anchor-id="labels">2. Labels</h3>
-<p>A label is a human judgment attached to a trace: pass or fail, plus a short critique. For example: <em>“Failed: agent routed the case as billing instead of refund at turn three; downstream handoff omitted refund-request status.”</em> That critique tells the team what failed, where, and what to watch for. A score of 3 out of 5 does not.</p>
+<p>A label is a human judgment attached to a trace: pass or fail, plus a short critique. For example: <em>“Failed: agent routed the case as billing instead of refund at turn three; downstream handoff omitted refund-request status.”</em> That critique tells the team what failed, where, and what to watch for; a score of 3 out of 5 does not.</p>
 </section>
 <section id="failure-modes" class="level3">
 <h3 class="anchored" data-anchor-id="failure-modes">3. Failure modes</h3>
@@ -1095,7 +1095,7 @@ font-style: inherit;">"No refund-promise language"</span>)</span></code></pre></
 <section id="review-and-decisions" class="level3">
 <h3 class="anchored" data-anchor-id="review-and-decisions">6. Review and decisions</h3>
 <p>The loop only matters if it changes what the team does. A failed check blocks a merge, a spike in redundant-question failures triggers investigation, a new production failure becomes a regression case, a judge disagreement becomes a calibration example.</p>
-<p>Pull a small sample of recent failures regularly, read them end-to-end, and ask whether they reveal a pattern the current dataset misses. The habit is simple: new failures feed back into the eval loop instead of disappearing into Slack.</p>
+<p>Pull a small sample of recent failures regularly, read them end-to-end, and ask whether they reveal a pattern the current dataset misses. New failures feed back into the eval loop instead of disappearing into Slack.</p>
 <p><a href="../../../../posts/series/llm-evaluation-honestly/07-eval-drift/index.html">Your eval system also drifts</a> returns to this production loop: how new failures from real usage become new eval cases, alerts, and hardening work.</p>
 </section>
 <section id="a-concrete-first-version" class="level3">
@@ -1139,13 +1139,13 @@ font-style: inherit;">"No refund-promise language"</span>)</span></code></pre></
 </tr>
 </tbody>
 </table>
-<p>The numbers are illustrative. The shape matters: start small, use real failures, make every new failure feed back into the loop.</p>
+<p>The numbers are illustrative; the shape is what matters: start small, use real failures, make every new failure feed back into the loop.</p>
 </section>
 </section>
 <section id="the-smallest-useful-promise" class="level2">
 <h2 class="anchored" data-anchor-id="the-smallest-useful-promise">The smallest useful promise</h2>
 <p>Having a minimal eval loop in place is enough to change how the team builds. “Does v2 feel better?” becomes “Which failure modes improved, which regressed, and do we trust the measurement?” Eval stops being a side research exercise and becomes part of the engineering loop.</p>
-<p><strong>The harness made the agent’s behavior observable, the eval system turns that behavior into evidence, and the hardening loop turns evidence into a system harder to break.</strong></p>
+<p>The harness made the agent’s behavior observable, the eval system turns that behavior into evidence, and the hardening loop turns evidence into a system harder to break.</p>
 <p>The <a href="../../../../posts/series/llm-evaluation-honestly/02-eval-dataset/index.html">next article</a> goes one layer deeper: the eval dataset.</p>
 
 
@@ -1154,7 +1154,7 @@ font-style: inherit;">"No refund-promise language"</span>)</span></code></pre></
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/01-stop-vibe-checking/</guid>
-  <pubDate>Fri, 15 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 15 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Traces are how agents get better</title>
@@ -1197,8 +1197,8 @@ The agent harness
 2026-05-08 14:23:19  run_551  tool_call: retrieval, status: success
 2026-05-08 14:23:21  run_551  response generated
 2026-05-08 14:23:21  run_551  run completed</code></pre>
-<p>That log records events. It does not show which passages were retrieved, what the model saw, why it chose 30 days, which passage supported the claim, or which validation checks ran. The team can guess. It cannot debug.</p>
-<p>Logs tell you what happened. Traces show why it happened.</p>
+<p>That log records events. It does not show which passages were retrieved, what the model saw, why it chose 30 days, which passage supported the claim, or which validation checks ran. The team can guess but cannot debug.</p>
+<p>Logs record what happened; traces show why.</p>
 <p>The <a href="../../../../posts/series/the-agent-harness/04-prompts-gate/index.html">previous article</a> covered gates: runtime checks that stop wrong actions before they happen. This article covers traces: structured records that make failures explainable after they happen.</p>
 <section id="what-a-useful-trace-records" class="level2">
 <h2 class="anchored" data-anchor-id="what-a-useful-trace-records">What a useful trace records</h2>
@@ -1500,11 +1500,11 @@ font-style: inherit;">"snippet"</span>: <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Standard data retention: 30 days post-closure..."</span>},</span>
 <span id="cb3-12">]</span></code></pre></div></div>
-<p>Retrieval found the right passage and ranked it first. The system did not fail to retrieve the answer.</p>
+<p>Retrieval found the right passage and ranked it first.</p>
 <p>Step 3, <code>synthesize</code>, shows the first bad move. Synthesis received passage text without category tags. It saw four general passages saying 30 days and one trial-account passage saying 90 days. Without category metadata, the model had no signal that the 90-day passage was the relevant one.</p>
 <p>Step 4, <code>ground</code>, mapped the drafted claim to <code>psg_0871</code>. Grounding succeeded narrowly because the claim had a citation. The missing check was category alignment. The trace shows <code>category_alignment_check: not_run</code>.</p>
 <p>The failure is now specific: retrieval found the answer, context assembly dropped the metadata, synthesis chose the wrong passage, and validation missed the category mismatch.</p>
-<p>A team reading only the output might edit the synthesis prompt. A team reading the trace fixes the right layer: include category metadata in the context pack, weight category-specific passages for category-specific queries, and validate category alignment before returning the answer.</p>
+<p>Reading only the output, a team might edit the synthesis prompt; reading the trace, it fixes the right layer: include category metadata in the context pack, weight category-specific passages for category-specific queries, and validate category alignment before returning the answer.</p>
 </section>
 <section id="from-first-bad-move-to-durable-fix" class="level2">
 <h2 class="anchored" data-anchor-id="from-first-bad-move-to-durable-fix">From first bad move to durable fix</h2>
@@ -1524,7 +1524,7 @@ Figure&nbsp;1: The hardening loop. A failure produces a trace; the trace identif
 </figcaption>
 </figure>
 </div>
-<p>Teams that run this loop on every incident are doing reliability engineering. Teams that stop at “patched the prompt, moved on” are managing symptoms. A system improves when the team stops wasting failure.</p>
+<p>Running this loop on every incident is reliability engineering; stopping at “patched the prompt, moved on” only manages symptoms. A system improves when the team stops wasting failure.</p>
 </section>
 <section id="minimum-viable-trace" class="level2">
 <h2 class="anchored" data-anchor-id="minimum-viable-trace">Minimum viable trace</h2>
@@ -1568,7 +1568,7 @@ Figure&nbsp;1: The hardening loop. A failure produces a trace; the trace identif
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/05-traces/</guid>
-  <pubDate>Sun, 10 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sun, 10 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Prompts guide. Gates enforce</title>
@@ -1604,10 +1604,10 @@ The agent harness
 <li><a href="../05-traces/">Traces are how agents get better</a></li>
 </ol>
 </div>
-<p>A prompt can guide behavior. It cannot enforce behavior.</p>
+<p>A prompt can guide behavior but cannot enforce it.</p>
 <p>The scheduling assistant’s prompt says, “Always confirm the target meeting before making any changes.” A user asks it to move “my Tuesday review with Priya” to Thursday afternoon. The model calls <code>reschedule_event(description="Tuesday review with Priya", new_time="Thursday afternoon")</code>; the API matches a different recurring meeting with Priya; the agent replies, “I’ve moved it, and I’ll keep an eye on it going forward.”</p>
-<p>The failure is not the wording of the prompt. The runtime allowed an unsafe action. A gate should have blocked <code>reschedule_event</code> until the target event was uniquely confirmed, non-recurring, and represented by a specific event ID.</p>
-<p>Prompts shape behavior. Gates enforce behavior.</p>
+<p>The failure was not the wording of the prompt; the runtime allowed an unsafe action. A gate should have blocked <code>reschedule_event</code> until the target event was uniquely confirmed, non-recurring, and represented by a specific event ID.</p>
+<p>Prompts shape behavior; gates enforce it.</p>
 <p>The <a href="../../../../posts/series/the-agent-harness/03-state-not-transcript/index.html">previous article</a> established that state holds the system’s beliefs. This article is about the runtime checks that decide whether the system can act on those beliefs.</p>
 <section id="why-prompt-only-control-breaks" class="level2">
 <h2 class="anchored" data-anchor-id="why-prompt-only-control-breaks">Why prompt-only control breaks</h2>
@@ -1737,7 +1737,7 @@ font-style: inherit;">return</span> Allow()</span></code></pre></div></div>
 <li>Does this response give advice outside the agent’s role?</li>
 </ul>
 <p>These checks usually require model judgment. They are slower and more expensive than hard gates, so use them when the risk is semantic and code cannot capture it.</p>
-<p>Use hard gates for crisp conditions. Use semantic gates for judgment calls.</p>
+<p>Use hard gates for crisp conditions and semantic gates for judgment calls.</p>
 </section>
 </section>
 <section id="the-tool-executes" class="level2">
@@ -1797,8 +1797,8 @@ font-style: inherit;">    Requires a specific event_id, not a free-text descript
 background-color: null;
 font-style: inherit;">    """</span></span></code></pre></div></div>
 <p>The second tool removes unsafe paths. It requires a specific <code>event_id</code>, which forces the workflow to identify the target before the call. It requires an idempotency key. It does not expose a broad <code>field</code> parameter that could update anything.</p>
-<p>Tool contracts should also distinguish reads from writes. Reads can usually be retried after a timeout. Writes need more care. A write should carry an idempotency key, and an ambiguous timeout should route to verification before retry.</p>
-<p>Broad tools push hidden responsibility onto the model. Narrow tools move more of that responsibility into the harness.</p>
+<p>Tool contracts should also distinguish reads from writes. Reads can usually be retried after a timeout; writes need more care. A write should carry an idempotency key, and an ambiguous timeout should route to verification before retry.</p>
+<p>Broad tools push hidden responsibility onto the model; narrow tools move more of it into the harness.</p>
 </section>
 </section>
 <section id="the-harness-verifies-and-routes" class="level2">
@@ -1859,12 +1859,12 @@ background-color: null;
 font-style: inherit;">"Move Tuesday 2pm with Priya to Wednesday 10am"</span>,</span>
 <span id="cb4-11">}</span></code></pre></div></div>
 <p>Before execution, the runtime checks that the approval has not expired and that the relevant state has not changed. If the target event, user request, or proposed action changed, the packet is stale and should not execute.</p>
-<p>Humans approve specific actions, not summaries of actions.</p>
+<p>Humans should approve the exact action rather than a summary of it.</p>
 </section>
 </section>
 <section id="gate-where-failure-matters" class="level2">
 <h2 class="anchored" data-anchor-id="gate-where-failure-matters">Gate where failure matters</h2>
-<p>Gate the actions where failure matters most. Do not gate everything.</p>
+<p>Gate the actions where failure matters most, not every action.</p>
 <p>Heavy gates belong around actions that change the outside world, affect another person, are hard to undo, depend on weak evidence, or may require human escalation. Keep the path light for harmless clarifying questions, read-only lookups, and low-stakes summaries.</p>
 <p>The goal is appropriate gating, not maximum gating. A gate that fires on every action becomes a gate the team learns to ignore.</p>
 </section>
@@ -1885,7 +1885,7 @@ The harness verifies.</code></pre>
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/04-prompts-gate/</guid>
-  <pubDate>Fri, 01 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 01 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>State, not transcript, is agent memory</title>
@@ -1949,7 +1949,7 @@ background-color: null;
 font-style: inherit;">"user_turn_2"</span>,</span>
 <span id="cb1-5">}</span></code></pre></div></div>
 <p>That field lets the agent skip a redundant plan-tier question, lets the handoff writer emit <code>plan_tier: enterprise</code>, and lets a required-field check decide whether the handoff is ready.</p>
-<p>State also records reliability. If a user first says, “I think it might be the migration,” and later says, “Support confirmed it was the migration,” state should mark one claim as uncertain and the other as confirmed. The transcript preserves both sentences, but state tells the system how to use them.</p>
+<p>State also records reliability. If a user first says, “I think it might be the migration,” and later says, “Support confirmed it was the migration,” state should mark one claim as uncertain and the other as confirmed. The transcript preserves both sentences; state tells the system how to use them.</p>
 <p>The same issue appears in handoff readiness. If the handoff requires <code>plan_tier</code>, <code>affected_feature</code>, and <code>confirmed_root_cause</code>, state should show which fields are filled, which are uncertain, and which still need follow-up. The agent can then read state instead of reconstructing the situation from the transcript every turn.</p>
 </section>
 <section id="state-turns-remembered-facts-into-usable-facts" class="level2">
@@ -2170,7 +2170,7 @@ font-style: inherit;">"user_turn_5"</span>,</span>
 <li>What stage of the workflow are we in?</li>
 </ol>
 <p>These questions expose whether state is usable. Without those fields, the model has to reconstruct the situation from raw history. It may treat guesses as facts, skip required questions, or advance the workflow too early.</p>
-<p>State gives the model and runtime stable fields to read. The model uses state to decide what to say next. The runtime uses state to decide what is allowed next.</p>
+<p>State gives the model and runtime stable fields to read. The model uses state to decide what to say next; the runtime uses state to decide what is allowed next.</p>
 </section>
 <section id="state-changes-as-the-workflow-runs" class="level2">
 <h2 class="anchored" data-anchor-id="state-changes-as-the-workflow-runs">State changes as the workflow runs</h2>
@@ -2245,7 +2245,7 @@ font-weight: bold;
 font-style: inherit;">is</span> <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">True</span></span></code></pre></div></div>
-<p>Prompts suggest behavior. Runtime checks enforce it.</p>
+<p>Prompts suggest behavior; runtime checks enforce it.</p>
 </section>
 <section id="common-mistakes" class="level2">
 <h2 class="anchored" data-anchor-id="common-mistakes">Common mistakes</h2>
@@ -2261,7 +2261,7 @@ font-style: inherit;">True</span></span></code></pre></div></div>
 </section>
 <section id="state-is-the-systems-memory" class="level2">
 <h2 class="anchored" data-anchor-id="state-is-the-systems-memory">State is the system’s memory</h2>
-<p>The transcript records what was said. State records what the system can rely on.</p>
+<p>The transcript records what was said; state records what the system can rely on.</p>
 <p>The intake agent needed to store two confirmed facts: the user was on the enterprise plan, and the dashboard was the affected feature. Once those facts became state, later steps could use them. The agent could avoid a redundant question, produce a better handoff, and expose unresolved fields before claiming the workflow was ready.</p>
 <p>State gives gates, tools, verification steps, and traces concrete fields to read and update. Runtime control reads state before acting. Gates and tool contracts decide what the system is allowed to do with that memory.</p>
 
@@ -2271,7 +2271,7 @@ font-style: inherit;">True</span></span></code></pre></div></div>
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/03-state-not-transcript/</guid>
-  <pubDate>Tue, 28 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 28 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>The harness is the product</title>
@@ -2309,12 +2309,12 @@ The agent harness
 </div>
 <p>A stronger model does not automatically give you a reliable agent.</p>
 <p>The <a href="../../../../posts/series/the-agent-harness/01-demos-break/index.html">previous article</a> catalogued six ways agent demos break in production. The intake agent forgot a fact the user gave it on turn 2. The scheduling assistant double-booked a meeting after an ambiguous timeout. The docs Q&amp;A agent gave a confident, well-formed, wrong answer.</p>
-<p>The instinct after each failure is to reach for a stronger model. Sometimes that helps a little. More often, the failure returns in a slightly different shape because the system around the model has not changed. The useful reframe is simple:</p>
+<p>The instinct after each failure is to reach for a stronger model. Sometimes that helps a little. More often, the failure returns in a slightly different shape because the system around the model has not changed. The reframe:</p>
 <p><strong>Agent = model + harness</strong></p>
-<p>The model is the reasoning engine. The harness is the system the model lives inside. Models get swapped, cheaper, and faster. The harness carries the team’s accumulated understanding of how to make the agent reliable. For production agents, the harness is the product.</p>
+<p>The model is the reasoning engine; the harness is the system the model lives inside. Models get swapped, cheaper, and faster. The harness carries the team’s accumulated understanding of how to make the agent reliable. For production agents, the harness is the product.</p>
 <section id="prompts-guide.-harnesses-constrain." class="level2">
 <h2 class="anchored" data-anchor-id="prompts-guide.-harnesses-constrain.">Prompts guide. Harnesses constrain.</h2>
-<p>A prompt tells the model what behavior you want. A harness decides what behavior the system permits.</p>
+<p>A prompt tells the model what behavior you want; a harness decides what behavior the system permits.</p>
 <p>The difference is concrete:</p>
 <ul>
 <li><strong>Refunds:</strong> a prompt can say, “Do not issue refunds.” A harness can make the refund tool unavailable.</li>
@@ -2322,7 +2322,7 @@ The agent harness
 <li><strong>Docs Q&amp;A:</strong> a prompt can say, “Use only the retrieved documents.” A harness can require every final claim to map to a cited passage.</li>
 <li><strong>Retries:</strong> a prompt can say, “Be careful with retries.” A harness can enforce one write attempt, require an idempotency key, and route ambiguous timeouts to verification.</li>
 </ul>
-<p>The prompt shapes one model call. The harness controls the workflow around that call. It makes some failures impossible to commit and makes the rest easier to detect.</p>
+<p>The prompt shapes one model call; the harness controls the workflow around that call. It makes some failures impossible to commit and makes the rest easier to detect.</p>
 <p>That is the shift from prompt engineering to harness engineering.</p>
 </section>
 <section id="scope-is-the-first-harness-decision" class="level2">
@@ -2391,7 +2391,7 @@ Figure&nbsp;2: Three nested levels of engineering. Each level encompasses the pr
 <h2 class="anchored" data-anchor-id="which-parts-of-the-harness-age">Which parts of the harness age?</h2>
 <p>Some harness pieces get lighter as models improve. Tool-selection scaffolding matters less when models choose tools reliably. Format validators matter less when structured output becomes dependable. Long prompt chains matter less when models handle more reasoning in one call. These pieces compensate for model limitations, so stronger models reduce their importance.</p>
 <p>Other harness pieces remain necessary because they control product risk. A smarter model still cannot unsend a calendar invite, undo a payment, or reconstruct last month’s behavior without traces. It still needs runtime boundaries around tools, writes, permissions, and user-visible actions.</p>
-<p>The pieces that age are scaffolding around weak model behavior. The pieces that stay are tied to reliability: state, tool contracts, gates, verification, recovery, traces, and tests.</p>
+<p>The pieces that age are scaffolding around weak model behavior, while the pieces that stay are tied to reliability: state, tool contracts, gates, verification, recovery, traces, and tests.</p>
 
 
 </section>
@@ -2399,7 +2399,7 @@ Figure&nbsp;2: Three nested levels of engineering. Each level encompasses the pr
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/02-harness-is-the-product/</guid>
-  <pubDate>Thu, 23 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Thu, 23 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Why AI agent demos break in production</title>
@@ -2535,7 +2535,7 @@ background-color: null;
 font-style: inherit;">2</span>,</span>
 <span id="cb3-11">    },</span>
 <span id="cb3-12">}</span></code></pre></div></div>
-<p>Now the agent reads <code>plan_tier = enterprise</code> instead of rediscovering it from the transcript. The transcript records what the user said. State records what the system can rely on. <a href="../../../../posts/series/the-agent-harness/03-state-not-transcript/index.html">State, not transcript, is agent memory</a> goes deeper into that distinction.</p>
+<p>Now the agent reads <code>plan_tier = enterprise</code> instead of rediscovering it from the transcript. The transcript records what the user said; state records what the system can rely on. <a href="../../../../posts/series/the-agent-harness/03-state-not-transcript/index.html">State, not transcript, is agent memory</a> goes deeper into that distinction.</p>
 <ul>
 <li><strong>Visible failure:</strong> the model forgot.</li>
 <li><strong>Deeper failure:</strong> the system treated the conversation transcript as memory.</li>
@@ -2588,7 +2588,7 @@ font-style: inherit;">"confirmed"</span>,</span>
 <li><strong>Visible failure:</strong> the agent gave a wrong answer.</li>
 <li><strong>Deeper failure:</strong> the system never tracked which claims were supported by which evidence.</li>
 </ul>
-<p>Groundedness is a system property. Polished prose does not make an answer grounded.</p>
+<p>Groundedness is a system property; polished prose does not make an answer grounded.</p>
 </section>
 <section id="failure-5-the-agent-repeats-a-side-effect" class="level2">
 <h2 class="anchored" data-anchor-id="failure-5-the-agent-repeats-a-side-effect">Failure 5: The agent repeats a side effect</h2>
@@ -2626,7 +2626,7 @@ font-style: inherit;">"idempotency_key"</span>: <span class="st" style="color: #
 background-color: null;
 font-style: inherit;">"run_847_step_3"</span>,</span>
 <span id="cb7-5">}</span></code></pre></div></div>
-<p>After an ambiguous timeout, the agent should check the calendar before retrying. Verify first, retry second.</p>
+<p>After an ambiguous timeout, the agent should check the calendar before retrying.</p>
 <ul>
 <li><strong>Visible failure:</strong> the meeting update happened twice.</li>
 <li><strong>Deeper failure:</strong> the system treated reads and writes as equivalent tool calls.</li>
@@ -2686,7 +2686,7 @@ Figure&nbsp;1: Six failure shapes mapped to the control surfaces that should hav
 <li><strong>Step logging:</strong> logs that say what happened do not explain why it happened. A useful trace records state, decisions, tool inputs, tool outputs, verification results, and version information.</li>
 <li><strong>Random-failure framing:</strong> most failures are recurring shapes. Once the category is visible, the team can engineer against it.</li>
 </ul>
-<p>Reliable agents do not come from prompts alone. They come from moving the right responsibilities into the harness: state, workflow, gates, tools, verification, traces, and tests.</p>
+<p>Reliable agents come from moving the right responsibilities into the harness rather than from prompts alone: state, workflow, gates, tools, verification, traces, and tests.</p>
 
 
 </section>
@@ -2694,7 +2694,7 @@ Figure&nbsp;1: Six failure shapes mapped to the control surfaces that should hav
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/01-demos-break/</guid>
-  <pubDate>Sat, 18 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sat, 18 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Behind the scenes of AI agent frameworks</title>
@@ -2959,7 +2959,7 @@ font-style: inherit;">"style"</span>],</span>
 <span id="cb2-15">    },</span>
 <span id="cb2-16">}</span></code></pre></div></div>
 <p>The framework’s <code>@function_tool</code> decorator generates this from the Pydantic model and the docstring at import time. Without the framework you write it by hand for every tool, and keep it in sync when the function signature changes.</p>
-<p>One thing worth knowing now, because it determines how well the agent works: <strong>the schema is part of the prompt the model sees during generation.</strong> Vague parameter descriptions weaken the agent more than people expect. Treat schemas with the same care you’d treat a system prompt.</p>
+<p>One thing worth knowing now, because it determines how well the agent works: the schema is part of the prompt the model sees during generation. Vague parameter descriptions weaken the agent more than people expect. Treat schemas with the same care you’d treat a system prompt.</p>
 <p>The schema can also constrain values, but only for constraints you actually put in. If <code>style</code> should only be one of three strings, use an enum:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
@@ -3099,7 +3099,7 @@ font-style: inherit;">]</span></span>
 <span id="cb4-12"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">}</span></span></code></pre></div></div>
-<p>The model didn’t emit <code>&lt;tool_call&gt;...&lt;/tool_call&gt;</code> tags as plain text. It produced output that the API surfaces in a typed <code>tool_calls</code> field, with <code>content: null</code> because the model didn’t generate any text alongside.</p>
+<p>The API surfaces this output in a typed <code>tool_calls</code> field, with <code>content: null</code> because the model didn’t generate any text alongside.</p>
 </section>
 <section id="the-messages-array" class="level3">
 <h3 class="anchored" data-anchor-id="the-messages-array">3. The messages array</h3>
@@ -3145,7 +3145,7 @@ font-style: inherit;">"Send a cold sales email"</span>},</span>
 <li><code>length</code>: generation hit the token limit. Response is truncated.</li>
 <li><code>content_filter</code>: the API’s safety filter intervened.</li>
 </ul>
-<p><code>finish_reason</code> is the API’s label for what just happened, not a decision the model made. The model emits tokens; the API examines what was emitted and applies the label. If the output ended with structured tool-call tokens, the API labels it <code>tool_calls</code>. If the budget was hit mid-generation, the API labels it <code>length</code>. Knowing which layer the signal comes from is the first move in debugging.</p>
+<p><code>finish_reason</code> is the API’s label for what just happened. The model emits tokens; the API examines what was emitted and applies the label. If the output ended with structured tool-call tokens, the API labels it <code>tool_calls</code>. If the budget was hit mid-generation, the API labels it <code>length</code>. Knowing which layer the signal comes from is the first move in debugging.</p>
 </section>
 <section id="the-loop-itself" class="level3">
 <h3 class="anchored" data-anchor-id="the-loop-itself">5. The loop itself</h3>
@@ -3380,7 +3380,7 @@ font-style: inherit;">}"</span>}}</span>
 <pre><code>{"role": "tool", "tool_call_id": "call_001", "content": "Subject: Streamlining your Q4 operations\n\nDear..."}</code></pre>
 <p>The messages array now has six entries: <code>system</code>, <code>user</code>, <code>assistant</code> (with three tool calls), <code>tool</code>, <code>tool</code>, <code>tool</code>.</p>
 <p><strong>Loop 2.</strong> Second API call. The model is now seeing the system prompt, the user query, the three tool calls it made, and the three emails the tools produced. It evaluates them, the professional one is generic, the engaging one too casual, the concise one lacks credibility, and emits two new <code>generate_email</code> calls with <code>include_data=true</code> and adjusted lengths. The model didn’t “remember” anything between loops; models are stateless. The continuity is your code’s responsibility, sitting in the messages array that gets re-sent each iteration.</p>
-<p><strong>Loop 3.</strong> Your code dispatches the two retries. By now the array contains ten entries and five emails worth of text. Every loop iteration re-sends the entire array, so by Loop 3 you’re paying input tokens on the system prompt, the user query, three full email texts from Loop 1, two more from Loop 2, and the assistant messages tying them together. Server-managed state via <code>previous_response_id</code> avoids the physical re-upload, but the conceptual cost is the same: the model attends to all accumulated history on every step, and the token bill reflects that. This is one of the main reasons production agents trim, summarize, or compress their context as it grows. The framework hides the loop but it doesn’t hide the bill.</p>
+<p><strong>Loop 3.</strong> Your code dispatches the two retries. By now the array contains ten entries and five emails worth of text. Every loop iteration re-sends the entire array, so by Loop 3 you’re paying input tokens on the system prompt, the user query, three full email texts from Loop 1, two more from Loop 2, and the assistant messages tying them together. Server-managed state via <code>previous_response_id</code> avoids the physical re-upload, but the conceptual cost is the same: the model attends to all accumulated history on every step, and the token bill reflects that. This is one of the main reasons production agents trim, summarize, or compress their context as it grows. The framework hides the loop, but the token cost stays yours.</p>
 <p><strong>Loops 4-5.</strong> The pattern repeats. The model sees the five emails, picks the strongest, and emits a single <code>send_email</code> call. Your code dispatches it. The next API call has nothing left to do; the model generates a brief confirmation in plain text, no tool calls, and the API sets <code>finish_reason="stop"</code>. Your code returns the assistant message and exits.</p>
 <p>Five loops, multiple API round trips, tool executions, one cold sales email sent. The framework’s <code>Runner.run()</code> collapses all of that into one line.</p>
 </section>
@@ -3445,7 +3445,7 @@ font-style: inherit;"># dict</span></span></code></pre></div></div>
 <li><strong>Did the API parse and return the tool call correctly?</strong> Almost always yes for tool-call shape, since structured output is constrained at the API boundary. But <code>finish_reason</code> values come from the API and tell you why generation stopped (<code>length</code>, <code>content_filter</code>, etc.), not what the model decided.</li>
 <li><strong>Did your code dispatch the tool, append the result, and continue the loop correctly?</strong> This is where most bugs in a manual implementation live, and where <a href="../../../../posts/series/the-agent-harness/05-traces/index.html">most bugs in a framework implementation are hidden behind abstractions you can’t see</a>. Drop down to the API call directly when in doubt; the framework can be a fog over what the model is actually emitting.</li>
 </ul>
-<p>The useful mental model is short: <strong>the model emits, the API parses, your code dispatches and loops.</strong> Frameworks are convenience layered over those three steps.</p>
+<p>The model emits, the API parses, your code dispatches and loops. Frameworks are convenience layered over those three steps.</p>
 
 
 </section>
@@ -3453,7 +3453,7 @@ font-style: inherit;"># dict</span></span></code></pre></div></div>
  ]]></description>
   <category>What an agent actually is</category>
   <guid>https://yeesengchan.com/posts/series/what-an-agent-actually-is/02-agent-frameworks/</guid>
-  <pubDate>Tue, 14 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 14 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>What the heck is an AI agent?</title>
@@ -3487,7 +3487,7 @@ What an agent actually is
 </ol>
 </div>
 <p>“Agent” has become the most overloaded word in AI engineering. Vendors apply it to everything from a single tool-use LLM call to systems that run autonomously for days. The definitions in serious use don’t agree with each other, and the disagreement isn’t going to resolve.</p>
-<p>The right move isn’t to pick a winner. It’s to refuse the question. Stop asking whether something is an agent. Ask how much autonomy it has, and whether that’s the right amount for the task.</p>
+<p>Rather than pick a winner, stop asking whether something is an agent. Ask how much autonomy it has, and whether that’s the right amount for the task.</p>
 <section id="stop-asking-for-one-definition" class="level2">
 <h2 class="anchored" data-anchor-id="stop-asking-for-one-definition">Stop asking for one definition</h2>
 <p>The definitions across the field vary, and the variation is real:</p>
@@ -3498,7 +3498,7 @@ What an agent actually is
 <li><p><strong>Cameron Wolfe</strong> <span class="citation" data-cites="wolfe_2025">(Wolfe 2025)</span> builds the idea from first principles: standard LLMs, tool usage, decomposing problems, reasoning models, and more autonomous systems. He frames agents as lying on a spectrum of capabilities rather than drawing one hard threshold for what counts as a “real” agent.</p></li>
 <li><p><strong>McKinsey’s 2025 enterprise survey</strong> <span class="citation" data-cites="mckinsey_2025">(McKinsey &amp; Company 2025)</span> frames AI agents as systems based on foundation models that act in the real world and are capable of autonomously planning and executing multiple steps in a workflow. This is a more autonomy-heavy enterprise framing than Lambert’s tool-use baseline.</p></li>
 </ul>
-<p>These definitions do not fully agree. That is why the better question is not “is this an agent?” but “how much autonomy does it have, and is that the right amount for the task?”</p>
+<p>These definitions do not fully agree.</p>
 </section>
 <section id="the-autonomy-spectrum" class="level2">
 <h2 class="anchored" data-anchor-id="the-autonomy-spectrum">The autonomy spectrum</h2>
@@ -3541,7 +3541,7 @@ What an agent actually is
 <p><strong>+ Tools</strong> is the first place the word “agent” gets applied, and where the definition fight starts. A model that emits one tool call and synthesizes the result is doing more than text generation, but calling it autonomous is a stretch. Wolfe calls this Level 1; Lambert calls it the entry point to the spectrum.</p>
 <p><strong>+ Loop</strong> is where “agentic” becomes a defensible label. The model can chain operations: search, read a result, refine the query, search again, synthesize. ReAct <span class="citation" data-cites="yao_etal_2023">(Yao et al. 2023)</span> formalized this early (alternating reasoning and action steps until the model decides it’s done) and it’s still the canonical pattern. The loop is also where <a href="../../../../posts/series/the-agent-harness/01-demos-break/index.html">things fail in interesting ways</a>: the model can loop without converging, hallucinate tool calls, or decide the task is done when it isn’t.</p>
 <p><strong>+ Autonomy</strong> is the regime Anthropic reserves the word “agent” for, and it’s where the failure modes get expensive.</p>
-<p>Each step adds capability and removes a constraint. Each one is also a deliberate engineering choice. More autonomy isn’t better; it’s different. A task that would be well served by a fixed workflow doesn’t improve when you add a planning loop, and a task that genuinely needs open-ended exploration isn’t solved by a single tool call.</p>
+<p>Each step adds capability and removes a constraint. Each one is also a deliberate engineering choice. More autonomy is different, not better. A task that would be well served by a fixed workflow doesn’t improve when you add a planning loop, and a task that genuinely needs open-ended exploration isn’t solved by a single tool call.</p>
 <p>To make this concrete, take a customer-support refund task. A standard LLM can’t handle it at all. With no access to the order record, the best it can do is draft a generic reply that pretends to. With tools, it can look up the order and draft a real one. With a loop, it can ask for missing information and retry. With reasoning, it can handle edge cases: orders past the policy window, partial refunds, conflicts with prior tickets. With autonomy, it decides whether to issue the refund or escalate.</p>
 <div id="fig-agent-spectrum" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A horizontal spectrum diagram for the word agent. The left end is labeled with a single tool call, the simplest case. Moving right, the points increase in autonomy and scope through multi-step tool use and longer task loops. The right end is labeled with systems that run without human input for extended periods. The figure frames agent as this whole range rather than one fixed point on it.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -3564,13 +3564,13 @@ Figure&nbsp;1: "Agent" does not pick out a single artifact; it picks out a range
 <li><strong>Memory.</strong> What’s available across loop iterations and across sessions.</li>
 <li><strong>Control flow.</strong> Decides which path through the system gets taken; via explicit code, or implicit in the model’s reasoning.</li>
 </ul>
-<p>The proportions and complexity vary; the components don’t.</p>
-<p>This is also why agents aren’t a fundamentally new paradigm. A modern agent is a tool-use LLM in a loop with structured control flow, and each component has been around for years: Toolformer <span class="citation" data-cites="schick_etal_2023">(Schick et al. 2023)</span> for tool use, ReAct <span class="citation" data-cites="yao_etal_2023">(Yao et al. 2023)</span> for the reasoning-and-action loop, and the broader control-flow patterns Anthropic documented in late 2024. The novelty isn’t the architecture. It’s that the underlying language models are finally good enough at instruction-following, structured output, and reasoning that the architecture works in production.</p>
+<p>The proportions and complexity vary, but the components stay the same.</p>
+<p>This is also why agents aren’t a fundamentally new paradigm. A modern agent is a tool-use LLM in a loop with structured control flow, and each component has been around for years: Toolformer <span class="citation" data-cites="schick_etal_2023">(Schick et al. 2023)</span> for tool use, ReAct <span class="citation" data-cites="yao_etal_2023">(Yao et al. 2023)</span> for the reasoning-and-action loop, and the broader control-flow patterns Anthropic documented in late 2024. The novelty is in the models, not the architecture: the underlying language models are finally good enough at instruction-following, structured output, and reasoning that the architecture works in production.</p>
 <p>Frameworks like LangChain, LangGraph, and the OpenAI Agents SDK abstract these primitives into higher-level constructs. That’s often useful, as they handle schema generation, message management, tool dispatch, retry logic. But the abstraction has a cost. Anthropic’s recommendation is worth taking seriously: start with direct API calls so you understand the mechanics, then reach for frameworks once the cost of not using one is clear. The <a href="../../../../posts/series/what-an-agent-actually-is/02-agent-frameworks/index.html">next article</a> goes deep and looks at what tool calls look like at the token level, how the loop is implemented, and what frameworks save you versus what they hide.</p>
 </section>
 <section id="more-autonomy-is-not-always-better" class="level2">
 <h2 class="anchored" data-anchor-id="more-autonomy-is-not-always-better">More autonomy is not always better</h2>
-<p>If you read AI marketing in 2026, the implicit definition of an agent is the right end of the spectrum: a system that operates without human input, makes decisions, takes actions, plans across long horizons. That’s the picture. It’s also a small slice of what’s actually deployed.</p>
+<p>If you read AI marketing in 2026, the implicit definition of an agent is the right end of the spectrum: a system that operates without human input, makes decisions, takes actions, plans across long horizons. That’s the picture, but it’s a small slice of what’s actually deployed.</p>
 <p>Anthropic’s engineering team has been direct about this. Their observation, after working with dozens of teams building production systems: the most successful implementations weren’t using complex frameworks or specialized libraries. They were building with simple, composable patterns. The systems delivering value in production are mostly workflows with LLM calls in them, not open-ended autonomous agents.</p>
 <p>Two systems I’ve built sit at different points on the spectrum. The clinical-documentation pipeline is a workflow: code routes a series of LLM calls that <a href="../../../../posts/series/research-foundations-of-modern-llms/05-information-extraction/index.html">extract problems, labs, and physical-exam findings into note sections</a>. The LLM is the labor; the control flow is fixed, and that’s what makes the system shippable. The deep research agent I built sits further right. Query formulation, how deeply to read each source, and when to stop are all the model’s calls, with a controller-enforced budget on top so the agency stays bounded.</p>
 <p>This isn’t a temporary state that resolves when the models get better. It reflects a permanent engineering reality: predictability is valuable. A workflow with fixed control flow is easier to debug, evaluate, and ship. An autonomous agent that decides its own path is harder on every axis. For most production tasks, the cost of that flexibility has to be balanced against its benefit. McKinsey’s 2025 survey found only about 10% of enterprises have agents running in production in even a single department, despite vendor messaging suggesting far wider adoption.</p>
@@ -3605,7 +3605,7 @@ Yao, Shunyu, Jeffrey Zhao, Dian Yu, et al. 2023. <span>“ReAct: Synergizing Rea
 </div></section></div> ]]></description>
   <category>What an agent actually is</category>
   <guid>https://yeesengchan.com/posts/series/what-an-agent-actually-is/01-what-is-an-agent/</guid>
-  <pubDate>Sat, 11 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sat, 11 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Information extraction didn’t disappear. It moved inside the workflow.</title>
@@ -3643,8 +3643,8 @@ Research foundations of modern LLMs
 </div>
 <p>For thirty years, information extraction was a real subfield of NLP. Named entity recognition, relation extraction, event extraction, coreference resolution, slot filling, knowledge-base population. Annotated corpora: ACE, OntoNotes, KBP, TAC. A shared-task culture at every major conference. An entire industry of vendors and government-funded R&amp;D organizations whose product was, essentially, structured records pulled out of unstructured text.</p>
 <p>By 2024, the center of gravity had shifted.</p>
-<p>The standard story is that LLMs replaced IE. The truer claim is that IE didn’t disappear. It moved inside the workflow. Where the pre-LLM IE pipeline was the <em>product</em> (extract entities, link them, populate a knowledge base, ship the KB), modern IE is the <em>structured layer</em> between raw text and downstream generation or action.</p>
-<p>What changed wasn’t the existence of the work. It was the labor model. Pre-LLM IE meant labeling thousands of examples per task, engineering features, training task-specific classifiers, and tuning a pipeline. LLM-era IE means designing a JSON schema, writing a prompt, and evaluating the result. Both are real engineering. They are not the same engineering.</p>
+<p>The standard story is that LLMs replaced IE. What actually happened is that IE moved inside the workflow. Where the pre-LLM IE pipeline was the <em>product</em> (extract entities, link them, populate a knowledge base, ship the KB), modern IE is the <em>structured layer</em> between raw text and downstream generation or action.</p>
+<p>The work still exists. What changed is the labor model. Pre-LLM IE required labeling thousands of examples per task, engineering features, training task-specific classifiers, and tuning a pipeline. LLM-era IE requires designing a JSON schema, writing a prompt, and evaluating the result. Both require real engineering of different kinds.</p>
 <p>I worked across all three eras the article traces: pre-BERT IE during a postdoc, BERT-era production IE through the late 2010s, and LLM-era workflow IE now.</p>
 <div id="fig-three-eras" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three stacked panels for three eras of information extraction. The pre-BERT and BERT panels show the same left-to-right pipeline of identical boxes, with only the contents of each box changing between them, hand-built features in the first and learned BERT representations in the second. The LLM panel replaces the linear pipeline with a workflow: several extraction calls run in parallel and emit structured frames that flow into a downstream system. A side label contrasts the labor profile, shifting from data annotation and feature engineering in the earlier eras to schema design, prompt engineering, and evaluation in the LLM era.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -3669,7 +3669,7 @@ Figure&nbsp;1: The three eras of information extraction. The pipeline shape is u
 <p>Each of these was its own subfield. Each had its own datasets: CoNLL-2003 <span class="citation" data-cites="sang_demeulder_2003">(Tjong Kim Sang and Meulder 2003)</span> for NER, ACE-2005 <span class="citation" data-cites="walker_etal_2006">(Walker et al. 2006)</span> for events and relations, OntoNotes <span class="citation" data-cites="hovy_etal_2006">(Hovy et al. 2006)</span> for coreference, the TAC KBP datasets <span class="citation" data-cites="ji_grishman_2011">(Ji and Grishman 2011)</span> for end-to-end knowledge-base construction. Each had its own modeling tradition: HMMs and CRFs for sequence labeling, structured-prediction for relation classification, ILP-based joint inference for combining extractions.</p>
 <p>The labor was substantial and concentrated on the input side. To build an NER system for a new entity type, you collected text, annotated mentions (typically thousands per type), engineered features (word identity, POS, gazetteer match, dependency context), and trained a classifier. Relation extraction added another annotation pass per relation type. Event extraction added another for triggers and another for each argument role.</p>
 <p>I worked in this regime during my postdoc. The published work from that period is on relation extraction <span class="citation" data-cites="chan_roth_2010 chan_roth_2011">(Chan and Roth 2010, 2011)</span> and minimally-supervised event causality <span class="citation" data-cites="do_etal_2011">(Do et al. 2011)</span>. The relation-extraction setup was typical for the era: a feature engineering pass over syntactic and semantic structures (constituency parses, dependency paths, semantic roles, Wikipedia categories as background knowledge), then a structured classifier.</p>
-<p>The defining property of pre-BERT IE wasn’t any particular model. It was the labor model. Every new task, every new domain, every new ontology required a fresh labeling effort, a fresh feature-engineering pass, and a fresh trained model. Performance was decent on benchmarks and worse in domain transfer. Adapting to a new domain typically meant starting over.</p>
+<p>The defining property of pre-BERT IE was the labor model, not any particular architecture. Every new task, every new domain, every new ontology required a fresh labeling effort, a fresh feature-engineering pass, and a fresh trained model. Performance was decent on benchmarks and worse in domain transfer. Adapting to a new domain typically meant starting over.</p>
 </section>
 <section id="bert-made-ie-better-not-cheaper" class="level2">
 <h2 class="anchored" data-anchor-id="bert-made-ie-better-not-cheaper">BERT made IE better, not cheaper</h2>
@@ -3689,7 +3689,7 @@ Figure&nbsp;1: The three eras of information extraction. The pipeline shape is u
 </section>
 <section id="llms-changed-the-labor-model" class="level2">
 <h2 class="anchored" data-anchor-id="llms-changed-the-labor-model">LLMs changed the labor model</h2>
-<p>What changed with LLMs wasn’t that you could finally do IE. You could already do IE. What changed was the cost structure.</p>
+<p>IE was already possible before LLMs. What they changed was the cost structure.</p>
 <p>A frontier LLM with structured-output support can solve most NER, RE, and slot-filling tasks zero-shot or few-shot from a prompt and a JSON schema. Quality is task-dependent:</p>
 <ul>
 <li>On standard benchmarks like CoNLL-2003, a well-prompted frontier LLM lands within a few F1 points of fine-tuned baselines.</li>
@@ -3730,7 +3730,7 @@ Figure&nbsp;2: Three modern IE patterns. They differ in where the LLM sits and w
 <li><strong>Metadata on each extracted item.</strong> Temporal status (past / present / future), source and stance (patient-reported vs clinician-assessed), section affinity.</li>
 <li><strong>Downstream routing.</strong> Present-tense problem details go to HPI; clinician assessment and treatment plans go to A&amp;P; past resolved history goes to medical history.</li>
 </ul>
-<p>This is the modern form of IE I see most often: not an extractor that ships as the product, but a structured control layer that lets the rest of the workflow behave reliably. The product is the clinical note; the extractions are what the downstream system builds it from.</p>
+<p>This is the modern form of IE I see most often: a structured control layer that lets the rest of the workflow behave reliably. The product is the clinical note; the extractions are what the downstream system builds it from.</p>
 <p>The pattern isn’t unique. SpecialtyScribe <span class="citation" data-cites="goyal_etal_2025">(Goyal et al. 2025)</span> and GENIE <span class="citation" data-cites="ying_etal_2025">(Ying et al. 2025)</span> are published instances of the same idea: IE as the structured intermediate layer of a workflow, with the extraction done by a frontier LLM, a fine-tuned smaller specialist, or a mix.</p>
 <p>GraphRAG <span class="citation" data-cites="edge_etal_2024">(Edge et al. 2024)</span> is another version of the same move: use IE to turn documents into entities, relations, and summaries, then run retrieval and reasoning over that structure rather than over raw chunks. These are entity extraction, relation extraction, and light coreference, with the graph as the structured layer they feed.</p>
 </section>
@@ -3797,7 +3797,7 @@ font-style: inherit;">}</span></span></code></pre></div></div>
 <li><strong>Workflow orchestration</strong>: how extractions compose, how frames are routed, where metadata gates decisions.</li>
 <li><strong>Cost control</strong>: which calls run on a frontier model, which on a smaller specialist, which can be batched or cached.</li>
 </ul>
-<p>The old labor was annotation, feature engineering, and per-task model training. The new labor is schema, prompts, eval, and orchestration. The label changed, but the work did not vanish. It moved from model training into workflow design.</p>
+<p>None of this is less work than before. It moved from model training into workflow design.</p>
 </section>
 <section id="when-classical-ie-still-wins" class="level2">
 <h2 class="anchored" data-anchor-id="when-classical-ie-still-wins">When classical IE still wins</h2>
@@ -3828,9 +3828,8 @@ font-style: inherit;">}</span></span></code></pre></div></div>
 </section>
 <section id="closing" class="level2">
 <h2 class="anchored" data-anchor-id="closing">Closing</h2>
-<p>For decades, information extraction was a product: annotate, train, extract, ship the knowledge base. BERT made the models better but left the labor model intact; every new domain still cost an annotation effort. LLMs didn’t make IE possible. IE was already possible. They made it low-startup-cost enough that it stopped being a product and became infrastructure: the structured layer between raw text and whatever the system does next.</p>
-<p>The work didn’t disappear. The annotation-and-feature-engineering labor became schema-and-eval labor.</p>
-<p><strong>The extractor stopped being the deliverable and became workflow state.</strong></p>
+<p>For decades, information extraction was a product: annotate, train, extract, ship the knowledge base. BERT made the models better but left the labor model intact; every new domain still cost an annotation effort. LLMs did not make IE possible; it already was. They made it low-startup-cost enough that it stopped being a product and became infrastructure: the structured layer between raw text and whatever the system does next.</p>
+<p>The extractor now serves as workflow state rather than the final deliverable.</p>
 <p>The papers on the hard research problems (coreference, cross-document linking, strict argument-role constraints) are still being written; they’re just no longer where most production IE work happens. The next time someone says their system “doesn’t do information extraction,” it’s worth asking what the JSON between their LLM calls is.</p>
 
 
@@ -3901,7 +3900,7 @@ Zhang, Zikun, Wei You, Tongtao Wu, Xiaolong Wang, Jianxin Li, and Min Zhang. 202
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/05-information-extraction/</guid>
-  <pubDate>Sun, 05 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sun, 05 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>The fine-tuning stack: one loss, different data</title>
@@ -3938,7 +3937,7 @@ Research foundations of modern LLMs
 </ol>
 </div>
 <p>The standard story about post-pretraining is: first supervised fine-tuning (often called instruction tuning), then alignment with RLHF or DPO. Two stages, presented as several distinct techniques because the SFT stage has gone by many names: supervised fine-tuning, instruction tuning, distilled SFT, chat tuning. Mechanically, they’re the same operation.</p>
-<p>Here’s the thesis: SFT shares its loss function with pretraining. They’re both next-token cross-entropy, differing only in what data goes in and which tokens contribute to the loss. Preference optimization is the only stage that introduces a genuinely new loss family.</p>
+<p>SFT shares its loss function with pretraining. They’re both next-token cross-entropy, differing only in what data goes in and which tokens contribute to the loss. Preference optimization is the only stage that introduces a genuinely new loss family.</p>
 <section id="two-loss-families-across-three-stages" class="level2">
 <h2 class="anchored" data-anchor-id="two-loss-families-across-three-stages">Two loss families across three stages</h2>
 <div id="fig-three-jobs" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A diagram of three training stages grouped by loss family. Pretraining and supervised fine-tuning are bracketed together as one group because both use next-token cross-entropy; the diagram contrasts them only by their input data and by which tokens contribute to the loss. Preference optimization sits in a separate group, labeled as the only stage that introduces a different loss family.">
@@ -3989,7 +3988,7 @@ Figure&nbsp;2: LoRA decomposes the fine-tuning update into two small matrices B 
 </figcaption>
 </figure>
 </div>
-<p><a href="https://chanys.github.io/lora/">LoRA</a> <span class="citation" data-cites="hu_etal_2022">(Hu et al. 2022)</span> trains a small low-rank adapter on top of a frozen base model. The premise: full fine-tuning is overkill for most tasks because fine-tuning updates have low intrinsic rank. The base already knows grammar, world facts, and reasoning patterns; fine-tuning is usually a <em>nudge</em>, not a rewrite. LoRA replaces the full update <img src="https://latex.codecogs.com/png.latex?%5CDelta%20W"> with the product of two much smaller matrices <img src="https://latex.codecogs.com/png.latex?BA">, where the rank <img src="https://latex.codecogs.com/png.latex?r"> is much smaller than the original matrix dimensions. The base <img src="https://latex.codecogs.com/png.latex?W_0"> stays frozen; only the small <img src="https://latex.codecogs.com/png.latex?B"> and <img src="https://latex.codecogs.com/png.latex?A"> are trained. The phrase to remember: LoRA works because fine-tuning is usually steering, not rebuilding.</p>
+<p><a href="https://chanys.github.io/lora/">LoRA</a> <span class="citation" data-cites="hu_etal_2022">(Hu et al. 2022)</span> trains a small low-rank adapter on top of a frozen base model. The premise: full fine-tuning is overkill for most tasks because fine-tuning updates have low intrinsic rank. The base already knows grammar, world facts, and reasoning patterns; fine-tuning is usually a <em>nudge</em>, not a rewrite. LoRA replaces the full update <img src="https://latex.codecogs.com/png.latex?%5CDelta%20W"> with the product of two much smaller matrices <img src="https://latex.codecogs.com/png.latex?BA">, where the rank <img src="https://latex.codecogs.com/png.latex?r"> is much smaller than the original matrix dimensions. The base <img src="https://latex.codecogs.com/png.latex?W_0"> stays frozen; only the small <img src="https://latex.codecogs.com/png.latex?B"> and <img src="https://latex.codecogs.com/png.latex?A"> are trained.</p>
 <p><a href="https://chanys.github.io/qlora/">QLoRA</a> <span class="citation" data-cites="dettmers_etal_2023">(Dettmers et al. 2023)</span> keeps LoRA’s structure but quantizes the frozen base to 4 bits while leaving the adapter in 16-bit. The QLoRA mechanics (NF4 quantization, double quantization of scale constants, paged optimizers for memory spikes) are covered in the <a href="https://chanys.github.io/qlora/">QLoRA deep-dive post</a>; they’re what makes the memory math work but they’re orthogonal to the article’s thesis.</p>
 <p>Almost all open-source fine-tuning in 2024-2026 uses LoRA or QLoRA. Full fine-tuning still happens for frontier-scale base-model training, but downstream specialization is overwhelmingly LoRA-based. The wave of fine-tuned open-source models from late 2023 onward is downstream of this.</p>
 </section>
@@ -4060,7 +4059,7 @@ Zhou, Chunting, Pengfei Liu, Puxin Xu, et al. 2023. <span>“LIMA: Less Is More 
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/04-fine-tuning-stack/</guid>
-  <pubDate>Tue, 31 Mar 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 31 Mar 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Retrieval is older than RAG: from DPR to end-to-end</title>
@@ -4212,7 +4211,7 @@ Figure&nbsp;2: The production RAG pipeline. Top: offline indexing. Bottom: onlin
 </section>
 <section id="closing" class="level2">
 <h2 class="anchored" data-anchor-id="closing">Closing</h2>
-<p>The retrieval lineage from DPR through RA-DIT is a story of escalating sophistication: bi-encoder dense retrieval, then joint training with a frozen index, then joint training with an updating index, then a two-stage practical compromise. Production RAG, meanwhile, mostly stopped at step one. That’s not a critique. The simpler pattern works well for most use cases, and the engineering cost of going further is real.</p>
+<p>The retrieval lineage from DPR through RA-DIT is a story of escalating sophistication: bi-encoder dense retrieval, then joint training with a frozen index, then joint training with an updating index, then a two-stage practical compromise. Production RAG, meanwhile, mostly stopped at step one. The simpler pattern works well for most use cases, and the engineering cost of going further is real.</p>
 <p>But the gap is worth knowing. When the off-the-shelf pipeline isn’t working on your data, the next step isn’t to swap embedding models or try another vector database. It’s to figure out where in the pipeline the loss is happening, and whether the answer is a configuration change, a fine-tune, or the more ambitious territory the original RAG paper was actually about.</p>
 
 
@@ -4250,7 +4249,7 @@ Siriwardhana, Shamane, Rivindu Weerasekera, Elliott Wen, Tharindu Kaluarachchi, 
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/03-retrieval/</guid>
-  <pubDate>Fri, 27 Mar 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 27 Mar 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>The encoder didn’t die. It became the embedding model</title>
@@ -4289,7 +4288,7 @@ Research foundations of modern LLMs
 <p>The LLM story is usually told as a generation story: GPT scaling, instruction tuning, RLHF, chat, agents.</p>
 <p>But most LLM-powered systems also depend on a quieter model running in the background: an embedding model. RAG, semantic search, reranking, clustering, recommendation, deduplication, and classification all depend on embeddings. The generator gets the headlines, but the embedding model often decides what the generator gets to see.</p>
 <p>This is where encoders went.</p>
-<p>The <a href="../../../../posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/index.html">previous article</a> argued that decoder-only models won the general-purpose generation interface. This article makes the complementary argument: encoders didn’t die. They became the default architecture for turning text into reusable vectors.</p>
+<p>The <a href="../../../../posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/index.html">previous article</a> argued that decoder-only models won the general-purpose generation interface. This article makes the complementary argument: encoders became the default architecture for turning text into reusable vectors.</p>
 <p>More precisely, the embedding role was won by encoder-style machinery: bidirectional attention, pooled output representations, and contrastive fine-tuning. Even modern decoder-based embedders often move in this direction during fine-tuning, relaxing causal attention and training the model to produce reusable vectors.</p>
 <p>I have been circling this topic for a while. Since late 2022, I have written separate deep dives on <a href="https://chanys.github.io/sbert/">SBERT</a>, <a href="https://chanys.github.io/sgpt/">SGPT</a>, <a href="https://chanys.github.io/mteb-dataset/">MTEB</a>, <a href="https://chanys.github.io/mpnet/">MPNet</a>, <a href="https://chanys.github.io/plm/">PLM/XLNet</a>, <a href="https://chanys.github.io/knowledge-distillation/">knowledge distillation and DistilBERT</a>, and the relevant <a href="https://chanys.github.io/loss-functions/">loss functions</a> and <a href="https://chanys.github.io/knn/">KNN search</a> over at <a href="https://chanys.github.io" class="uri">https://chanys.github.io</a>. Those posts covered the individual papers and techniques; this article steps back from them to make the broader point.</p>
 <p>It is also a bridge between those older paper notes and the <a href="https://github.com/chanys/tnlp">TNLP codebase</a>: the paper trail explains the ideas, and the code shows what they look like when implemented.</p>
@@ -4353,7 +4352,7 @@ Figure&nbsp;1: Three architectures for similarity scoring. Bi-encoders encode in
 <p>The early version of this idea was <a href="https://chanys.github.io/sgpt/">SGPT</a> <span class="citation" data-cites="muennighoff_2022">(Muennighoff 2022)</span>: take a GPT-style decoder-only model, pool token representations with a position-weighted mean, and contrastively fine-tune for semantic search. It worked, but it was expensive relative to encoder-based alternatives.</p>
 <p>The current generation is stronger. Large decoder backbones (Llama, Mistral) can be turned into embedders that compete at the top of MTEB <span class="citation" data-cites="muennighoff_etal_2022">(Muennighoff et al. 2022)</span>, especially on retrieval and reranking. But notice the recipe they converge on: take a strong decoder-only LLM, relax or replace causal attention during fine-tuning, pool the output representations, and contrastively fine-tune on a large mix of data.</p>
 <p>That recipe looks encoder-like. Bidirectional access, pooled output, contrastive geometry. The starting weights may come from a decoder-only LLM, but the embedding behavior is built by the fine-tuning stage.</p>
-<p>So “decoders caught up” is only half right. The better framing is that large decoder backbones can be adapted into strong embedders when the fine-tuning recipe starts to look encoder-like. For most production systems, small encoder-based embedders remain attractive because they are fast and cheap. For highest-quality retrieval where compute is available, large decoder-based embedders are now real competitors.</p>
+<p>So “decoders caught up” is only half right. Large decoder backbones can be adapted into strong embedders when the fine-tuning recipe starts to look encoder-like. For most production systems, small encoder-based embedders remain attractive because they are fast and cheap. For highest-quality retrieval where compute is available, large decoder-based embedders are now real competitors.</p>
 </section>
 <section id="closing" class="level2">
 <h2 class="anchored" data-anchor-id="closing">Closing</h2>
@@ -4391,7 +4390,7 @@ Wang, Liang, Nan Yang, Xiaolong Huang, et al. 2022. <span>“Text Embeddings by 
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/02-encoder-embeddings/</guid>
-  <pubDate>Mon, 23 Mar 2026 04:00:00 GMT</pubDate>
+  <pubDate>Mon, 23 Mar 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Pretraining objectives: why decoder-only won</title>
@@ -4428,8 +4427,8 @@ Research foundations of modern LLMs
 </ol>
 </div>
 <p>The standard tutorial story: “BERT was bidirectional, T5 was sequence-to-sequence, GPT was autoregressive, and decoder-only won because it was simpler.” Sometimes “scaling worked better.” Sometimes “instruction-tuning needed it.”</p>
-<p>I think this story is shallow. The objective didn’t win; the paradigm did.</p>
-<p>I’ve been writing about these architectures individually since late 2022: deep-dives on <a href="https://chanys.github.io/transformer-architecture/">transformer architecture</a>, <a href="https://chanys.github.io/bert/">BERT</a>, <a href="https://chanys.github.io/roberta/">RoBERTa</a>, <a href="https://chanys.github.io/t5/">T5</a>, <a href="https://chanys.github.io/gpt1/">GPT-1</a>, <a href="https://chanys.github.io/electra/">ELECTRA</a>, <a href="https://chanys.github.io/deberta/">DeBERTa</a>, <a href="https://chanys.github.io/deberta-v3/">DeBERTa-v3</a>, <a href="https://chanys.github.io/ul2/">UL2</a>, <a href="https://chanys.github.io/flan-palm/">FLAN</a>, and <a href="https://chanys.github.io/llama2/">LLaMA-2</a> over at <a href="https://chanys.github.io" class="uri">https://chanys.github.io</a>. This article steps back from those individual treatments to make an argument those posts don’t make explicitly: the field’s reasons for converging on decoder-only are often misstated. Decoder-only did not win because causal language modeling was magically superior. It won because the decoder-only paradigm made pretraining, prompting, generation, inference, and deployment all line up.</p>
+<p>I think this story is shallow. Decoder-only won because of the paradigm, not the objective.</p>
+<p>I’ve been writing about these architectures individually since late 2022: deep-dives on <a href="https://chanys.github.io/transformer-architecture/">transformer architecture</a>, <a href="https://chanys.github.io/bert/">BERT</a>, <a href="https://chanys.github.io/roberta/">RoBERTa</a>, <a href="https://chanys.github.io/t5/">T5</a>, <a href="https://chanys.github.io/gpt1/">GPT-1</a>, <a href="https://chanys.github.io/electra/">ELECTRA</a>, <a href="https://chanys.github.io/deberta/">DeBERTa</a>, <a href="https://chanys.github.io/deberta-v3/">DeBERTa-v3</a>, <a href="https://chanys.github.io/ul2/">UL2</a>, <a href="https://chanys.github.io/flan-palm/">FLAN</a>, and <a href="https://chanys.github.io/llama2/">LLaMA-2</a> over at <a href="https://chanys.github.io" class="uri">https://chanys.github.io</a>. This article steps back from those individual treatments to make an argument those posts don’t make explicitly: the field’s reasons for converging on decoder-only are often misstated. Decoder-only won because the paradigm made pretraining, prompting, generation, inference, and deployment all line up, not because causal language modeling was magically superior.</p>
 <section id="a-short-tour-of-the-pretraining-objectives" class="level2">
 <h2 class="anchored" data-anchor-id="a-short-tour-of-the-pretraining-objectives">A short tour of the pretraining objectives</h2>
 <p>The objectives that defined the pretraining era can be characterized cleanly by what they hold out, what they leave visible, and which architectural family they imply. Throughout, let <img src="https://latex.codecogs.com/png.latex?x%20=%20(x_1,%20%5Cldots,%20x_n)"> be a sequence of tokens.</p>
@@ -4516,7 +4515,7 @@ Figure&nbsp;2: Attention masks across the three transformer families. Filled cel
 <p>This matters because some capabilities that look architecture-specific can be recovered by changing the data layout. Prefix-LM gives a decoder-style model bidirectional access to a prefix before generating a continuation. Fill-in-the-middle gives a decoder-only model infilling behavior by rearranging the sequence into prefix, suffix, then middle. Span corruption can be viewed similarly: decide what is visible, decide what is hidden, then train the model to predict the missing text.</p>
 <p>So the important question is not simply, “Which objective is best?” The better question is: Which training setup gives the most useful capabilities per unit of data, compute, and deployment complexity?</p>
 <p>From that angle, decoder-only models had a major advantage. They could absorb many task formats into a single pattern: put context in the prefix, then generate the continuation.</p>
-<p>The claim is not that CLM is theoretically superior to every denoising objective. The claim is that decoder-only made the fewest assumptions about the shape of the task. Once everything can be represented as context followed by continuation, the same model can support pretraining, instruction following, few-shot prompting, chat, tool use, and long-form generation without changing architecture.</p>
+<p>The claim is not that CLM is theoretically superior to every denoising objective, but that decoder-only made the fewest assumptions about the shape of the task. Once everything can be represented as context followed by continuation, the same model can support pretraining, instruction following, few-shot prompting, chat, tool use, and long-form generation without changing architecture.</p>
 </section>
 <section id="at-small-scale-objective-matters-more" class="level2">
 <h2 class="anchored" data-anchor-id="at-small-scale-objective-matters-more">At small scale, objective matters more</h2>
@@ -4529,12 +4528,12 @@ Figure&nbsp;2: Attention masks across the three transformer families. Filled cel
 </section>
 <section id="the-actual-reason-decoder-only-won-unification" class="level2">
 <h2 class="anchored" data-anchor-id="the-actual-reason-decoder-only-won-unification">The actual reason decoder-only won: unification</h2>
-<p>Decoder-only did not win because MLM was “wrong” or span corruption was “worse.” It won because the field moved from many specialized NLP tasks toward one general-purpose modeling interface.</p>
+<p>Decoder-only won because the field moved from many specialized NLP tasks toward one general-purpose modeling interface, not because MLM was “wrong” or span corruption was “worse.”</p>
 <p>BERT-style models were excellent for classification, sequence labeling, span extraction, and retrieval. But each task usually required a specific setup: a head, a pooling strategy, a masking scheme, or a fine-tuned output format.</p>
 <p>Decoder-only models made the interface much simpler: <em>Put the context in the prefix, then generate the continuation.</em></p>
 <p>That one pattern absorbs many tasks. Classification becomes completion. Question answering becomes completion. Dialogue becomes completion. Code generation becomes completion. Tool use becomes completion over an action-observation trace.</p>
 <p>So the deeper reason decoder-only won is unification: many task formats became one modeling problem: context in, continuation out.</p>
-<p><strong>1. One interface for many tasks.</strong> Decoder-only models turn many tasks into the same pattern: put the task description, examples, prior turns, or tool outputs in the prefix, then generate the continuation. Classification, QA, dialogue, code generation, and tool use all become variations of completion.</p>
+<p><strong>1. One interface for many tasks.</strong> Decoder-only models turn many tasks into the same pattern: put the task description, examples, prior turns, or tool outputs in the prefix, then generate the continuation.</p>
 <p><strong>2. Flexible training data.</strong> CLM trains directly on raw token sequences. No masking, span sampling, task-specific heads, or encoder-decoder split. Documents, code, conversations, transcripts, math, and structured text can all be modeled in the same format.</p>
 <p><strong>3. Training matches inference.</strong> Modern LLM use is generative: chat, instruction following, summarization, code generation, agents, and tool use. Decoder-only models are trained in the same mode in which they are used: condition on previous tokens, then generate the next ones. Encoders remain excellent representation learners, but open-ended generation is not their native mode.</p>
 <p><strong>4. New capabilities become formatting problems.</strong> Decoder-only models can absorb behaviors that once looked like they required specialized objectives. Fill-in-the-middle reframes span filling as autoregressive prediction over rearranged data. Instruction tuning, chat formatting, tool traces, and preference tuning follow the same pattern: keep the architecture fixed, change the data format and training signal.</p>
@@ -4602,7 +4601,7 @@ Tay, Yi, Mostafa Dehghani, Vinh Q. Tran, et al. 2023. <span>“UL2: Unifying Lan
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/</guid>
-  <pubDate>Wed, 18 Mar 2026 04:00:00 GMT</pubDate>
+  <pubDate>Wed, 18 Mar 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>How reasoning models learn to use tools</title>
@@ -4860,7 +4859,7 @@ font-style: inherit;">from</span> retrieved passages</span></code></pre></div></
 <p>The trajectory contains tokens the model didn’t write: the retrieved Wikipedia passages between <code>&lt;information&gt;</code> tags. Run the policy gradient over every token, and you’re training the model to assign higher probability to those passages too. That’s nonsense as a learning signal. The model didn’t choose those tokens, and the retrieved text isn’t even consistent across rollouts of the same prompt.</p>
 <p>The fix is to mask retrieved tokens out of the loss. Only update on tokens the model actually generated. The full PPO/GRPO objective is more involved, but the core idea is an indicator in front of each token’s contribution:</p>
 <p><img src="https://latex.codecogs.com/png.latex?%5Ctext%7BLoss%7D%20%5C;=%5C;%20-%5Csum_%7Bt=1%7D%5E%7B%7Cy%7C%7D%20I(y_t)%20%5C,%5Ccdot%5C,%20%5B%5C,%5Ctext%7Bpolicy-gradient%20signal%20at%20token%20%7D%20t%5C,%5D"></p>
-<p>where <img src="https://latex.codecogs.com/png.latex?I(y_t)%20=%201"> if the model generated token <img src="https://latex.codecogs.com/png.latex?y_t">, and <img src="https://latex.codecogs.com/png.latex?I(y_t)%20=%200"> if the token came from a retrieved passage. Without the indicator, retrieved tokens contribute to the gradient and pull the policy toward whatever was in the search results. With it, only tokens the model actually chose contribute.</p>
+<p>where <img src="https://latex.codecogs.com/png.latex?I(y_t)%20=%201"> if the model generated token <img src="https://latex.codecogs.com/png.latex?y_t">, and <img src="https://latex.codecogs.com/png.latex?I(y_t)%20=%200"> if the token came from a retrieved passage. Without the indicator, retrieved tokens contribute to the gradient and pull the policy toward whatever was in the search results; with it, only tokens the model actually chose contribute.</p>
 <p>Without the mask, the same model gets 34% average accuracy. With it, 43%. Nine points from one indicator function.</p>
 <p>The principle generalizes. Anytime your RL setup includes tokens from outside the model (search results, tool outputs, environment state, function returns), you have to be careful which ones enter the gradient. Get it wrong and the model regresses toward whatever distribution those external tokens come from.</p>
 </section>
@@ -4913,9 +4912,9 @@ font-style: inherit;">from</span> retrieved passages</span></code></pre></div></
 </tbody>
 </table>
 <p>The length rewards work. The traces visibly get longer. But accuracy gets worse, not better.</p>
-<p>This reshapes how to think about the R1 piece. In math and code, longer reasoning traces meant more exploration before commitment, which translated cleanly into accuracy. In tool use, the same instinct backfires. The model about to commit to a tool call doesn’t always benefit from talking itself through one more time. It can talk itself out of the right call, or elaborate a wrong call into a worse one.</p>
-<p>Thinking helps when the structure of the task rewards thinking. Math problems reward exploration before commitment. Tool use rewards picking the right tool, getting the arguments right, and getting on with it.</p>
-<p>You can see hints of this in production models. Claude and GPT-4 produce different amounts of reasoning depending on whether you’ve asked them to do math or look up a fact. The faster response on a tool-use task isn’t laziness, it’s efficiency. Optimal trace length is task-shaped.</p>
+<p>This reshapes how to think about the R1 piece. In math and code, longer reasoning traces meant more exploration before commitment, which translated cleanly into accuracy; in tool use, the same instinct backfires. The model about to commit to a tool call doesn’t always benefit from talking itself through one more time. It can talk itself out of the right call, or elaborate a wrong call into a worse one.</p>
+<p>Thinking helps when the structure of the task rewards thinking. Math problems reward exploration before commitment; tool use rewards picking the right tool, getting the arguments right, and getting on with it.</p>
+<p>You can see hints of this in production models. Claude and GPT-4 produce different amounts of reasoning depending on whether you’ve asked them to do math or look up a fact. The faster response on a tool-use task is efficiency, not laziness. Optimal trace length is task-shaped.</p>
 </section>
 </section>
 <section id="what-this-means-for-the-models-you-use" class="level2">
@@ -4951,7 +4950,7 @@ Qian, Cheng, Emre Can Acikgoz, Qi He, et al. 2026. <span>“ToolRL: Reward Is Al
 </div></section></div> ]]></description>
   <category>How LLMs learn to reason</category>
   <guid>https://yeesengchan.com/posts/series/how-llms-learn-to-reason/05-tool-use/</guid>
-  <pubDate>Sat, 14 Mar 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sat, 14 Mar 2026 00:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>

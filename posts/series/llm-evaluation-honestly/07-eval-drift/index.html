@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -41,14 +41,14 @@ ul.task-list li input[type="checkbox"] {
 <script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d5cc8be5113747845e6a8f301e2f5216.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-84d2a07a02d80bd473282a08374b6e76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-fe40ab8e643ad6158d4e6e7f87defb9b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -417,7 +417,7 @@ LLM evaluation, honestly
 <p>The running example is the docs Q&amp;A agent from <a href="../../../../posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.html">the judge calibration</a> and <a href="../../../../posts/series/llm-evaluation-honestly/06-rag-evaluation/index.html">RAG evaluation</a> articles. It answers retention-policy questions. At launch, the eval stack looks solid: retrieval checks, faithfulness judges, answer relevance judges, and answerability tests.</p>
 <p>Six months later, the dashboard is still green. That only means the agent still passes the old eval.</p>
 <p>Suppose the retention policy changes. Trial accounts used to retain data for 90 days. Now they retain data for 120 days. The docs are updated, and the agent correctly answers “120 days.” The eval set still expects “90 days,” so the dashboard reports a regression.</p>
-<p>The agent did not regress. The eval system became stale.</p>
+<p>The agent did not regress; the eval system became stale.</p>
 <p>The fix is eval maintenance:</p>
 <ul>
 <li><strong>Update the active case:</strong> the current expected answer is now 120 days.</li>
@@ -441,7 +441,7 @@ LLM evaluation, honestly
 </section>
 <section id="production-traces-keep-the-eval-current" class="level2">
 <h2 class="anchored" data-anchor-id="production-traces-keep-the-eval-current">Production traces keep the eval current</h2>
-<p>A locked eval set protects known failures. It does not discover new ones.</p>
+<p>A locked eval set protects known failures but does not discover new ones.</p>
 <p>Production traces show what users are asking now, what the agent is retrieving now, and which answers are failing now. Sample them regularly and feed the important cases back into the eval set.</p>
 <p>Use a small sampling plan:</p>
 <ul>
@@ -467,8 +467,8 @@ LLM evaluation, honestly
 <h2 class="anchored" data-anchor-id="the-eval-system-is-part-of-the-product">The eval system is part of the product</h2>
 <p>A dashboard is useful only if the eval still matches the product.</p>
 <p>The eval system has to track current policies, current documents, current traffic, judge validity, and the team’s standard for correctness. Production traces become labels. Labels become failure modes. Failure modes become checks, judges, and regression cases. Incidents update the suite.</p>
-<p>Teams that treat eval as first-class code version, review, monitor, and maintain it. Teams that do not eventually read numbers they can no longer trust.</p>
-<p>The next time someone reports “the eval system says we’re at 87%,” ask: <em>when did we last check that the eval system is still telling the truth?</em></p>
+<p>Teams that treat eval as first-class code version, review, monitor, and maintain it; teams that do not eventually read numbers they can no longer trust.</p>
+<p>A reading like “the eval system says we’re at 87%” is only worth trusting if you know when the eval system was last checked to confirm it still tells the truth.</p>
 
 
 </section>

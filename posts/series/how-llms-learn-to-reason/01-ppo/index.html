@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -95,14 +95,14 @@ div.csl-indent {
 <script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d5cc8be5113747845e6a8f301e2f5216.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-84d2a07a02d80bd473282a08374b6e76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-fe40ab8e643ad6158d4e6e7f87defb9b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -504,7 +504,7 @@ How LLMs learn to reason
 <li><a href="../05-tool-use/">How reasoning models learn to use tools</a></li>
 </ol>
 </div>
-<p>Most treatments of PPO either start with MDPs and Bellman equations and lose you in the abstract before the algorithm appears, or treat PPO as a black box. Neither helps when you actually want to understand it. Here’s the framing that finally made it stick for me: PPO <span class="citation" data-cites="schulman_etal_2017">(<a href="#ref-schulman_etal_2017" role="doc-biblioref">Schulman et al. 2017</a>)</span> is REINFORCE with five fixes that, together, solve two problems.</p>
+<p>Most treatments of PPO either start with MDPs and Bellman equations and lose you in the abstract before the algorithm appears, or treat PPO as a black box. Neither helps when you actually want to understand it. PPO <span class="citation" data-cites="schulman_etal_2017">(<a href="#ref-schulman_etal_2017" role="doc-biblioref">Schulman et al. 2017</a>)</span> is REINFORCE with five fixes that, together, solve two problems.</p>
 <p>The plan: walk through the two problems REINFORCE has, watch each PPO fix arise as a response to one of them, and end by tracing how the final objective decomposes all the way down to things you can actually compute.</p>
 <section id="reinforce-in-one-breath" class="level2">
 <h2 class="anchored" data-anchor-id="reinforce-in-one-breath">REINFORCE in one breath</h2>
@@ -589,7 +589,7 @@ Figure&nbsp;1: PPO is REINFORCE plus five fixes. Fixes 1–3 attack REINFORCE’
 <li>The <strong>value network</strong> (the critic) takes a state, outputs a single number: the expected total reward from this state onward.</li>
 </ul>
 <p>For the chatbot, the value network looks at a partial response, e.g.&nbsp;<em>“PPO is a reinforcement learning”</em>, and outputs something like 0.6, meaning “responses that start this way tend to score around 0.6 from the reward model.” After the next token, the partial response becomes <em>“PPO is a reinforcement learning algorithm”</em> and the value might shift to a slightly higher score of 0.65, indicating that the response is heading somewhere good. The critic is essentially a running estimate of “how well is this generation going so far?”</p>
-<p>The critic doesn’t act. It just judges. Taken together, the actor and critic give an <em>actor-critic</em> architecture, of which PPO is one specific instance.</p>
+<p>The critic judges rather than acts. Taken together, the actor and critic give an <em>actor-critic</em> architecture, of which PPO is one specific instance.</p>
 <p>How does the critic learn? Standard regression. After a rollout, you have actual rewards <span class="math inline">\(r_0, r_1, \ldots, r_T\)</span>. From any state <span class="math inline">\(s_t\)</span> along the trajectory, the actual return is <span class="math inline">\(G_t = r_t + \gamma r_{t+1} + \ldots + \gamma^{T-t} r_T\)</span>. Train the critic to predict <span class="math inline">\(G_t\)</span> from <span class="math inline">\(s_t\)</span> using mean-squared-error. Over many trajectories the critic becomes a calibrated estimator, and the advantages it underwrites become reliable.</p>
 <p>For LLMs, the value network is typically a copy of the policy architecture: same transformer body, with a small linear head outputting a scalar instead of a token distribution. Whether the bodies are <em>shared</em> (parameters trained jointly) or <em>separate copies</em> (parameters trained independently) varies by implementation.</p>
 </section>
@@ -600,7 +600,7 @@ Figure&nbsp;1: PPO is REINFORCE plus five fixes. Fixes 1–3 attack REINFORCE’
 <li><strong>Use the actual rewards that followed.</strong> Accurate but noisy: at the mercy of every random thing that happened in the trajectory.</li>
 <li><strong>Trust the value network’s predictions.</strong> Stable but biased: if the critic is wrong, your advantages are wrong.</li>
 </ul>
-<p>You can blend. Use the actual rewards for the next few steps, then have the critic estimate the rest. This is the <em>n-step</em> family of advantage estimators, parameterized by how many real-reward steps to use before deferring to the critic. Small <span class="math inline">\(n\)</span> trusts the critic. Large <span class="math inline">\(n\)</span> trusts the rewards.</p>
+<p>You can blend. Use the actual rewards for the next few steps, then have the critic estimate the rest. This is the <em>n-step</em> family of advantage estimators, parameterized by how many real-reward steps to use before deferring to the critic. Small <span class="math inline">\(n\)</span> trusts the critic; large <span class="math inline">\(n\)</span> trusts the rewards.</p>
 <p>Rather than picking one <span class="math inline">\(n\)</span>, <strong>Generalized Advantage Estimation</strong> <span class="citation" data-cites="schulman_etal_2016">(<a href="#ref-schulman_etal_2016" role="doc-biblioref">Schulman et al. 2016</a>)</span> takes an exponentially-weighted average across all <span class="math inline">\(n\)</span>:</p>
 <p><span class="math display">\[\hat{A}_t^{\text{GAE}} = (1-\lambda)\hat{A}_t^{(1)} + (1-\lambda)\lambda\hat{A}_t^{(2)} + (1-\lambda)\lambda^2\hat{A}_t^{(3)} + \ldots\]</span></p>
 <p>The <span class="math inline">\((1-\lambda)\)</span> prefactors normalize the weights to sum to 1 (geometric series). Small <span class="math inline">\(\lambda\)</span> puts most weight on the 1-step estimator (trust the critic); large <span class="math inline">\(\lambda\)</span> flattens the weights toward the full-trajectory estimator (trust the rewards). Default <span class="math inline">\(\lambda = 0.95\)</span>.</p>

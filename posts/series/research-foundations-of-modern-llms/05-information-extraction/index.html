@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -95,14 +95,14 @@ div.csl-indent {
 <script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d5cc8be5113747845e6a8f301e2f5216.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-948210ad518a3a748cb4055ab5b6af66.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-3047d7a2f2fd7c2d1255011f53237e23.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-561fcabd85fe9585208db7d271db1375.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-84d2a07a02d80bd473282a08374b6e76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-083563c0d608a4e1c4addaddced8296c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-fe40ab8e643ad6158d4e6e7f87defb9b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-550c919dd822166fe7bcc94dcb6b46c2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -480,8 +480,8 @@ Research foundations of modern LLMs
 </div>
 <p>For thirty years, information extraction was a real subfield of NLP. Named entity recognition, relation extraction, event extraction, coreference resolution, slot filling, knowledge-base population. Annotated corpora: ACE, OntoNotes, KBP, TAC. A shared-task culture at every major conference. An entire industry of vendors and government-funded R&amp;D organizations whose product was, essentially, structured records pulled out of unstructured text.</p>
 <p>By 2024, the center of gravity had shifted.</p>
-<p>The standard story is that LLMs replaced IE. The truer claim is that IE didn’t disappear. It moved inside the workflow. Where the pre-LLM IE pipeline was the <em>product</em> (extract entities, link them, populate a knowledge base, ship the KB), modern IE is the <em>structured layer</em> between raw text and downstream generation or action.</p>
-<p>What changed wasn’t the existence of the work. It was the labor model. Pre-LLM IE meant labeling thousands of examples per task, engineering features, training task-specific classifiers, and tuning a pipeline. LLM-era IE means designing a JSON schema, writing a prompt, and evaluating the result. Both are real engineering. They are not the same engineering.</p>
+<p>The standard story is that LLMs replaced IE. What actually happened is that IE moved inside the workflow. Where the pre-LLM IE pipeline was the <em>product</em> (extract entities, link them, populate a knowledge base, ship the KB), modern IE is the <em>structured layer</em> between raw text and downstream generation or action.</p>
+<p>The work still exists. What changed is the labor model. Pre-LLM IE required labeling thousands of examples per task, engineering features, training task-specific classifiers, and tuning a pipeline. LLM-era IE requires designing a JSON schema, writing a prompt, and evaluating the result. Both require real engineering of different kinds.</p>
 <p>I worked across all three eras the article traces: pre-BERT IE during a postdoc, BERT-era production IE through the late 2010s, and LLM-era workflow IE now.</p>
 <div id="fig-three-eras" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three stacked panels for three eras of information extraction. The pre-BERT and BERT panels show the same left-to-right pipeline of identical boxes, with only the contents of each box changing between them, hand-built features in the first and learned BERT representations in the second. The LLM panel replaces the linear pipeline with a workflow: several extraction calls run in parallel and emit structured frames that flow into a downstream system. A side label contrasts the labor profile, shifting from data annotation and feature engineering in the earlier eras to schema design, prompt engineering, and evaluation in the LLM era.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -506,7 +506,7 @@ Figure&nbsp;1: The three eras of information extraction. The pipeline shape is u
 <p>Each of these was its own subfield. Each had its own datasets: CoNLL-2003 <span class="citation" data-cites="sang_demeulder_2003">(<a href="#ref-sang_demeulder_2003" role="doc-biblioref">Tjong Kim Sang and Meulder 2003</a>)</span> for NER, ACE-2005 <span class="citation" data-cites="walker_etal_2006">(<a href="#ref-walker_etal_2006" role="doc-biblioref">Walker et al. 2006</a>)</span> for events and relations, OntoNotes <span class="citation" data-cites="hovy_etal_2006">(<a href="#ref-hovy_etal_2006" role="doc-biblioref">Hovy et al. 2006</a>)</span> for coreference, the TAC KBP datasets <span class="citation" data-cites="ji_grishman_2011">(<a href="#ref-ji_grishman_2011" role="doc-biblioref">Ji and Grishman 2011</a>)</span> for end-to-end knowledge-base construction. Each had its own modeling tradition: HMMs and CRFs for sequence labeling, structured-prediction for relation classification, ILP-based joint inference for combining extractions.</p>
 <p>The labor was substantial and concentrated on the input side. To build an NER system for a new entity type, you collected text, annotated mentions (typically thousands per type), engineered features (word identity, POS, gazetteer match, dependency context), and trained a classifier. Relation extraction added another annotation pass per relation type. Event extraction added another for triggers and another for each argument role.</p>
 <p>I worked in this regime during my postdoc. The published work from that period is on relation extraction <span class="citation" data-cites="chan_roth_2010 chan_roth_2011">(<a href="#ref-chan_roth_2010" role="doc-biblioref">Chan and Roth 2010</a>, <a href="#ref-chan_roth_2011" role="doc-biblioref">2011</a>)</span> and minimally-supervised event causality <span class="citation" data-cites="do_etal_2011">(<a href="#ref-do_etal_2011" role="doc-biblioref">Do et al. 2011</a>)</span>. The relation-extraction setup was typical for the era: a feature engineering pass over syntactic and semantic structures (constituency parses, dependency paths, semantic roles, Wikipedia categories as background knowledge), then a structured classifier.</p>
-<p>The defining property of pre-BERT IE wasn’t any particular model. It was the labor model. Every new task, every new domain, every new ontology required a fresh labeling effort, a fresh feature-engineering pass, and a fresh trained model. Performance was decent on benchmarks and worse in domain transfer. Adapting to a new domain typically meant starting over.</p>
+<p>The defining property of pre-BERT IE was the labor model, not any particular architecture. Every new task, every new domain, every new ontology required a fresh labeling effort, a fresh feature-engineering pass, and a fresh trained model. Performance was decent on benchmarks and worse in domain transfer. Adapting to a new domain typically meant starting over.</p>
 </section>
 <section id="bert-made-ie-better-not-cheaper" class="level2">
 <h2 class="anchored" data-anchor-id="bert-made-ie-better-not-cheaper">BERT made IE better, not cheaper</h2>
@@ -526,7 +526,7 @@ Figure&nbsp;1: The three eras of information extraction. The pipeline shape is u
 </section>
 <section id="llms-changed-the-labor-model" class="level2">
 <h2 class="anchored" data-anchor-id="llms-changed-the-labor-model">LLMs changed the labor model</h2>
-<p>What changed with LLMs wasn’t that you could finally do IE. You could already do IE. What changed was the cost structure.</p>
+<p>IE was already possible before LLMs. What they changed was the cost structure.</p>
 <p>A frontier LLM with structured-output support can solve most NER, RE, and slot-filling tasks zero-shot or few-shot from a prompt and a JSON schema. Quality is task-dependent:</p>
 <ul>
 <li>On standard benchmarks like CoNLL-2003, a well-prompted frontier LLM lands within a few F1 points of fine-tuned baselines.</li>
@@ -567,7 +567,7 @@ Figure&nbsp;2: Three modern IE patterns. They differ in where the LLM sits and w
 <li><strong>Metadata on each extracted item.</strong> Temporal status (past / present / future), source and stance (patient-reported vs clinician-assessed), section affinity.</li>
 <li><strong>Downstream routing.</strong> Present-tense problem details go to HPI; clinician assessment and treatment plans go to A&amp;P; past resolved history goes to medical history.</li>
 </ul>
-<p>This is the modern form of IE I see most often: not an extractor that ships as the product, but a structured control layer that lets the rest of the workflow behave reliably. The product is the clinical note; the extractions are what the downstream system builds it from.</p>
+<p>This is the modern form of IE I see most often: a structured control layer that lets the rest of the workflow behave reliably. The product is the clinical note; the extractions are what the downstream system builds it from.</p>
 <p>The pattern isn’t unique. SpecialtyScribe <span class="citation" data-cites="goyal_etal_2025">(<a href="#ref-goyal_etal_2025" role="doc-biblioref">Goyal et al. 2025</a>)</span> and GENIE <span class="citation" data-cites="ying_etal_2025">(<a href="#ref-ying_etal_2025" role="doc-biblioref">Ying et al. 2025</a>)</span> are published instances of the same idea: IE as the structured intermediate layer of a workflow, with the extraction done by a frontier LLM, a fine-tuned smaller specialist, or a mix.</p>
 <p>GraphRAG <span class="citation" data-cites="edge_etal_2024">(<a href="#ref-edge_etal_2024" role="doc-biblioref">Edge et al. 2024</a>)</span> is another version of the same move: use IE to turn documents into entities, relations, and summaries, then run retrieval and reasoning over that structure rather than over raw chunks. These are entity extraction, relation extraction, and light coreference, with the graph as the structured layer they feed.</p>
 </section>
@@ -590,7 +590,7 @@ Figure&nbsp;2: Three modern IE patterns. They differ in where the LLM sits and w
 <li><strong>Workflow orchestration</strong>: how extractions compose, how frames are routed, where metadata gates decisions.</li>
 <li><strong>Cost control</strong>: which calls run on a frontier model, which on a smaller specialist, which can be batched or cached.</li>
 </ul>
-<p>The old labor was annotation, feature engineering, and per-task model training. The new labor is schema, prompts, eval, and orchestration. The label changed, but the work did not vanish. It moved from model training into workflow design.</p>
+<p>None of this is less work than before. It moved from model training into workflow design.</p>
 </section>
 <section id="when-classical-ie-still-wins" class="level2">
 <h2 class="anchored" data-anchor-id="when-classical-ie-still-wins">When classical IE still wins</h2>
@@ -621,9 +621,8 @@ Figure&nbsp;2: Three modern IE patterns. They differ in where the LLM sits and w
 </section>
 <section id="closing" class="level2">
 <h2 class="anchored" data-anchor-id="closing">Closing</h2>
-<p>For decades, information extraction was a product: annotate, train, extract, ship the knowledge base. BERT made the models better but left the labor model intact; every new domain still cost an annotation effort. LLMs didn’t make IE possible. IE was already possible. They made it low-startup-cost enough that it stopped being a product and became infrastructure: the structured layer between raw text and whatever the system does next.</p>
-<p>The work didn’t disappear. The annotation-and-feature-engineering labor became schema-and-eval labor.</p>
-<p><strong>The extractor stopped being the deliverable and became workflow state.</strong></p>
+<p>For decades, information extraction was a product: annotate, train, extract, ship the knowledge base. BERT made the models better but left the labor model intact; every new domain still cost an annotation effort. LLMs did not make IE possible; it already was. They made it low-startup-cost enough that it stopped being a product and became infrastructure: the structured layer between raw text and whatever the system does next.</p>
+<p>The extractor now serves as workflow state rather than the final deliverable.</p>
 <p>The papers on the hard research problems (coreference, cross-document linking, strict argument-role constraints) are still being written; they’re just no longer where most production IE work happens. The next time someone says their system “doesn’t do information extraction,” it’s worth asking what the JSON between their LLM calls is.</p>
 
 
