@@ -43,6 +43,26 @@ Paths below are a common Quarto blog layout; adapt them to your site's listing g
 - **Figures:** a markdown image on its own line renders as a `<figure>`, and `fig-alt` renders as a visible caption. For a chromeless image use raw `<img>` HTML. Always provide `fig-alt`.
 - A new sibling directory needs a `quarto preview` **restart**, not just a reload.
 
+## Figures
+
+Figures are expensive to get right and easy to over-produce. Two per article is usually the limit.
+
+- **Author the figure as an `.svg` source** next to `index.qmd`, then export it to `.png` and embed the PNG. The PNG is what ships; keep the `.svg` alongside as the editable source.
+- **Design one palette that reads on both light and dark page backgrounds.** An embedded PNG is static and cannot follow the site's theme toggle, so the figure must work on either background rather than swap.
+- **Give the SVG source `role="img"`, a `<title>`, and a `<desc>`.** Write the `<desc>` once and reuse it as the Quarto `fig-alt`.
+- **Validate the source before exporting:** `python3 -c "import xml.dom.minidom; xml.dom.minidom.parse('fig.svg')"`.
+- **Mark placement in the markdown** with an HTML comment block, so the figure, its `fig-alt`, and its caption travel together:
+
+    <!-- ================= FIGURE 1 GOES HERE ================= -->
+
+    ![](before-after.png){fig-alt="..."}
+
+    *Figure 1: ...*
+
+    <!-- ====================================================== -->
+
+Design rules (caption length, colour encoding, prose overlap) live in `house-style.md`.
+
 ## Article structure (the transferable craft)
 
 - **Title** is a compressed thesis or reframe, not a topic label: an identity claim ("PPO is REINFORCE plus five fixes"), a myth-correction ("The encoder didn't die. It became the embedding model"), second-person ("Your RAG score hides the diagnosis"), or an imperative ("Stop vibe-checking your agent"). Avoid listicle numbers and buzzword-colon subtitles.
