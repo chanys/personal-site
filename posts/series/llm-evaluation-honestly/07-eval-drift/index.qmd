@@ -16,7 +16,7 @@ Six months later, the dashboard is still green. That only means the agent still 
 
 Suppose the retention policy changes. Trial accounts used to retain data for 90 days. Now they retain data for 120 days. The docs are updated, and the agent correctly answers "120 days." The eval set still expects "90 days," so the dashboard reports a regression.
 
-The agent did not regress. The eval system became stale.
+The agent did not regress; the eval system became stale.
 
 The fix is eval maintenance:
 
@@ -43,7 +43,7 @@ Without these fields, stale examples look authoritative.
 
 ## Production traces keep the eval current
 
-A locked eval set protects known failures. It does not discover new ones.
+A locked eval set protects known failures but does not discover new ones.
 
 Production traces show what users are asking now, what the agent is retrieving now, and which answers are failing now. Sample them regularly and feed the important cases back into the eval set.
 
@@ -73,6 +73,6 @@ A dashboard is useful only if the eval still matches the product.
 
 The eval system has to track current policies, current documents, current traffic, judge validity, and the team's standard for correctness. Production traces become labels. Labels become failure modes. Failure modes become checks, judges, and regression cases. Incidents update the suite.
 
-Teams that treat eval as first-class code version, review, monitor, and maintain it. Teams that do not eventually read numbers they can no longer trust.
+Teams that treat eval as first-class code version, review, monitor, and maintain it; teams that do not eventually read numbers they can no longer trust.
 
-The next time someone reports "the eval system says we're at 87%," ask: *when did we last check that the eval system is still telling the truth?*
+A reading like "the eval system says we're at 87%" is only worth trusting if you know when the eval system was last checked to confirm it still tells the truth.

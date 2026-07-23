@@ -53,13 +53,13 @@ Balance difficulty too:
 - **Hard cases:** the system often fails. These show the frontier.
 - **Safety cases:** the system must refuse, escalate, or avoid forbidden behavior.
 
-Too easy and the dataset saturates; too hard and it doesn't show progress. Aim for a visible mix so the team can tell what actually improved.
+A dataset that is too easy saturates, and one that is too hard fails to show progress, so aim for a visible mix that tells the team what actually improved.
 
 [Eval scores are samples, not truth](/posts/series/llm-evaluation-honestly/05-scores-are-samples/index.qmd) returns to sample size and uncertainty. If a slice matters, include it deliberately and track it separately.
 
 ## When you don't have production data
 
-Before launch, the dataset has to come from somewhere other than production. The key rule: generate inputs, not outputs. Let the real system produce the responses, and label the resulting traces like any other trace.
+Before launch, the dataset has to come from somewhere other than production. Generate the inputs and let the real system produce the responses, then label the resulting traces like any other trace.
 
 Two sources work well in combination.
 

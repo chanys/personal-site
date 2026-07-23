@@ -10,11 +10,11 @@ draft: false
 
 Most bad LLM judges are doing a simpler evaluator's job. They are asked whether JSON is valid. Whether a required field is present. Whether a tool was called. Whether a prohibited phrase appears in the final answer. Whether a handoff record contains an order ID.
 
-That is not judgment. That is checking.
+That is checking, not judgment.
 
 When a team asks an LLM judge to do what code could have checked, it gets the worst of both worlds: slower, noisier, more expensive, and harder to debug.
 
-LLM judges are useful when the evaluator needs to understand meaning in context. They are wasted when the failure has a structural shape. If the failure can be detected with code, use code. Save judges for failures that require understanding meaning.
+LLM judges are useful when the evaluator needs to understand meaning in context, and wasted when the failure has a structural shape. If the failure can be detected with code, use code.
 
 ## Start with the failure mode
 
@@ -39,7 +39,7 @@ def check_handoff_schema(trace) -> Score:
 
 Five lines. Runs in milliseconds. Deterministic: same input, same output, every time. Debuggable: when it fails, the reason tells you exactly what to look at. Free: no API calls, no token costs, no rate limits. Runs on every trace, on every CI build, on every production trace if you want.
 
-Code and judges aren't always alternatives. **Sometimes they're layers.** A regex check for refund-promise language catches explicit cases (*"Your refund has been approved"*); it misses subtler implications (*"We'll make sure you get your money back"*). The fix isn't to abandon the regex for a judge. Run the cheap regex on every trace; run a more expensive judge only when the trace involves a refund request and the regex didn't fire. The principle: run cheap checks broadly, run judges where they add value.
+Code and judges aren't always alternatives. Sometimes they're layers. A regex check for refund-promise language catches explicit cases (*"Your refund has been approved"*); it misses subtler implications (*"We'll make sure you get your money back"*). The fix isn't to abandon the regex for a judge. Run the cheap regex on every trace; run a more expensive judge only when the trace involves a refund request and the regex didn't fire. Run cheap checks broadly, and run judges where they add value.
 
 ## Use LLM judges for semantic failures
 
@@ -49,7 +49,7 @@ A judge worth trusting is binary (pass or fail, not 1-5) and grounded in labeled
 
 ## Keep each evaluator narrow
 
-The mistake is building one big judge called `quality_judge_v3` and asking it to score everything: tone, helpfulness, schema validity, routing. That judge produces a number. It does not produce a diagnosis.
+The mistake is building one big judge called `quality_judge_v3` and asking it to score everything: tone, helpfulness, schema validity, routing. That judge produces a number, not a diagnosis.
 
 It's the same reason you don't write a single function called `is_correct()` in production code. Composite signals are harder to act on, harder to debug, and harder to improve.
 
@@ -79,6 +79,6 @@ One related discipline: when a regression case enters the suite, tag it by the l
 
 ## Code first, judges when you need them
 
-[Your LLM judge is a classifier](/posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.qmd) covers the next layer: making judges trustworthy when you do need them. A judge that produces verdicts in the right format isn't the same as a judge that produces correct verdicts.
+[Your LLM judge is a classifier](/posts/series/llm-evaluation-honestly/04-judge-is-classifier/index.qmd) covers the next layer: making judges trustworthy when you do need them. A judge that produces verdicts in the right format doesn't necessarily produce correct ones.
 
 The next time someone proposes a judge, first ask: *could code answer this?*
