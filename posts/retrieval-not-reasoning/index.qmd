@@ -6,7 +6,7 @@ categories: ["evaluation", "RAG", "retrieval", "LLM judge"]
 draft: false
 ---
 
-The [previous article](/posts/the-agent-is-the-easy-part/index.qmd) built AnswerTrail: a research agent that answers questions from one YouTube creator's transcripts, with every citation checked against the corpus.
+The [previous article](/posts/the-agent-is-the-easy-part/index.qmd) built AnswerTrail: a research agent that answers questions over one AI/LLM YouTube channel's video transcripts, with every citation checked against the corpus.
 This article asks whether it is any good, and the honest answer needs a measuring instrument built as carefully as the agent.
 
 The headline is a gap.
@@ -67,7 +67,7 @@ The factual tier asks for a single specific fact, so its gold is a small set of 
 
 **Sample over time, not topic.**
 Order the 475 videos by date, divide them into 5 equal-count bins of about 95 videos each, and take a seeded draw of 10 videos from each.
-The 50 source videos then span the whole 16-month range rather than clustering on the creator's most prolific months.
+The 50 source videos then span the whole 16-month range rather than clustering on the channel's most prolific months.
 
 **Select and compose, two calls per video.**
 A cheap thinking-off Sonnet 5 call picks the video's 2 most question-worthy high-confidence claims, and the script keeps one as primary and one as fallback.

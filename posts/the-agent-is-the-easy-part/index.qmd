@@ -6,26 +6,27 @@ categories: ["agents", "RAG", "retrieval", "AWS"]
 draft: false
 ---
 
-AnswerTrail answers questions about one YouTube creator's work by reading that creator's own transcripts, and it checks every citation in its answer against those transcripts before you ever see the answer.
+AnswerTrail answers questions about one AI/LLM YouTube channel by reading that channel's video transcripts, and it checks every citation in its answer against those transcripts before you ever see the answer.
 It runs live on AWS.
 
 The agent itself is the small part.
-The loop that drives it is about a page of control flow, and its answers hold up because of a citation check and two guardrails, not because the model is clever.
-The effort is in the harness around the model, and it splits into two halves.
+The loop that drives it is about a page of control flow, and its answers hold up because of a citation check and two guardrails.
+The work is everything around the model, and it takes two articles.
 
-This article is the first half: turning a channel into a searchable corpus, running the agent loop over it, and serving the whole thing on AWS.
-The [second article](/posts/retrieval-not-reasoning/index.qmd) is the other half: curating the evaluation data and running the experiments that measure how well the agent answers.
+This one builds the system that produces the answers: the corpus it reads, the agent harness that searches and cites over that corpus, and the AWS stack that serves the whole thing.
+The [second article](/posts/retrieval-not-reasoning/index.qmd) is the evaluation: curating the gold data and running the experiments that measure how well the agent answers.
 
 ## What AnswerTrail is
 
 AnswerTrail is a deep-research agent over a **bounded corpus**, a fixed body of text the agent is allowed to read and nothing else.
-The corpus here is the transcripts of a single AI and LLM creator's channel.
+The corpus here is the video transcripts of a single AI/LLM YouTube channel.
 Given a question, the agent runs a ReAct loop written by hand: it searches the transcripts, reads what comes back, decides whether it has enough, and writes an answer whose citations are validated against the corpus.
 Retrieval is dense-only over Postgres, the model is stateless, and the agent drives its own exploration until it decides it is ready to answer.
 
 Bounding the corpus to one channel is the point, not a limitation.
-Because the agent may only read those transcripts, "the corpus cannot answer this" is a real outcome the system can reach and report, rather than a prompt it papers over.
-The live corpus is 475 videos from the creator's most recent 16 months, cut into 25,401 transcript chunks, about 52 per video.
+The model has no parametric knowledge of what these particular videos say, so every answer has to come from what the agent retrieves rather than from the model's own memory.
+And because the agent may only read those transcripts, "the corpus cannot answer this" is a real outcome the system can reach and report, rather than a prompt it papers over.
+The live corpus is 475 videos from the channel's most recent 16 months, cut into 25,401 transcript chunks, about 52 per video.
 It is live at `answertrail.yeesengchan.com`, though the site may be taken down at times to avoid running costs.
 
 ## The corpus is built once, offline
@@ -100,10 +101,10 @@ Deploys are automatic: every push to `main` builds the container image, ships it
 ## The loop is small on purpose
 
 The agent is a page of control flow, and its reliability comes from the citation check and two guardrails.
-The work is the harness around it: the ingestion pipeline that turns a channel into 25,401 searchable chunks, and the AWS stack that serves the whole thing and rebuilds from a single command.
+The work is everything around it: the ingestion pipeline that turns a channel into 25,401 searchable chunks, the agent harness that searches and cites over them, and the AWS stack that serves the whole thing and rebuilds from a single command.
 
-That is one half of the harness.
-The other half is measurement, and it is as much of the work as anything here.
+Building that system is only half the effort.
+The other half is measuring it.
 The [second article](/posts/retrieval-not-reasoning/index.qmd) curates the evaluation data and runs the experiments that score the agent.
 
 ## Code companion
