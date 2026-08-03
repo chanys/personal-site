@@ -40,7 +40,7 @@ Paths below are a common Quarto blog layout; adapt them to your site's listing g
 - **Standalone post:** `posts/<slug>/index.qmd`.
 - **Series:** one folder per series, parts nested one level with an integer `order:` field, and a shared "part of a series" snippet included into each part. (This repo uses `posts/series/<series>/NN-<slug>/index.qmd` with `{{< include ../_series.qmd >}}` as the first body line.)
 - **Front matter:** `title`, `description` (one sentence; shows on the index and the feed), `date`, `categories`, `draft: false`.
-- **Figures:** a markdown image on its own line renders as a `<figure>`, and `fig-alt` renders as a visible caption. For a chromeless image use raw `<img>` HTML. Always provide `fig-alt`.
+- **Figures:** put the caption inside the image brackets and add a `#fig-<slug>` id. That makes Quarto render a `<figure>` and auto-number the caption (`Figure 1:`). `fig-alt` sets the accessibility alt text, which is separate from the caption; empty brackets (`![](...)`) give a bare inline image with no caption at all. For a chromeless image use raw `<img>` HTML. Always provide `fig-alt`.
 - A new sibling directory needs a `quarto preview` **restart**, not just a reload.
 
 ## Figures
@@ -51,15 +51,9 @@ Figures are expensive to get right and easy to over-produce. Two per article is 
 - **Design one palette that reads on both light and dark page backgrounds.** An embedded PNG is static and cannot follow the site's theme toggle, so the figure must work on either background rather than swap.
 - **Give the SVG source `role="img"`, a `<title>`, and a `<desc>`.** Write the `<desc>` once and reuse it as the Quarto `fig-alt`.
 - **Validate the source before exporting:** `python3 -c "import xml.dom.minidom; xml.dom.minidom.parse('fig.svg')"`.
-- **Mark placement in the markdown** with an HTML comment block, so the figure, its `fig-alt`, and its caption travel together:
+- **Embed with the caption in the brackets and a `#fig-<slug>` id.** Quarto then auto-numbers the figure and renders the caption as a `<figcaption>`. Do not write the `Figure N:` prefix yourself, and do not put the caption in a separate italic paragraph:
 
-    <!-- ================= FIGURE 1 GOES HERE ================= -->
-
-    ![](before-after.png){fig-alt="..."}
-
-    *Figure 1: ...*
-
-    <!-- ====================================================== -->
+    ![Full information-dense caption, one or more sentences, no leading "Figure N:".](before-after.png){#fig-before-after fig-alt="Accessibility description, mirrors the SVG <desc>."}
 
 Design rules (caption length, colour encoding, prose overlap) live in `house-style.md`.
 
