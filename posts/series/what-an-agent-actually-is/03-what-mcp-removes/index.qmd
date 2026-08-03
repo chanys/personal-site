@@ -202,25 +202,13 @@ Without MCP, the two structures grow linearly: every tool added means one more h
 
 That is a specific claim, and I want to keep it specific. Plenty of other things still grow as you add tools: the context the schemas take up, the validation you write, the permissions you decide, the tests. Adding tools still costs something. The bookkeeping is what went away.
 
-<!-- ================= FIGURE 1 GOES HERE ================= -->
-
-![](before-after-mcp.png){fig-alt="Two panels. Without MCP, the host holds a TOOLS list and a DISPATCH map with one hand-written entry per tool source, wired separately to each source. With MCP, the host still has TOOLS and DISPATCH, but builds both at startup from what each server reports over tools/list, and each server owns its own tool descriptions."}
-
-*Figure 1: The same host, written twice. On the left, every tool source adds one entry to TOOLS, describing the tool for the model, and one entry to DISPATCH, pointing the tool's name at the function that runs it. Both are written by hand, both are copies of decisions made in somebody else's code, and both grow with each source added. On the right the host still has TOOLS and DISPATCH, but it no longer writes them: it asks each server what it offers at startup and fills both structures from the answer. The descriptions did not disappear, they moved to the party that owns the function.*
-
-<!-- ====================================================== -->
+![The same host, written twice. On the left, every tool source adds one entry to TOOLS, describing the tool for the model, and one entry to DISPATCH, pointing the tool's name at the function that runs it. Both are written by hand, both are copies of decisions made in somebody else's code, and both grow with each source added. On the right the host still has TOOLS and DISPATCH, but it no longer writes them: it asks each server what it offers at startup and fills both structures from the answer. The descriptions did not disappear, they moved to the party that owns the function.](before-after-mcp.png){#fig-before-after fig-alt="Two panels. Without MCP, the host holds a TOOLS list and a DISPATCH map with one hand-written entry per tool source, wired separately to each source. With MCP, the host still has TOOLS and DISPATCH, but builds both at startup from what each server reports over tools/list, and each server owns its own tool descriptions."}
 
 ## Discovery is the part doing the work
 
 This is the drift problem from earlier. Without tool discovery via `session.list_tools()`, the host is holding its own description of somebody else's function. It is right on the day you write it, and after that nobody is checking. The model can only work from what that description says, so when it goes stale the model is the one calling the tool wrongly.
 
-<!-- ================= FIGURE 2 GOES HERE ================= -->
-
-![](schema-drift.png){fig-alt="Two columns. On the left, the tool owner's function. On the right, the host's hand-written copy of its description. At first both say get_housing takes one argument, town, and they match. Later the owner adds a second required argument, year, but the host copy still says one argument, so the model calls the tool the old way."}
-
-*Figure 2: Why the hand-written copy is a liability. At first the two agree, because the copy was written by reading the function. Later the tool owner adds a second required argument, and nothing connects that change to the host's copy, so the copy keeps describing the old version. The result is either a TypeError when the arguments reach a function that no longer accepts them, or a wrong answer that nobody notices. Neither side did anything wrong, which is what makes it easy to miss.*
-
-<!-- ====================================================== -->
+![Why the hand-written copy is a liability. At first the two agree, because the copy was written by reading the function. Later the tool owner adds a second required argument, and nothing connects that change to the host's copy, so the copy keeps describing the old version. The result is either a TypeError when the arguments reach a function that no longer accepts them, or a wrong answer that nobody notices. Neither side did anything wrong, which is what makes it easy to miss.](schema-drift.png){#fig-schema-drift fig-alt="Two columns. On the left, the tool owner's function. On the right, the host's hand-written copy of its description. At first both say get_housing takes one argument, town, and they match. Later the owner adds a second required argument, year, but the host copy still says one argument, so the model calls the tool the old way."}
 
 `tools/list` fixes this by asking the server every time the host starts. The server owns its tools, so the server's description is the correct one, and that is the description the model sees.
 
