@@ -504,7 +504,7 @@ body.projects-page main.content > section.level2:first-of-type > h2 {
   border-radius: 100px;
   padding: 0.32rem 0.95rem;
   color: var(--fn-ink);
-  margin-top: 0.35rem;
+  margin: 0.35rem 0.45rem 0 0;
   transition: border-color 0.16s ease, color 0.16s ease;
 }
 .proj-cta:hover { border-color: var(--fn-accent); color: var(--fn-accent); }
