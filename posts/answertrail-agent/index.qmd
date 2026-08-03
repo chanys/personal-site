@@ -14,7 +14,7 @@ The loop that drives it is about a page of control flow, and its answers hold up
 The work is everything around the model, and it takes two articles.
 
 This one builds the system that produces the answers: the corpus it reads, the agent harness that searches and cites over that corpus, and the AWS stack that serves the whole thing.
-The [second article](/posts/retrieval-not-reasoning/index.qmd) is the evaluation: curating the gold data and running the experiments that measure how well the agent answers.
+The [second article](/posts/answertrail-evaluation/index.qmd) is the evaluation: curating the gold data and running the experiments that measure how well the agent answers.
 
 ## What AnswerTrail is
 
@@ -73,7 +73,7 @@ The model must run at least a couple of distinct searches before it may answer, 
 And a run that keeps searching but finds nothing still stops, reporting that the corpus cannot answer rather than looping forever.
 
 Every run is recorded as a `RunEvidenceState`: its searches and queries, the chunks retrieved and cited, the token usage and cost, and the outcome, stamped with the recipe version and the git SHA.
-That provenance is what lets the [second article](/posts/retrieval-not-reasoning/index.qmd) freeze one agent and score every variant against it.
+That provenance is what lets the [second article](/posts/answertrail-evaluation/index.qmd) freeze one agent and score every variant against it.
 
 ## Deployment on AWS
 
@@ -104,7 +104,7 @@ The work is everything around it: the ingestion pipeline that turns a channel in
 
 Building that system is only half the effort.
 The other half is measuring it.
-The [second article](/posts/retrieval-not-reasoning/index.qmd) curates the evaluation data and runs the experiments that score the agent.
+The [second article](/posts/answertrail-evaluation/index.qmd) curates the evaluation data and runs the experiments that score the agent.
 
 ## Code companion
 
