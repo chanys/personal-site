@@ -13,7 +13,10 @@ When people describe a system like this, the agent gets the attention: the ReAct
 In this project the agent is the part that took the least work.
 The loop that drives it is about a page of control flow, and what makes its answers trustworthy is a citation check and two guardrails, not a clever model.
 The engineering that took the real effort sits on either side of that loop: the pipeline that turns a channel into a searchable corpus, and the AWS stack that serves the whole thing in production.
-This article walks all three, in the order they are built.
+
+This is the first of two articles.
+This one walks the system that produces the answers, in the order it is built: the ingestion pipeline, the agent, and the AWS deployment.
+The [second article](/posts/retrieval-not-reasoning/index.qmd) is about measurement, where the evaluation data is built and the experiments that score the agent are run.
 
 ## What AnswerTrail is
 
