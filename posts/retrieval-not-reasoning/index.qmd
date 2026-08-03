@@ -26,7 +26,7 @@ This article builds both, then reports what the agent scores.
 Measurement starts from gold data: each question comes with a set of **nuggets**, the atomic facts a correct answer must state and the unit recall is scored against.
 A factual nugget is a single fact; a longitudinal nugget is a stance plus a time window.
 
-This nugget-based design follows recent work on automating RAG evaluation with LLMs, the AutoNuggetizer framework of [@pradeep_etal_2025], which uses an LLM both to create nuggets and to assign them to an answer; AnswerTrail keeps its nuggets human-adjudicated and automates only the assignment, calibrated against a human.
+AnswerTrail's nugget-based design follows the AutoNuggetizer framework of [@pradeep_etal_2025], which proposes a fully automatic configuration where an LLM both creates nuggets and assigns them to answers, and also evaluates hybrid configurations that keep a human in nugget creation or assignment. AnswerTrail uses one such hybrid: human-adjudicated nuggets with automated, human-calibrated assignment.
 
 Nuggets are not written from scratch.
 They are extracted from claims, and claims are extracted from chunks, so three units stack up:
