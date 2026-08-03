@@ -56,6 +56,8 @@
   {
     "listing": "/writing.html",
     "items": [
+      "/posts/answertrail-agent/index.html",
+      "/posts/answertrail-evaluation/index.html",
       "/posts/series/what-an-agent-actually-is/03-what-mcp-removes/index.html",
       "/posts/series/llm-evaluation-honestly/07-eval-drift/index.html",
       "/posts/series/llm-evaluation-honestly/06-rag-evaluation/index.html",

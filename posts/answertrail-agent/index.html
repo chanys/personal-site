@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Yee Seng Chan">
-<meta name="description" content="BERT-style encoders moved into retrieval, reranking, and classification.">
+<meta name="description" content="How AnswerTrail turns one YouTube channel into a searchable corpus, answers over it with a citation-validating ReAct agent, and runs in production on AWS.">
 
-<title>The encoder didn’t die. It became the embedding model – Yee Seng Chan</title>
+<title>AnswerTrail: building a deep-research agent over a bounded corpus – Yee Seng Chan</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -28,49 +28,30 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for citations */
-div.csl-bib-body { }
-div.csl-entry {
-  clear: both;
-}
-.hanging-indent div.csl-entry {
-  margin-left:2em;
-  text-indent:-2em;
-}
-div.csl-left-margin {
-  min-width:2em;
-  float:left;
-}
-div.csl-right-inline {
-  margin-left:2em;
-  padding-left:1em;
-}
-div.csl-indent {
-  margin-left: 2em;
-}</style>
+</style>
 
 
-<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../../../../">
-<link href="../../../../favicon.svg" rel="icon" type="image/svg+xml">
-<script src="../../../../site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="../../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
-<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-b536773ea9642060c833a78fc319e66a.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-2414d75c65f4f47fe8b2b419ce1a3f49.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-b536773ea9642060c833a78fc319e66a.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
-<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-5dddf4721a94098b9627856476617ab3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-26b7c3e7b0b32923c223cb3852583406.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-5dddf4721a94098b9627856476617ab3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-b536773ea9642060c833a78fc319e66a.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-2414d75c65f4f47fe8b2b419ce1a3f49.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-b536773ea9642060c833a78fc319e66a.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-5dddf4721a94098b9627856476617ab3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-26b7c3e7b0b32923c223cb3852583406.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-5dddf4721a94098b9627856476617ab3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -104,28 +85,28 @@ div.csl-indent {
 <!-- GoatCounter: privacy-friendly, cookieless analytics (no consent
      banner needed). Dashboard: https://yeesengchan.goatcounter.com -->
 <script data-goatcounter="https://yeesengchan.goatcounter.com/count" async="" src="//gc.zgo.at/count.js"></script>
-<link rel="canonical" href="https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/02-encoder-embeddings/index.html">
-<meta property="og:url" content="https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/02-encoder-embeddings/index.html">
+<link rel="canonical" href="https://yeesengchan.com/posts/answertrail-agent/index.html">
+<meta property="og:url" content="https://yeesengchan.com/posts/answertrail-agent/index.html">
 <meta property="og:type" content="article">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","headline":"The encoder didn’t die. It became the embedding model","description":"BERT-style encoders moved into retrieval, reranking, and classification.","datePublished":"2026-03-23","dateModified":"2026-03-23","author":{"@type":"Person","name":"Yee Seng Chan","url":"https://yeesengchan.com/"},"publisher":{"@type":"Person","name":"Yee Seng Chan"},"mainEntityOfPage":"https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/02-encoder-embeddings/index.html","url":"https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/02-encoder-embeddings/index.html"}
+{"@context":"https://schema.org","@type":"BlogPosting","headline":"AnswerTrail: building a deep-research agent over a bounded corpus","description":"How AnswerTrail turns one YouTube channel into a searchable corpus, answers over it with a citation-validating ReAct agent, and runs in production on AWS.","datePublished":"2026-08-02","dateModified":"2026-08-02","author":{"@type":"Person","name":"Yee Seng Chan","url":"https://yeesengchan.com/"},"publisher":{"@type":"Person","name":"Yee Seng Chan"},"mainEntityOfPage":"https://yeesengchan.com/posts/answertrail-agent/index.html","url":"https://yeesengchan.com/posts/answertrail-agent/index.html"}
 </script>
 
 
-<link rel="stylesheet" href="../../../../styles.css">
-<meta property="og:title" content="The encoder didn’t die. It became the embedding model – Yee Seng Chan">
-<meta property="og:description" content="BERT-style encoders moved into retrieval, reranking, and classification.">
-<meta property="og:image" content="https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/02-encoder-embeddings/architectures.png">
+<link rel="stylesheet" href="../../styles.css">
+<meta property="og:title" content="AnswerTrail: building a deep-research agent over a bounded corpus – Yee Seng Chan">
+<meta property="og:description" content="How AnswerTrail turns one YouTube channel into a searchable corpus, answers over it with a citation-validating ReAct agent, and runs in production on AWS.">
+<meta property="og:image" content="https://yeesengchan.com/posts/answertrail-agent/react-loop.png">
 <meta property="og:site_name" content="Yee Seng Chan">
-<meta property="og:image:alt" content="Three side-by-side architecture diagrams. Left, a bi-encoder: query and document go through separate encoder towers into one vector each, compared by a single similarity score. Middle, a cross-encoder: the concatenated query and document go through one shared encoder that outputs a single relevance score. Right, late interaction: both are encoded but token-level vectors are kept, and the score is the sum over query tokens of each token's maximum similarity to any document token.">
-<meta property="og:image:height" content="980">
-<meta property="og:image:width" content="2016">
-<meta name="twitter:title" content="The encoder didn’t die. It became the embedding model – Yee Seng Chan">
-<meta name="twitter:description" content="BERT-style encoders moved into retrieval, reranking, and classification.">
-<meta name="twitter:image" content="https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/02-encoder-embeddings/architectures.png">
-<meta name="twitter:image:alt" content="Three side-by-side architecture diagrams. Left, a bi-encoder: query and document go through separate encoder towers into one vector each, compared by a single similarity score. Middle, a cross-encoder: the concatenated query and document go through one shared encoder that outputs a single relevance score. Right, late interaction: both are encoded but token-level vectors are kept, and the score is the sum over query tokens of each token's maximum similarity to any document token.">
-<meta name="twitter:image-height" content="980">
-<meta name="twitter:image-width" content="2016">
+<meta property="og:image:alt" content="A question enters a stateless agent loop. The loop either calls search_transcripts, which runs a dense pgvector search and returns the top-10 chunks to read, or calls mark_ready. A guardrail check, explored enough, sends the run back to keep searching until it has explored enough, then a final submit_answer turn validates every citation against the corpus before emitting the answer; a rejected citation returns to be fixed, and an accepted answer with citations is the loop's stop signal.">
+<meta property="og:image:height" content="600">
+<meta property="og:image:width" content="2000">
+<meta name="twitter:title" content="AnswerTrail: building a deep-research agent over a bounded corpus – Yee Seng Chan">
+<meta name="twitter:description" content="How AnswerTrail turns one YouTube channel into a searchable corpus, answers over it with a citation-validating ReAct agent, and runs in production on AWS.">
+<meta name="twitter:image" content="https://yeesengchan.com/posts/answertrail-agent/react-loop.png">
+<meta name="twitter:image:alt" content="A question enters a stateless agent loop. The loop either calls search_transcripts, which runs a dense pgvector search and returns the top-10 chunks to read, or calls mark_ready. A guardrail check, explored enough, sends the run back to keep searching until it has explored enough, then a final submit_answer turn validates every citation against the corpus before emitting the answer; a rejected citation returns to be fixed, and an accepted answer with citations is the loop's stop signal.">
+<meta name="twitter:image-height" content="600">
+<meta name="twitter:image-width" content="2000">
 <meta name="twitter:card" content="summary_large_image">
 </head>
 
@@ -298,7 +279,7 @@ div.csl-indent {
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="../../../../index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Yee Seng Chan</span>
     </a>
   </div>
@@ -309,29 +290,29 @@ div.csl-indent {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../../../../index.html"> 
+    <a class="nav-link" href="../../index.html"> 
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../../../../writing.html"> 
+    <a class="nav-link" href="../../writing.html"> 
 <span class="menu-text">Writing</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../../../../series.html"> 
+    <a class="nav-link" href="../../series.html"> 
 <span class="menu-text">Series</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../../../../projects.html"> 
+    <a class="nav-link" href="../../projects.html"> 
 <span class="menu-text">Projects</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../../../../about.html"> 
+    <a class="nav-link" href="../../about.html"> 
 <span class="menu-text">About</span></a>
   </li>  
 </ul>
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item compact">
-    <a class="nav-link" href="../../../../writing.xml"> <i class="bi bi-rss" role="img" aria-label="RSS feed">
+    <a class="nav-link" href="../../writing.xml"> <i class="bi bi-rss" role="img" aria-label="RSS feed">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
@@ -367,12 +348,12 @@ div.csl-indent {
     <h2 id="toc-title">Contents</h2>
    
   <ul class="collapse">
-  <li><a href="#where-embeddings-actually-live-in-modern-systems" id="toc-where-embeddings-actually-live-in-modern-systems" class="nav-link active" data-scroll-target="#where-embeddings-actually-live-in-modern-systems">Where embeddings actually live in modern systems</a></li>
-  <li><a href="#how-a-modern-embedding-model-is-built" id="toc-how-a-modern-embedding-model-is-built" class="nav-link" data-scroll-target="#how-a-modern-embedding-model-is-built">How a modern embedding model is built</a></li>
-  <li><a href="#how-embedding-models-are-used-for-retrieval" id="toc-how-embedding-models-are-used-for-retrieval" class="nav-link" data-scroll-target="#how-embedding-models-are-used-for-retrieval">How embedding models are used for retrieval</a></li>
-  <li><a href="#code-companion-the-tnlp-embedding-experiments" id="toc-code-companion-the-tnlp-embedding-experiments" class="nav-link" data-scroll-target="#code-companion-the-tnlp-embedding-experiments">Code companion: the TNLP embedding experiments</a></li>
-  <li><a href="#decoder-only-models-can-do-embeddings-too" id="toc-decoder-only-models-can-do-embeddings-too" class="nav-link" data-scroll-target="#decoder-only-models-can-do-embeddings-too">Decoder-only models can do embeddings too</a></li>
-  <li><a href="#closing" id="toc-closing" class="nav-link" data-scroll-target="#closing">Closing</a></li>
+  <li><a href="#what-answertrail-is" id="toc-what-answertrail-is" class="nav-link active" data-scroll-target="#what-answertrail-is">What AnswerTrail is</a></li>
+  <li><a href="#the-corpus-is-built-once-offline" id="toc-the-corpus-is-built-once-offline" class="nav-link" data-scroll-target="#the-corpus-is-built-once-offline">The corpus is built once, offline</a></li>
+  <li><a href="#the-agent-is-a-small-loop" id="toc-the-agent-is-a-small-loop" class="nav-link" data-scroll-target="#the-agent-is-a-small-loop">The agent is a small loop</a></li>
+  <li><a href="#deployment-on-aws" id="toc-deployment-on-aws" class="nav-link" data-scroll-target="#deployment-on-aws">Deployment on AWS</a></li>
+  <li><a href="#the-loop-is-small-on-purpose" id="toc-the-loop-is-small-on-purpose" class="nav-link" data-scroll-target="#the-loop-is-small-on-purpose">The loop is small on purpose</a></li>
+  <li><a href="#code-companion" id="toc-code-companion" class="nav-link" data-scroll-target="#code-companion">Code companion</a></li>
   </ul>
 </nav>
     </div>
@@ -382,15 +363,18 @@ div.csl-indent {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">The encoder didn’t die. It became the embedding model</h1>
+<h1 class="title">AnswerTrail: building a deep-research agent over a bounded corpus</h1>
   <div class="quarto-categories">
-    <div class="quarto-category">Research foundations of modern LLMs</div>
+    <div class="quarto-category">agents</div>
+    <div class="quarto-category">RAG</div>
+    <div class="quarto-category">retrieval</div>
+    <div class="quarto-category">AWS</div>
   </div>
   </div>
 
 <div>
   <div class="description">
-    BERT-style encoders moved into retrieval, reranking, and classification.
+    How AnswerTrail turns one YouTube channel into a searchable corpus, answers over it with a citation-validating ReAct agent, and runs in production on AWS.
   </div>
 </div>
 
@@ -407,7 +391,7 @@ div.csl-indent {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">2026 · March 23</p>
+      <p class="date">2026 · August 2</p>
     </div>
   </div>
   
@@ -419,133 +403,85 @@ div.csl-indent {
 </header>
 
 
-<!-- Shared series navigation. Each PART includes this file with a Quarto
-     include shortcode pointing at ../_series.qmd (see any part's index.qmd
-     for the exact syntax — do NOT repeat that shortcode here, it would
-     recurse). Links are sibling-relative (../NN-slug/) so they resolve
-     identically from any part. When you add a part, add one line here.
-     Files starting with "_" are never rendered as their own page. -->
-<div class="series-nav">
-<div class="series-label">
-<p>Part of a series</p>
-</div>
-<div class="series-name">
-<p>Research foundations of modern LLMs</p>
-</div>
-<!-- Add parts as an ordered list below as you publish, e.g.
-     1. [Part title](../01-slug/)
-     2. [Part title](../02-slug/) -->
-<ol type="1">
-<li><a href="../01-pretraining-objectives/">Pretraining objectives: Why decoder-only won</a></li>
-<li><a href="../02-encoder-embeddings/">The encoder didn’t die. It became the embedding model</a></li>
-<li><a href="../03-retrieval/">Retrieval is older than RAG: From DPR to end-to-end</a></li>
-<li><a href="../04-fine-tuning-stack/">The fine-tuning stack: One loss, different data</a></li>
-<li><a href="../05-information-extraction/">Information extraction didn’t disappear. It moved inside the workflow</a></li>
-</ol>
-</div>
-<p>The LLM story is usually told as a generation story: GPT scaling, instruction tuning, RLHF, chat, agents.</p>
-<p>But most LLM-powered systems also depend on a quieter model running in the background: an embedding model. RAG, semantic search, reranking, clustering, recommendation, deduplication, and classification all depend on embeddings. The generator gets the headlines, but the embedding model often decides what the generator gets to see.</p>
-<p>This is where encoders went.</p>
-<p>The <a href="../../../../posts/series/research-foundations-of-modern-llms/01-pretraining-objectives/index.html">previous article</a> argued that decoder-only models won the general-purpose generation interface. This article makes the complementary argument: encoders became the default architecture for turning text into reusable vectors.</p>
-<p>More precisely, the embedding role was won by encoder-style machinery: bidirectional attention, pooled output representations, and contrastive fine-tuning. Even modern decoder-based embedders often move in this direction during fine-tuning, relaxing causal attention and training the model to produce reusable vectors.</p>
-<p>I have been circling this topic for a while. Since late 2022, I have written separate deep dives on <a href="https://chanys.github.io/sbert/">SBERT</a>, <a href="https://chanys.github.io/sgpt/">SGPT</a>, <a href="https://chanys.github.io/mteb-dataset/">MTEB</a>, <a href="https://chanys.github.io/mpnet/">MPNet</a>, <a href="https://chanys.github.io/plm/">PLM/XLNet</a>, <a href="https://chanys.github.io/knowledge-distillation/">knowledge distillation and DistilBERT</a>, and the relevant <a href="https://chanys.github.io/loss-functions/">loss functions</a> and <a href="https://chanys.github.io/knn/">KNN search</a> over at <a href="https://chanys.github.io" class="uri">https://chanys.github.io</a>. Those posts covered the individual papers and techniques; this article steps back from them to make the broader point.</p>
-<p>It is also a bridge between those older paper notes and the <a href="https://github.com/chanys/tnlp">TNLP codebase</a>: the paper trail explains the ideas, and the code shows what they look like when implemented.</p>
-<p>One terminology clarification before going further. “Embedding” refers to two different things: the token embedding table, which maps token IDs to input vectors, and the output embedding, which is the pooled vector representing a sentence, paragraph, or document. When practitioners today say “an embedding,” they usually mean the latter. This article is about the latter.</p>
-<section id="where-embeddings-actually-live-in-modern-systems" class="level2">
-<h2 class="anchored" data-anchor-id="where-embeddings-actually-live-in-modern-systems">Where embeddings actually live in modern systems</h2>
-<p>Embeddings are the input layer of many AI systems. They show up anywhere we need to turn text into something searchable, comparable, clusterable, or rankable.</p>
+<p>AnswerTrail answers questions about one AI/LLM YouTube channel by reading that channel’s video transcripts, and it checks every citation in its answer against those transcripts before you ever see the answer. It runs live on AWS.</p>
+<p>The agent itself is the small part. The loop that drives it is about a page of control flow, and its answers hold up because of a citation check and two guardrails. The work is everything around the model, and it takes two articles.</p>
+<p>This one builds the system that produces the answers: the corpus it reads, the agent harness that searches and cites over that corpus, and the AWS stack that serves the whole thing. The <a href="../../posts/answertrail-evaluation/index.html">second article</a> is the evaluation: curating the gold data and running the experiments that measure how well the agent answers.</p>
+<section id="what-answertrail-is" class="level2">
+<h2 class="anchored" data-anchor-id="what-answertrail-is">What AnswerTrail is</h2>
+<p>AnswerTrail is a deep-research agent over a <strong>bounded corpus</strong>, a fixed body of text the agent is allowed to read and nothing else. The corpus here is the video transcripts of a single AI/LLM YouTube channel. Given a question, the agent runs a ReAct loop written by hand: it searches the transcripts, reads what comes back, decides whether it has enough, and writes an answer whose citations are validated against the corpus. Retrieval is dense-only over Postgres, the model is stateless, and the agent drives its own exploration until it decides it is ready to answer.</p>
+<p>Bounding the corpus to one channel is the point, not a limitation. The model has no parametric knowledge of what these particular videos say, so every answer has to come from what the agent retrieves rather than from the model’s own memory. And because the agent may only read those transcripts, “the corpus cannot answer this” is a real outcome the system can reach and report, rather than a prompt it papers over. The live corpus is 475 videos from the channel’s most recent 16 months, cut into 25,401 transcript chunks, about 52 per video. It is live at <code>answertrail.yeesengchan.com</code>, though the site may be taken down at times to avoid running costs.</p>
+</section>
+<section id="the-corpus-is-built-once-offline" class="level2">
+<h2 class="anchored" data-anchor-id="the-corpus-is-built-once-offline">The corpus is built once, offline</h2>
+<p>Postgres holds the corpus, and the embeddings and the search index are built from it. An offline pipeline builds the corpus once per channel, in five stages:</p>
 <ul>
-<li><strong>Retrieval (RAG).</strong> Embed the document corpus once, index the vectors in a vector database, embed the query at runtime, and retrieve nearest neighbors. If the embedding model can’t tell that “what causes type 2 diabetes” and “diabetes risk factors” should be close, the RAG system breaks before the LLM ever sees the query.</li>
-<li><strong>Reranking.</strong> Retrieval gives you candidates; a stronger model reranks the top results. This second model is often a cross-encoder, another transformer encoder used in a different way.</li>
-<li><strong>Classification heads.</strong> Encode text once, then run a classifier for sentiment, intent, moderation, or routing. The “encoder plus linear head” recipe predates BERT, but BERT made it the default.</li>
-<li><strong>Semantic deduplication.</strong> Large training datasets need more than exact-match deduplication. Embeddings catch near-duplicates that lexical matching misses.</li>
-<li><strong>Clustering and topic discovery.</strong> Embed a document collection, cluster the vectors, then inspect the clusters. This is a standard recipe for analyzing customer feedback, support tickets, or other text corpora.</li>
-<li><strong>Recommendation and semantic search.</strong> User embeddings, item embeddings, query-item matching, and document search are all variations of the same idea: represent things as vectors, then compare them.</li>
+<li><strong>List the videos.</strong> Enumerate the channel’s uploads through the YouTube Data API, drop anything 180 seconds or shorter so Shorts are excluded, and write a manifest of the survivors with their titles, descriptions, and publish dates.</li>
+<li><strong>Fetch the transcripts.</strong> Pull each video’s caption track, retrying transient network drops with backoff so one dropped connection does not kill a long batch. The language, and whether the captions are auto-generated or human-written, is recorded per video.</li>
+<li><strong>Clean the ASR.</strong> Auto-generated captions carry speech-recognition errors, so a <code>gpt-5.4-mini</code> pass repairs them in small batches, each batch given its neighbors as read-only context. A length guard keeps the raw text whenever the rewrite drifts too far from the original, and videos with human captions skip this stage.</li>
+<li><strong>Chunk into 30-second windows.</strong> Group the caption lines into fixed 30-second windows, the atomic unit the agent later searches and cites. Each chunk’s id is <code>video_id:start_second</code>.</li>
+<li><strong>Embed.</strong> Embed every chunk with OpenAI’s <code>text-embedding-3-large</code> and store the vector back in Postgres.</li>
 </ul>
-<p>The practical test is simple: pick an LLM-powered product and ask where the embedding model is. In many systems, it is doing critical work before the LLM ever sees the prompt.</p>
+<p>The last three stages each read from Postgres the rows not yet at their stage, so the pipeline is resumable: a crash resumes where it stopped rather than restarting. A final stage builds a local OpenSearch index, used only by the offline evaluation for one retrieval comparison; production never touches it.</p>
+<p>The embeddings are stored at 1536 dimensions rather than the model’s native 3072, because pgvector’s HNSW index caps vectors at 2000. That truncation is cheap because <code>text-embedding-3-large</code> produces <strong>Matryoshka embeddings</strong>: a leading prefix of the full vector is itself a complete embedding, with the earliest dimensions carrying the most information. Corpus and query are embedded the same way, so they share one vector space.</p>
 </section>
-<section id="how-a-modern-embedding-model-is-built" class="level2">
-<h2 class="anchored" data-anchor-id="how-a-modern-embedding-model-is-built">How a modern embedding model is built</h2>
-<p>A modern embedding model is usually built in two stages.</p>
-<p>First, start with a pretrained language model backbone. For encoder-based embedders, this is often a BERT-like, MPNet-like, or DeBERTa-like model trained with MLM, RTD, or a related objective. Pretraining gives the model general language understanding: syntax, semantics, factual associations, and domain patterns.</p>
-<p>Second, fine-tune it contrastively. This is the step that turns a language model into an embedding model.</p>
-<p>Raw pretrained representations are not automatically good sentence embeddings. If you simply pool BERT outputs and compare them with cosine similarity, the geometry is often poor <span class="citation" data-cites="ethayarajh_2019 li_etal_2020">(<a href="#ref-ethayarajh_2019" role="doc-biblioref">Ethayarajh 2019</a>; <a href="#ref-li_etal_2020" role="doc-biblioref">Li et al. 2020</a>)</span>: unrelated texts can still end up with surprisingly high similarity scores. Sentence-BERT <span class="citation" data-cites="reimers_gurevych_2019">(<a href="#ref-reimers_gurevych_2019" role="doc-biblioref">Reimers and Gurevych 2019</a>)</span> made this practical problem visible.</p>
-<p>Contrastive training fixes the geometry by pulling related texts closer and pushing unrelated texts farther apart. The result is an embedding space where cosine similarity becomes useful for retrieval, clustering, classification, and semantic matching.</p>
-<p>The key distinction is simple: pretraining gives the model language understanding; contrastive fine-tuning gives it useful embedding geometry.</p>
-<section id="pooling" class="level3">
-<h3 class="anchored" data-anchor-id="pooling">Pooling</h3>
-<p>Transformers produce one vector per token. Embedding systems usually need one vector for the whole input, so they need a pooling strategy.</p>
-<p>Mean pooling is the safest encoder default: average the token representations. <code>[CLS]</code> pooling can work, but only if the model was trained to make <code>[CLS]</code> meaningful. Raw BERT <code>[CLS]</code> is usually weak for sentence similarity. Last-token pooling is common in decoder-based embedders, where the final token has seen the previous context.</p>
-</section>
-</section>
-<section id="how-embedding-models-are-used-for-retrieval" class="level2">
-<h2 class="anchored" data-anchor-id="how-embedding-models-are-used-for-retrieval">How embedding models are used for retrieval</h2>
-<p>Once you have an embedding model, the next question is how to use it to score query-document relevance.</p>
-<div id="fig-similarity-architectures" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three side-by-side architecture diagrams. Left, a bi-encoder: query and document go through separate encoder towers into one vector each, compared by a single similarity score. Middle, a cross-encoder: the concatenated query and document go through one shared encoder that outputs a single relevance score. Right, late interaction: both are encoded but token-level vectors are kept, and the score is the sum over query tokens of each token's maximum similarity to any document token.">
+<section id="the-agent-is-a-small-loop" class="level2">
+<h2 class="anchored" data-anchor-id="the-agent-is-a-small-loop">The agent is a small loop</h2>
+<p>With the corpus in place, the agent turns a question into an answer over it.</p>
+<!-- ================= FIGURE 1 ================= -->
+<div id="fig-react-loop" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A question enters a stateless agent loop. The loop either calls search_transcripts, which runs a dense pgvector search and returns the top-10 chunks to read, or calls mark_ready. A guardrail check, explored enough, sends the run back to keep searching until it has explored enough, then a final submit_answer turn validates every citation against the corpus before emitting the answer; a rejected citation returns to be fixed, and an accepted answer with citations is the loop's stop signal.">
 <figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-similarity-architectures-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="architectures.png" class="img-fluid figure-img" alt="Three side-by-side architecture diagrams. Left, a bi-encoder: query and document go through separate encoder towers into one vector each, compared by a single similarity score. Middle, a cross-encoder: the concatenated query and document go through one shared encoder that outputs a single relevance score. Right, late interaction: both are encoded but token-level vectors are kept, and the score is the sum over query tokens of each token's maximum similarity to any document token.">
+<div aria-describedby="fig-react-loop-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="react-loop.png" class="img-fluid figure-img" alt="A question enters a stateless agent loop. The loop either calls search_transcripts, which runs a dense pgvector search and returns the top-10 chunks to read, or calls mark_ready. A guardrail check, explored enough, sends the run back to keep searching until it has explored enough, then a final submit_answer turn validates every citation against the corpus before emitting the answer; a rejected citation returns to be fixed, and an accepted answer with citations is the loop's stop signal.">
 </div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-similarity-architectures-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;1: Three architectures for similarity scoring. Bi-encoders encode independently and compare; cross-encoders encode the pair jointly; late interaction keeps token-level representations and aggregates with MaxSim.
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-react-loop-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: The agent is a stateless ReAct loop with two moves each turn: search the transcripts, or mark itself ready. It keeps looping until it has run enough searches or reaches a 15-step budget, and only then does a final submit_answer turn run. That turn is a tool call like any other, so the loop validates every citation the answer makes against the corpus before accepting it, and a fabricated citation comes back on the normal tool channel to be corrected. An accepted answer with valid citations is what stops the loop.
 </figcaption>
 </figure>
 </div>
-<p><strong>Bi-encoder.</strong> Encode the query and document separately, then compare their vectors. Document vectors can be precomputed, so this is the standard choice for first-stage retrieval.</p>
-<p><strong>Cross-encoder.</strong> Encode the query and document together, then output a relevance score. This is usually more accurate, but too expensive to run over an entire corpus.</p>
-<p><strong>Late interaction.</strong> Models like <a href="https://chanys.github.io/colbert/">ColBERT</a> <span class="citation" data-cites="khattab_zaharia_2020">(<a href="#ref-khattab_zaharia_2020" role="doc-biblioref">Khattab and Zaharia 2020</a>)</span> keep token-level vectors and compare query tokens against document tokens. This sits between bi-encoders and cross-encoders in both cost and accuracy.</p>
-<p>The standard production recipe is simple: bi-encoder for retrieval; cross-encoder or late-interaction model for reranking.</p>
+<!-- ============================================ -->
+<p>The model is stateless, so the loop holds the whole conversation and hands it back every turn, and the agent acts only through tools, which is what lets the loop stop it and force it to finish.</p>
+<p>It has three tools:</p>
+<ul>
+<li><strong><code>search_transcripts</code></strong> embeds the query and runs a dense nearest-neighbour search over the pre-embedded chunks using the Postgres HNSW index, returning the top 10 by cosine similarity with no re-ranking, each with its full transcript text.</li>
+<li><strong><code>mark_ready</code></strong> takes no arguments; the model calls it to end the search phase once it has gathered enough.</li>
+<li><strong><code>submit_answer</code></strong> delivers the final answer, whose citations are ids only (<code>video_id</code>, <code>start_ts</code>, <code>end_ts</code>). The loop checks every citation against the index before accepting the answer, so a fabricated one is rejected and sent back to be corrected.</li>
+</ul>
+<p>Making the answer a tool is the design choice that carries the reliability, because producing the answer then runs through the same loop as searching. A rejected citation comes back on the normal tool-result channel to be fixed, an accepted answer is the loop’s stop signal, and <code>tool_choice</code> can force the <code>submit_answer</code> call when the step budget runs out.</p>
+<p>Two guardrails keep the loop honest. The model must run at least a couple of distinct searches before it may answer, so it cannot answer without exploring. And a run that keeps searching but finds nothing still stops, reporting that the corpus cannot answer rather than looping forever.</p>
+<p>Every run is recorded as a <code>RunEvidenceState</code>: its searches and queries, the chunks retrieved and cited, the token usage and cost, and the outcome, stamped with the recipe version and the git SHA. That provenance is what lets the <a href="../../posts/answertrail-evaluation/index.html">second article</a> freeze one agent and score every variant against it.</p>
 </section>
-<section id="code-companion-the-tnlp-embedding-experiments" class="level2">
-<h2 class="anchored" data-anchor-id="code-companion-the-tnlp-embedding-experiments">Code companion: the TNLP embedding experiments</h2>
-<p>The <a href="https://github.com/chanys/tnlp">TNLP repo</a> has my working code for the ideas in this article. The most relevant example is a pair of contrastive-training experiments on BioASQ11, a biomedical retrieval dataset with questions, chosen answers, and rejected PubMed snippets. Both experiments train the same behavior: pull the query and chosen answer closer, push the rejected candidate farther away.</p>
-<p>I implemented this two ways, to show two real workflows.</p>
-<p>The first uses <code>sentence-transformers</code> with <code>intfloat/e5-base-v2</code> <span class="citation" data-cites="wang_etal_2022">(<a href="#ref-wang_etal_2022" role="doc-biblioref">Wang et al. 2022</a>)</span>: take a strong existing embedder, rely on the library, and fine-tune with relatively little code. This is what <em>adapting an existing embedding model to your domain</em> looks like in practice.</p>
-<p>The second uses a custom DeBERTa-v3 triplet model with a hand-rolled training loop. Every hidden choice becomes visible: backbone, pooling, projection, distance function, triplet construction, loss. This is what <em>turning a pretrained encoder into an embedding model yourself</em> looks like, when you can’t or don’t want to lean on the library defaults.</p>
-<p>The two are not a head-to-head benchmark. E5 is already contrastively pretrained; DeBERTa-v3 is a general encoder backbone. They’re paired here because together they cover the two starting points a real production team faces.</p>
+<section id="deployment-on-aws" class="level2">
+<h2 class="anchored" data-anchor-id="deployment-on-aws">Deployment on AWS</h2>
+<p>The system runs on AWS, defined entirely in Terraform and designed to be torn down and rebuilt on demand. No secret is kept in code or git.</p>
+<!-- ================= FIGURE 2 ================= -->
+<div id="fig-aws" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A browser fetches static web pages from CloudFront backed by S3, and makes API calls to a load balancer inside the VPC. The internet gateway is an attachment on the VPC boundary rather than a hop. Public subnets hold the load balancer and the Fargate container; private subnets hold the Postgres database. The container reaches the OpenAI API outbound through its own public IP, so no NAT gateway is needed, and receives secrets from Secrets Manager.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-aws-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="aws-architecture.png" class="img-fluid figure-img" alt="A browser fetches static web pages from CloudFront backed by S3, and makes API calls to a load balancer inside the VPC. The internet gateway is an attachment on the VPC boundary rather than a hop. Public subnets hold the load balancer and the Fargate container; private subnets hold the Postgres database. The container reaches the OpenAI API outbound through its own public IP, so no NAT gateway is needed, and receives secrets from Secrets Manager.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-aws-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: AnswerTrail on AWS. The browser loads a static site from S3 through CloudFront, and makes API calls to a load balancer inside one VPC. The load balancer and the Fargate container sit in public subnets across two availability zones; the Postgres database sits in private subnets. The container is given its own public IP so it can call the OpenAI API outbound through the internet gateway, which is what lets the project skip a paid NAT gateway, and it reads its secrets from Secrets Manager. Traffic only ever flows inward one tier at a time.
+</figcaption>
+</figure>
+</div>
+<!-- ============================================ -->
+<p>The frontend is a static site on S3, served through CloudFront. The API is a single small Fargate container behind a load balancer that runs the agent and streams progress back over Server-Sent Events. Both sit in one VPC across two availability zones.</p>
+<p>A few choices are worth calling out. The app container sits in a public subnet with its own public IP, so it can reach the OpenAI API through the internet gateway; the alternative, a private subnet, would need a NAT gateway at about $32 per month for the same outbound calls. Security is a chain of one-way tiers: the load balancer is the only thing open to the internet, the container accepts traffic only from the load balancer, and the database accepts traffic only from the container, each rule written against the tier’s security group rather than any IP address. The database is disposable, holding nothing that cannot be reloaded from a dump kept in S3, so the whole stack can be destroyed when idle and rebuilt later with a single <code>terraform apply</code>.</p>
+<p>Deploys are automatic: every push to <code>main</code> builds the container image, ships it to ECS, then rebuilds the static frontend and clears the CloudFront cache, authenticating to AWS through OpenID Connect rather than stored keys.</p>
 </section>
-<section id="decoder-only-models-can-do-embeddings-too" class="level2">
-<h2 class="anchored" data-anchor-id="decoder-only-models-can-do-embeddings-too">Decoder-only models can do embeddings too</h2>
-<p>The article so far has argued that encoder-style machinery won the embedding role. That does not mean only encoder backbones can produce embeddings. Decoder-only models can, and recent work has pushed this direction hard.</p>
-<p>The early version of this idea was <a href="https://chanys.github.io/sgpt/">SGPT</a> <span class="citation" data-cites="muennighoff_2022">(<a href="#ref-muennighoff_2022" role="doc-biblioref">Muennighoff 2022</a>)</span>: take a GPT-style decoder-only model, pool token representations with a position-weighted mean, and contrastively fine-tune for semantic search. It worked, but it was expensive relative to encoder-based alternatives.</p>
-<p>The current generation is stronger. Large decoder backbones (Llama, Mistral) can be turned into embedders that compete at the top of MTEB <span class="citation" data-cites="muennighoff_etal_2022">(<a href="#ref-muennighoff_etal_2022" role="doc-biblioref">Muennighoff et al. 2022</a>)</span>, especially on retrieval and reranking. But notice the recipe they converge on: take a strong decoder-only LLM, relax or replace causal attention during fine-tuning, pool the output representations, and contrastively fine-tune on a large mix of data.</p>
-<p>That recipe looks encoder-like. Bidirectional access, pooled output, contrastive geometry. The starting weights may come from a decoder-only LLM, but the embedding behavior is built by the fine-tuning stage.</p>
-<p>So “decoders caught up” is only half right. Large decoder backbones can be adapted into strong embedders when the fine-tuning recipe starts to look encoder-like. For most production systems, small encoder-based embedders remain attractive because they are fast and cheap. For highest-quality retrieval where compute is available, large decoder-based embedders are now real competitors.</p>
+<section id="the-loop-is-small-on-purpose" class="level2">
+<h2 class="anchored" data-anchor-id="the-loop-is-small-on-purpose">The loop is small on purpose</h2>
+<p>The agent is a page of control flow, and its reliability comes from the citation check and two guardrails (it must search before it can answer, and it stops rather than invent one when the corpus has no answer). The work is everything around it: the ingestion pipeline that turns a channel into 25,401 searchable chunks, the agent harness that searches and cites over them, and the AWS stack that serves the whole thing and rebuilds from a single command.</p>
+<p>Building that system is only half the effort. The other half is measuring it. The <a href="../../posts/answertrail-evaluation/index.html">second article</a> curates the evaluation data and runs the experiments that score the agent.</p>
 </section>
-<section id="closing" class="level2">
-<h2 class="anchored" data-anchor-id="closing">Closing</h2>
-<p>Decoder-only models won the visible part of the LLM story: generation, chat, instruction following, agents.</p>
-<p>But encoder-style machinery won a quieter role: bidirectional access, pooled output representations, and contrastive fine-tuning. That machinery became the default way to turn text into reusable vectors, and it now powers retrieval, reranking, clustering, classification, deduplication, and semantic search across the modern AI stack.</p>
-<p>That is why the encoder did not die. It moved into the infrastructure.</p>
-<p>The <a href="../../../../posts/series/research-foundations-of-modern-llms/03-retrieval/index.html">next article</a> picks up where this one leaves off: how the retrieval part of RAG was solved well before “RAG” became the popular term, from Dense Passage Retrieval through end-to-end joint training of retriever and generator.</p>
+<section id="code-companion" class="level2">
+<h2 class="anchored" data-anchor-id="code-companion">Code companion</h2>
+<p>The <a href="https://github.com/chanys/bounded-deep-research">bounded-deep-research repo</a> has the ingestion pipeline, the agent, and the full Terraform stack, and the system is live at <a href="https://answertrail.yeesengchan.com">answertrail.yeesengchan.com</a> (occasionally taken down to save on running costs). A short demonstration video is planned: ▸ EDIT ME.</p>
 
 
-
 </section>
 
-<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" role="list">
-<div id="ref-ethayarajh_2019" class="csl-entry" role="listitem">
-Ethayarajh, Kawin. 2019. <span>“How Contextual Are Contextualized Word Representations? Comparing the Geometry of BERT, ELMo, and GPT-2 Contextualized Representations.”</span> <em>Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)</em>. <a href="https://arxiv.org/abs/1909.00512">https://arxiv.org/abs/1909.00512</a>.
-</div>
-<div id="ref-khattab_zaharia_2020" class="csl-entry" role="listitem">
-Khattab, Omar, and Matei Zaharia. 2020. <span>“ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT.”</span> <em>Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval</em>. <a href="https://arxiv.org/abs/2004.12832">https://arxiv.org/abs/2004.12832</a>.
-</div>
-<div id="ref-li_etal_2020" class="csl-entry" role="listitem">
-Li, Bohan, Hao Zhou, Junxian He, Mingxuan Wang, Yiming Yang, and Lei Li. 2020. <span>“On the Sentence Embeddings from Pre-Trained Language Models.”</span> <em>Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP)</em>. <a href="https://arxiv.org/abs/2011.05864">https://arxiv.org/abs/2011.05864</a>.
-</div>
-<div id="ref-muennighoff_2022" class="csl-entry" role="listitem">
-Muennighoff, Niklas. 2022. <span>“SGPT: GPT Sentence Embeddings for Semantic Search.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/2202.08904">https://arxiv.org/abs/2202.08904</a>.
-</div>
-<div id="ref-muennighoff_etal_2022" class="csl-entry" role="listitem">
-Muennighoff, Niklas, Nouamane Tazi, Loïc Magne, and Nils Reimers. 2022. <span>“MTEB: Massive Text Embedding Benchmark.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/2210.07316">https://arxiv.org/abs/2210.07316</a>.
-</div>
-<div id="ref-reimers_gurevych_2019" class="csl-entry" role="listitem">
-Reimers, Nils, and Iryna Gurevych. 2019. <span>“Sentence-BERT: Sentence Embeddings Using Siamese BERT-Networks.”</span> <em>Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)</em>. <a href="https://arxiv.org/abs/1908.10084">https://arxiv.org/abs/1908.10084</a>.
-</div>
-<div id="ref-wang_etal_2022" class="csl-entry" role="listitem">
-Wang, Liang, Nan Yang, Xiaolong Huang, et al. 2022. <span>“Text Embeddings by Weakly-Supervised Contrastive Pre-Training.”</span> <em>arXiv Preprint</em>. <a href="https://arxiv.org/abs/2212.03533">https://arxiv.org/abs/2212.03533</a>.
-</div>
-</div></section></div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
@@ -988,7 +924,7 @@ Wang, Liang, Nan Yang, Xiaolong Huang, et al. 2022. <span>“Text Embeddings by 
     </a>
   </li>  
     <li class="nav-item compact">
-    <a class="nav-link" href="../../../../writing.xml">
+    <a class="nav-link" href="../../writing.xml">
       <i class="bi bi-rss" role="img" aria-label="RSS feed">
 </i> 
     </a>

@@ -48,9 +48,9 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-b536773ea9642060c833a78fc319e66a.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-a3a8abd88d2002c37a123c16ddc2edeb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-29a81c55230e2bb4023cb8376a5ff7f8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-a3a8abd88d2002c37a123c16ddc2edeb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-f08a799d63b4e646404653b552ba6030.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-b66b643a2625f72b0c4a516cce53d691.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-f08a799d63b4e646404653b552ba6030.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -360,6 +360,22 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
+<section id="answertrail" class="level2">
+<h2 class="anchored" data-anchor-id="answertrail">AnswerTrail</h2>
+<svg class="project-glyph" viewbox="0 0 100 100" aria-hidden="true" focusable="false">
+  <g fill="none" stroke="currentColor" stroke-width="3">
+    <path d="M20 74 L40 44 L58 60 L78 30"></path>
+    <circle cx="78" cy="30" r="11"></circle>
+  </g>
+  <g fill="currentColor">
+    <circle cx="20" cy="74" r="5"></circle><circle cx="40" cy="44" r="5"></circle><circle cx="58" cy="60" r="5"></circle><circle cx="78" cy="30" r="4"></circle>
+  </g>
+</svg>
+<p><span class="project-meta"><code>Python · 2026 · open source</code></span></p>
+<p><span class="proj-chip">deep-research agent</span> <span class="proj-chip">RAG</span> <span class="proj-chip">retrieval</span> <span class="proj-chip">LLM evaluation</span> <span class="proj-chip">AWS</span></p>
+<p>A deep-research agent that answers questions over one AI/LLM YouTube channel’s transcripts, with <span class="gt-span gt-b">every citation validated against the corpus</span> before an answer is returned. A hand-written ReAct loop searches dense retrieval over Postgres, the whole system deploys live on AWS from a single-command Terraform stack, and a nugget-based evaluation with a <span class="gt-span">cross-family judge calibrated to Cohen’s kappa 0.879</span> measures how well it answers.</p>
+<p><a href="./posts/answertrail-agent/" class="proj-cta">Building it →</a> <a href="./posts/answertrail-evaluation/" class="proj-cta">Evaluating it →</a> <a href="https://github.com/chanys/bounded-deep-research" class="proj-cta">Code →</a></p>
+</section>
 <section id="clinical-documentation-pipeline" class="level2">
 <h2 class="anchored" data-anchor-id="clinical-documentation-pipeline">Clinical documentation pipeline</h2>
 <svg class="project-glyph" viewbox="0 0 100 100" aria-hidden="true" focusable="false">
@@ -371,7 +387,7 @@ ul.task-list li input[type="checkbox"] {
     <rect x="42" y="42" width="16" height="16" rx="3"></rect><circle cx="85" cy="50" r="6"></circle>
   </g>
 </svg>
-<p><span class="project-meta"><code>Python · 2023–2026 · proprietary</code></span></p>
+<p><span class="project-meta"><code>Python · 2025–2026 · proprietary</code></span></p>
 <p><span class="proj-chip">LLM workflow</span> <span class="proj-chip">structured extraction</span> <span class="proj-chip">clinical NLP</span></p>
 <p>A multi-step LLM workflow that turns a clinician-patient encounter transcript into a structured clinical note. Parallel extraction calls produce typed, metadata-tagged frames that a downstream routing layer places into the correct note sections. Clinician evaluation showed <span class="gt-span gt-b">2× recall of medical facts</span> at maintained accuracy, improved clinical utility over the prior production system, and <span class="gt-span gt-b">~50% better run-to-run consistency</span> on extracted medical problems and clinical facts.</p>
 <p><a href="./posts/series/research-foundations-of-modern-llms/05-information-extraction/#ie-as-workflow-state" class="proj-cta">Pattern writeup →</a></p>
