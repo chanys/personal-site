@@ -1,0 +1,210 @@
+---
+title: "The agent is the easy part"
+description: "AnswerTrail's research agent is a small stateless loop; the engineering that makes it trustworthy is the corpus pipeline behind it and the AWS stack around it."
+date: "2026-08-02"
+categories: ["agents", "RAG", "retrieval", "AWS"]
+draft: false
+---
+
+AnswerTrail answers questions about one YouTube creator's work by reading that creator's own transcripts, and it checks every citation in its answer against those transcripts before you ever see the answer.
+It runs live on AWS.
+
+When people describe a system like this, the agent gets the attention: the ReAct loop, the tool calls, the prompt that makes the model behave.
+In this project the agent is the part that took the least work.
+The loop that drives it is about a page of control flow, and what makes its answers trustworthy is a citation check and two guardrails, not a clever model.
+The engineering that took the real effort sits on either side of that loop: the pipeline that turns a channel into a searchable corpus, and the AWS stack that serves the whole thing in production.
+This article walks all three, in the order they are built.
+
+## What AnswerTrail is
+
+AnswerTrail is a deep-research agent over a **bounded corpus**, a fixed body of text the agent is allowed to read and nothing else.
+The corpus here is the transcripts of a single AI and LLM creator's channel.
+Given a question, the agent runs a ReAct loop written by hand: it searches the transcripts, reads what comes back, decides whether it has enough, and writes an answer whose citations are validated against the corpus.
+Retrieval is dense-only over Postgres, the model is stateless, and the agent drives its own exploration until it decides it is ready to answer.
+
+Bounding the corpus to one channel is the point, not a limitation.
+Because the agent may only read those transcripts, "the corpus cannot answer this" is a real outcome the system can reach and report, rather than a prompt it papers over.
+The live corpus is 475 videos from the creator's most recent 16 months, cut into 25,401 transcript chunks, about 52 per video.
+It is live at `answertrail.yeesengchan.com`, though the site may be taken down at times to avoid running costs.
+
+## The corpus is built once, offline
+
+Postgres is the source of truth for the corpus, and the embeddings and the search index are derived from it.
+The corpus is built by a pipeline that runs once per channel, each stage invoked as `uv run python -m ingest.<name>`:
+
+- **List the videos.** Enumerate the channel's uploads through the YouTube Data API, drop anything 180 seconds or shorter so Shorts are excluded, and write a manifest of the survivors with their titles, descriptions, and publish dates.
+- **Fetch the transcripts.** Pull each video's caption track, retrying transient network drops with backoff so one dropped connection does not kill a long batch. The language, and whether the captions are auto-generated or human-written, is recorded per video.
+- **Clean the ASR.** Auto-generated captions carry speech-recognition errors, so a `gpt-5.4-mini` pass repairs them in small batches, each batch given its neighbors as read-only context. A length guard keeps the raw text whenever the rewrite drifts too far from the original, and channels with human captions skip this stage.
+- **Chunk into 30-second windows.** Group the caption lines into fixed 30-second windows, the atomic unit the agent later searches and cites. Each chunk's id is `video_id:start_second`.
+- **Embed.** Embed every chunk with OpenAI's `text-embedding-3-large` and store the vector back in Postgres.
+
+The last three stages each read from Postgres the rows not yet at their stage, so the pipeline is resumable: a crash resumes where it stopped rather than restarting.
+A final stage builds a local OpenSearch index, used only by the offline evaluation for one retrieval comparison; production never touches it.
+
+One detail in the embedding stage is worth pausing on, because it is what lets the vectors fit the database index at all.
+`text-embedding-3-large` is natively 3072-dimensional, but pgvector's HNSW index caps vectors at 2000 dimensions, so the stored and queried vectors are 1536-dimensional.
+That truncation is safe because the model produces **Matryoshka embeddings**: it is trained so that a leading prefix of the full vector is itself a complete embedding, with the earliest dimensions carrying the most information.
+So the code asks the API for 1536 dimensions, which returns the first 1536 of the 3072 and renormalizes them, keeping most of the quality while fitting under the index cap.
+The corpus and the query use the same model at the same dimension, so they share one vector space.
+
+## The agent is a small loop
+
+With the corpus in place, the agent turns a question into an answer over it.
+
+<!-- ================= FIGURE 1 ================= -->
+
+![The agent is a stateless ReAct loop with two moves each turn: search the transcripts, or mark itself ready. It keeps looping until it has run enough searches or reaches a 15-step budget, and only then does a final submit_answer turn run. That turn is a tool call like any other, so the loop validates every citation the answer makes against the corpus before accepting it, and a fabricated citation comes back on the normal tool channel to be corrected. An accepted answer with valid citations is what stops the loop.](react-loop.png){#fig-react-loop fig-alt="A question enters a stateless agent loop. The loop either calls search_transcripts, which runs a dense pgvector search and returns the top-10 chunks to read, or calls mark_ready. A guardrail check, explored enough, sends the run back to keep searching until it has explored enough, then a final submit_answer turn validates every citation against the corpus before emitting the answer; a rejected citation returns to be fixed, and an accepted answer with citations is the loop's stop signal."}
+
+<!-- ============================================ -->
+
+The model is stateless, so the loop keeps the whole conversation and hands all of it back on every turn.
+The agent acts only through tools, which is what lets the loop stop it and force it to finish.
+
+Each turn, the model does one of two things.
+It can **search** the corpus, issuing one or more queries at once and reading the results on the next turn.
+Or it can **signal that it is ready** to answer.
+The loop repeats until the model signals ready or a budget of 15 steps is reached, and then a single final turn writes the answer.
+
+The agent has three tools.
+
+- **`search_transcripts`** embeds the query and runs a dense nearest-neighbour search over the pre-embedded chunks, using the Postgres HNSW index. It returns the top 10 by cosine similarity, with no re-ranking or pruning, each with its full transcript text.
+- **`mark_ready`** takes no arguments; the model calls it to say it has gathered enough, which ends the search phase.
+- **`submit_answer`** delivers the final answer, and its reliability comes from validating the citations. The citations are ids only (`video_id`, `start_ts`, `end_ts`), and the loop checks every one against the index before accepting the answer, so a fabricated citation is rejected and sent back to be corrected.
+
+Making the answer a tool, rather than something the loop does after the model is done, is the design choice that carries the reliability.
+It means producing the answer runs through the same loop as searching.
+A rejected citation returns on the normal tool-result channel for the model to fix, a submitted answer is the loop's stop signal, and `tool_choice` can force the `submit_answer` call when the step budget runs out.
+
+Two guardrails keep the loop honest.
+Before it may answer, the model must have run at least a couple of distinct searches, so it cannot answer without exploring.
+And a run that keeps searching but finds nothing still terminates, reporting that the corpus cannot answer rather than looping forever.
+
+The exploration policy itself lives in the prompt, in a versioned research recipe, not in the code.
+Its most important rule is the one the whole system is built around: halt and report that the corpus cannot answer, rather than fabricate an answer, when the evidence is not there.
+
+Both the exploration turns and the final answer turn run on the same agent model, `gpt-5.4`, but at different reasoning efforts: the exploration turns use none, and only the final answer turn uses a low effort.
+The two are separate settings, so the answer turn's effort can be raised later without changing how the agent explores.
+
+Every run is recorded as a `RunEvidenceState`: the searches and their queries, the chunks retrieved and cited, the token usage and cost, and the outcome.
+The record is stamped with the recipe version and the code's git SHA, so any result can be tied back to the exact agent that produced it.
+That provenance is what lets the evaluation in the [next article](/posts/retrieval-not-reasoning/index.qmd) freeze one agent and compare variants against it.
+
+On the serving side, a query arrives at a `POST /query` endpoint, and the app runs the agent while showing its work over Server-Sent Events: the searches appear live in the browser, and the final answer streams back token by token.
+Three cheap checks gate the request before the agent runs: the channel must exist, the day's spend cap must not be reached, and the caller must be within their per-IP quota.
+
+That is the whole agent.
+The loop is short, the tools are three, and the trust comes from the citation check and the two guardrails.
+The larger half of the system is where it runs.
+
+## Deployment on AWS is the larger half
+
+The agent runs as a service on AWS, defined entirely in Terraform, as one main stack plus a small bootstrap, all in `us-east-1`.
+The stack is designed to be torn down and rebuilt on demand.
+No secret is kept in code or git, with one exception: the database password, which Terraform generates and keeps in its encrypted state.
+
+<!-- ================= FIGURE 2 ================= -->
+
+![AnswerTrail on AWS. The browser loads a static site from S3 through CloudFront, and makes streamed API calls to a load balancer inside one VPC. The load balancer and the Fargate container sit in public subnets across two availability zones; the Postgres database sits in private subnets. The container is given its own public IP so it can call the OpenAI API outbound through the internet gateway, which is what lets the project skip a paid NAT gateway, and it reads its secrets from Secrets Manager. Traffic only ever flows inward one tier at a time.](aws-architecture.png){#fig-aws fig-alt="A browser fetches static web pages from CloudFront backed by S3, and makes streamed API calls to a load balancer inside the VPC. The internet gateway is an attachment on the VPC boundary rather than a hop. Public subnets hold the load balancer and the Fargate container; private subnets hold the Postgres database. The container reaches the OpenAI API outbound through its own public IP, so no NAT gateway is needed, and receives secrets from Secrets Manager."}
+
+<!-- ============================================ -->
+
+The frontend is a static export served from S3 through CloudFront, so it is cached at the edge and reads with low latency.
+The API is a container behind a load balancer that runs the agent and streams progress back over Server-Sent Events.
+The browser calls the API on its own subdomain, `api.<domain>`, and the DNS records in the edge layer wire the two together.
+
+### The network puts the app in a public subnet on purpose
+
+The load balancer, the app, and the database all run inside one VPC, `10.0.0.0/16`, spanning two availability zones because RDS requires subnets in at least two.
+The database sits in the private subnets, and the load balancer is attached to the public subnets.
+The app container sits in the public subnets with a public IP, which lets it reach OpenAI directly through the internet gateway.
+The alternative, holding the container in the private subnets, would require a NAT gateway at about \$32 per month just for the outbound OpenAI calls, so the public-subnet placement is a deliberate cost choice.
+
+### Security is a chain of one-way tiers
+
+Within the VPC, access is layered so each tier accepts traffic only from the tier in front of it:
+
+```
+internet --443--> ALB --8000--> app task --5432--> database
+```
+
+Each of the three security groups allows inbound from the previous group's security group, not from an IP range.
+So the rules read as "only the app may reach the database" without hardcoding any addresses.
+The only thing open to the whole internet is the load balancer, on ports 443 and 80.
+The app task accepts traffic on port 8000 only from the load balancer's security group, so even though it sits in a public subnet, nothing on the internet can reach it directly.
+The database accepts Postgres on 5432 only from the app task's security group, so it is never reachable from the internet or from anything else in the VPC.
+
+### Compute is a single cheap Fargate task
+
+The app runs on ECS Fargate.
+The image is stored in a private ECR repository and scanned on push.
+The task is small and cheap: ARM64 Graviton, 0.5 vCPU, 1 GB of memory, and one running copy.
+
+Its settings split in two.
+Plain settings are passed as environment variables, including `RETRIEVAL_BACKEND=pgvector`, the spend caps, and how to reach the database.
+Sensitive settings are injected from Secrets Manager at start time: the OpenAI key, the database password, and the two access codes.
+
+The load balancer's idle timeout is set to 150 seconds, which is what holds a streaming connection open through the quiet synthesis turn, so the app's 15-second SSE heartbeat has time to keep it alive.
+The target group health-checks `/health` every 15 seconds and marks a task healthy after two passes, so a fresh deploy comes into service quickly.
+
+### The database is disposable
+
+The database is RDS PostgreSQL 16 on a `db.t4g.small`, a small burstable Graviton instance.
+It lives in the private subnets, behind the database security group, and is not publicly accessible.
+It is disposable, because its data can always be reloaded from a dump kept in S3.
+Terraform generates the master password itself, a 30-character alphanumeric string chosen so it never contains characters that break a connection URL, stores it in the encrypted state file, and injects it into the container as `DB_PASSWORD`.
+
+### Secrets are created empty and filled out-of-band
+
+The values the task and database rely on live in Secrets Manager.
+Terraform creates the secret containers but not their values, so the OpenAI key, the Langfuse keys, and the two access codes are set out-of-band and never appear in code, state, or git.
+The database password is the one exception: Terraform generates it, so Terraform also sets it.
+
+### The edge serves the frontend and terminates HTTPS
+
+In front of the API, the edge layer serves the static frontend and terminates HTTPS.
+The frontend is a private S3 bucket served through CloudFront, which reads it through an Origin Access Control so the bucket is never public.
+Two Route 53 records point the apex domain at CloudFront and `api.<domain>` at the load balancer.
+
+### CI/CD deploys on every push to main
+
+Every push to `main` triggers a deploy through a GitHub Actions workflow.
+It authenticates with OpenID Connect rather than stored AWS keys, using an IAM role that only this repository's `main` branch is allowed to assume.
+The workflow builds the backend image on a native ARM runner and pushes it tagged by the git SHA, deploys it to ECS and waits for the service to stabilise, then builds the static frontend, uploads it to S3, and clears the CloudFront cache.
+
+### Bootstrap holds what must outlive the stack
+
+Every resource above is Terraform, split into two configs, because the main stack stores its state in a bucket that has to exist first.
+The bootstrap config uses local state and creates the two things that must outlive the main stack: the S3 bucket that holds Terraform state, versioned and encrypted and blocked from public access, and the Route 53 hosted zone for the subdomain.
+The hosted zone lives in bootstrap on purpose, so its nameservers stay stable across the main stack's destroy-and-apply cycles and the subdomain is delegated at the registrar only once.
+
+Once bootstrap has run, the whole stack goes up and comes down with a single command each:
+
+```
+terraform apply      # bring the stack up
+terraform destroy    # tear it all down
+```
+
+This is what makes the destroy-when-idle, rebuild-later cycle work: the database reloads from its S3 dump, while the state bucket and the DNS zone in bootstrap survive the cycle.
+
+### Observability is split three ways
+
+Three kinds of observability watch the running stack, and they see different things.
+The in-app **Run Audit** serves each run's `RunEvidenceState`, so per-run token counts, USD cost, search queries, and retrieved and cited chunks are visible in production from the app itself.
+**CloudWatch** shows the infrastructure metrics: ECS CPU and memory, load-balancer requests, 5xx, and latency, and RDS CPU and connections, plus the container logs; it says nothing about tokens, cost, or the model's inputs and outputs.
+**Langfuse** traces each raw model call with its input, output, and latency, but the code is instrumented for it only in development: the production task never injects the Langfuse keys, so it stays off in the deployed container.
+
+## The loop is small on purpose
+
+The agent is a page of control flow, and its reliability is the citation check and two guardrails.
+Everything that took real work is around it: the ingestion pipeline that turns a channel into 25,401 searchable chunks, and the AWS stack that serves the whole thing behind a one-way security chain and rebuilds from a single command.
+A production research agent is mostly the corpus you feed it and the infrastructure you run it on.
+
+There is one more thing the system is, which this article has only hinted at.
+It is a measuring instrument for itself.
+Every run is recorded with enough provenance to freeze one agent and score it.
+The [next article](/posts/retrieval-not-reasoning/index.qmd) builds the evaluation gold and runs the experiments, and its finding is that the agent's hard case is a retrieval problem, not a reasoning one.
+
+## Code companion
+
+The [bounded-deep-research repo](https://github.com/chanys/bounded-deep-research) has the ingestion pipeline, the agent, and the full Terraform stack, and the system is live at [answertrail.yeesengchan.com](https://answertrail.yeesengchan.com) (occasionally taken down to save on running costs).
+A short demonstration video is planned: ▸ EDIT ME.
