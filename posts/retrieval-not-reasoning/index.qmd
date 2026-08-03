@@ -1,6 +1,6 @@
 ---
 title: "AnswerTrail: evaluating a deep-research agent over a bounded corpus"
-description: "A nugget-based gold set and a calibrated cross-family judge show that AnswerTrail's factual-versus-longitudinal gap is dominantly a retrieval problem, not a reasoning one."
+description: "A nugget-based gold set, a calibrated cross-family judge (Cohen's kappa 0.879), and ablations that separate what retrieval surfaces from what the agent reasons over."
 date: "2026-08-02"
 categories: ["evaluation", "RAG", "retrieval", "LLM judge"]
 draft: false
