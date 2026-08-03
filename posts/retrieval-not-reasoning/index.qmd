@@ -7,25 +7,26 @@ draft: false
 ---
 
 The [previous article](/posts/the-agent-is-the-easy-part/index.qmd) built AnswerTrail: a research agent that answers questions over one AI/LLM YouTube channel's video transcripts, with every citation checked against the corpus.
-This article asks whether it is any good, and the honest answer needs a measuring instrument built as carefully as the agent.
+This article measures how well it answers.
 
-The headline is a gap.
-The agent answers single-fact questions well and change-over-time questions poorly, 87 percent against 32 percent.
-The interesting part is why, and the finding is that the gap is dominantly a retrieval problem.
-For the hard questions, the evidence an answer needs is usually never retrieved in the first place.
-Getting to that claim, and being able to trust it, took two things: a gold standard that says what each answer must contain, and a judge whose verdicts have been checked against a human.
+AnswerTrail is scored on two kinds of question.
+A **factual question** asks for one specific fact, which usually sits in one place in the corpus.
+A **longitudinal question** asks how the creator's view on a topic changed over time, which means gathering and connecting evidence spread across many videos and many months.
+The longitudinal kind is inherently much harder, so it is expected that the agent scores well on factual questions and lower on longitudinal ones: 87 percent against 32 percent.
+
+The interesting part is why, and the answer is retrieval rather than reasoning.
+For the longitudinal questions, the evidence an answer needs is usually never retrieved in the first place.
+Reaching that conclusion, and being able to trust it, takes two things built first: a gold standard that says what each answer must contain, and a judge whose verdicts have been checked against a human.
 This article builds both, then reports what the agent scores.
 
 ## What we measure against is nuggets
 
 Measurement starts from gold data: for each question, the set of facts a correct answer must state.
-AnswerTrail is evaluated on two kinds of question.
-A **factual question** asks for one specific fact.
-A **longitudinal question** asks how the creator's view on a topic changed over time.
-
 Each evaluation example is a question paired with a set of nuggets.
 A **nugget** is one atomic fact a correct answer must state, and it is the unit recall is scored against.
 A factual nugget is a single fact; a longitudinal nugget is a stance plus a time window.
+
+This nugget-based design follows recent work on automating RAG evaluation with LLMs, the AutoNuggetizer framework of [@pradeep_etal_2025], which uses an LLM both to create nuggets and to assign them to an answer; AnswerTrail keeps its nuggets human-adjudicated and automates only the assignment, calibrated against a human.
 
 Nuggets are not written from scratch.
 They are extracted from claims, and claims are extracted from chunks, so three units stack up:
@@ -215,11 +216,8 @@ The two tiers even work differently.
 A factual run took about 5 reasoning loops and about 4 searches, and surfaced about 19 chunks for synthesis.
 A longitudinal run worked harder, about 7 loops and about 9 searches, often firing several searches in one loop, and surfaced about 40 chunks.
 
-Longitudinal questions are inherently harder.
-A factual answer needs a single fact from usually one place, whereas a longitudinal answer must gather and connect evidence scattered across many videos and many months.
-
-The scores locate where that difficulty bites.
-The gap is dominantly retrieval: the retrieval ceiling, the fraction of gold nuggets whose evidence was retrieved at all, is only 43.5% for longitudinal against 86.8% for factual.
+The scores show where the difficulty lands, and it is retrieval.
+The retrieval ceiling, the fraction of gold nuggets whose evidence was retrieved at all, is only 43.5% for longitudinal against 86.8% for factual.
 Groundedness stays high on both tiers, 96 to 98%, so almost everything the agent asserts is backed by the chunks it actually retrieved.
 The agent is not making things up and it is not reasoning badly over what it has.
 It simply never sees the evidence for more than half of what a trajectory answer must say.
