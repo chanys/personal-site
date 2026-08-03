@@ -17,4 +17,5 @@ What an agent actually is
      2. [Part title](../02-slug/) -->
 1. [What the heck is an AI agent?](../01-what-is-an-agent/)
 2. [Behind the scenes of AI agent frameworks](../02-agent-frameworks/)
+3. [What MCP Actually Removes From a Host](../03-what-mcp-removes/)
 :::
