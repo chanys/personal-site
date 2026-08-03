@@ -10,8 +10,10 @@ The [previous article](/posts/the-agent-is-the-easy-part/index.qmd) built Answer
 This article measures how well it answers.
 
 AnswerTrail is scored on two kinds of question.
-A **factual question** asks for one specific fact, which usually sits in one place in the corpus.
-A **longitudinal question** asks how the creator's view on a topic changed over time, which means gathering and connecting evidence spread across many videos and many months.
+
+- A **factual question** asks for one specific fact, which usually sits in one place in the corpus.
+- A **longitudinal question** asks how the creator's view on a topic changed over time, which means gathering and connecting evidence spread across many videos and many months.
+
 The longitudinal kind is inherently much harder, so it is expected that the agent scores well on factual questions and lower on longitudinal ones: 87 percent against 32 percent.
 
 The interesting part is why, and the answer is retrieval rather than reasoning.
