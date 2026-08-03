@@ -14,8 +14,739 @@
 <title>What an agent actually is — series</title>
 <link>https://yeesengchan.com/posts/series/what-an-agent-actually-is/</link>
 </image>
-<generator>quarto-1.9.38</generator>
-<lastBuildDate>Tue, 14 Apr 2026 00:00:00 GMT</lastBuildDate>
+<generator>quarto-1.10.18</generator>
+<lastBuildDate>Thu, 23 Jul 2026 00:00:00 GMT</lastBuildDate>
+<item>
+  <title>What MCP Actually Removes From a Host</title>
+  <dc:creator>Yee Seng Chan</dc:creator>
+  <link>https://yeesengchan.com/posts/series/what-an-agent-actually-is/03-what-mcp-removes/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<!-- Shared series navigation. Each PART includes this file with a Quarto
+     include shortcode pointing at ../_series.qmd (see any part's index.qmd
+     for the exact syntax — do NOT repeat that shortcode here, it would
+     recurse). Links are sibling-relative (../NN-slug/) so they resolve
+     identically from any part. When you add a part, add one line here.
+     Files starting with "_" are never rendered as their own page. -->
+<div class="series-nav">
+<div class="series-label">
+<p>Part of a series</p>
+</div>
+<div class="series-name">
+<p>What an agent actually is</p>
+</div>
+<!-- Add parts as an ordered list below as you publish, e.g.
+     1. [Part title](../01-slug/)
+     2. [Part title](../02-slug/) -->
+<ol type="1">
+<li><a href="../01-what-is-an-agent/">What the heck is an AI agent?</a></li>
+<li><a href="../02-agent-frameworks/">Behind the scenes of AI agent frameworks</a></li>
+<li><a href="../03-what-mcp-removes/">What MCP Actually Removes From a Host</a></li>
+</ol>
+</div>
+<p>The <a href="../../../../posts/series/what-an-agent-actually-is/02-agent-frameworks/index.html">previous article</a> showed the host building its tool list and dispatch map by hand, and this one is about what MCP does to those two structures.</p>
+<p>The Model Context Protocol is usually introduced with a diagram. On the left, (M) AI applications. On the right, (N) tools. Between them, a dense mesh of M×N one-off integrations. Then a second diagram: MCP in the middle, M+N connections, order restored.</p>
+<p>The claim sounds reasonable, but a diagram is not something you can check. I wanted to know what it meant in actual host code, so I built the smallest thing that would tell me.</p>
+<section id="the-three-roles" class="level2">
+<h2 class="anchored" data-anchor-id="the-three-roles">The three roles</h2>
+<p>MCP is a JSON-RPC protocol connecting an AI application to external tools.</p>
+<ul>
+<li>The <strong>host</strong> is the application you write. It owns the model calls, the permissions, and the loop that ties them together.</li>
+<li>The <strong>client</strong> is a component inside the host managing one connection to one server. The SDK provides it as <code>ClientSession</code>, so you never write protocol code.</li>
+<li>The <strong>server</strong> is a program exposing capabilities, written by whoever owns the tool.</li>
+</ul>
+<p>Servers commonly expose tools, and also resources (read-only data) and prompts (user-selected templates). This experiment only uses tools.</p>
+</section>
+<section id="the-experiment" class="level2">
+<h2 class="anchored" data-anchor-id="the-experiment">The experiment</h2>
+<p>I wrote a small MCP server that reads a CSV of Massachusetts town data and exposes four tools: median home price, school rating, crime rate, and distance to Boston.</p>
+<p>Then I wrote two hosts against it. The first one takes the tool name from the command line. There is no LLM involved at all, so I could watch the protocol messages without model behavior getting in the way. The second one adds an LLM: the model proposes which tool to call, and the host checks that call before running it.</p>
+<p>What follows compares that second host against the version I would have to write without MCP. That version is not in the repo, it is the thing this article is about.</p>
+<p>One note on wording: I use “model” and “LLM” interchangeably throughout.</p>
+</section>
+<section id="without-mcp-two-structures-that-grow" class="level2">
+<h2 class="anchored" data-anchor-id="without-mcp-two-structures-that-grow">Without MCP: two structures that grow</h2>
+<p>Suppose there is no MCP. You have two tool sources: a Python package for the town data, and a weather service with an HTTP API and no package at all. To let a model use either one, you have to write two things yourself, and both live in your host.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> requests</span>
+<span id="cb1-2"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> town_explorer</span>
+<span id="cb1-3"></span>
+<span id="cb1-4">TOOLS <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> [</span>
+<span id="cb1-5">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"type"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"function"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"name"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"get_housing"</span>,</span>
+<span id="cb1-6">     <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"description"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Median home price for one town, in USD."</span>,</span>
+<span id="cb1-7">     <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"parameters"</span>: {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"type"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"object"</span>,</span>
+<span id="cb1-8">                    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"properties"</span>: {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"town"</span>: {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"type"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"string"</span>}},</span>
+<span id="cb1-9">                    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"required"</span>: [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"town"</span>]}},</span>
+<span id="cb1-10">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"type"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"function"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"name"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"get_schools"</span>,</span>
+<span id="cb1-11">     <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"description"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"School district rating for one town, 1 to 10."</span>,</span>
+<span id="cb1-12">     <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"parameters"</span>: {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"type"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"object"</span>,</span>
+<span id="cb1-13">                    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"properties"</span>: {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"town"</span>: {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"type"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"string"</span>}},</span>
+<span id="cb1-14">                    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"required"</span>: [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"town"</span>]}},</span>
+<span id="cb1-15">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"type"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"function"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"name"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"get_forecast"</span>,</span>
+<span id="cb1-16">     <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"description"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Weather forecast for a coordinate."</span>,</span>
+<span id="cb1-17">     <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"parameters"</span>: {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"type"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"object"</span>,</span>
+<span id="cb1-18">                    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"properties"</span>: {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"lat"</span>: {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"type"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"number"</span>},</span>
+<span id="cb1-19">                                   <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"lon"</span>: {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"type"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"number"</span>}},</span>
+<span id="cb1-20">                    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"required"</span>: [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"lat"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"lon"</span>]}},</span>
+<span id="cb1-21">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># one block per tool</span></span>
+<span id="cb1-22">]</span>
+<span id="cb1-23"></span>
+<span id="cb1-24"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># The weather service has no Python package, so the call is mine to write.</span></span>
+<span id="cb1-25"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> get_forecast(lat, lon):</span>
+<span id="cb1-26">    r <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> requests.get(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"https://api.example.com/forecast"</span>,</span>
+<span id="cb1-27">                     params<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>{<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"lat"</span>: lat, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"lon"</span>: lon})</span>
+<span id="cb1-28">    r.raise_for_status()</span>
+<span id="cb1-29">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> r.json()[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"properties"</span>][<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"forecast"</span>]</span>
+<span id="cb1-30"></span>
+<span id="cb1-31">DISPATCH <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> {</span>
+<span id="cb1-32">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"get_housing"</span>:  town_explorer.get_housing,</span>
+<span id="cb1-33">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"get_schools"</span>:  town_explorer.get_schools,</span>
+<span id="cb1-34">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"get_forecast"</span>: get_forecast,</span>
+<span id="cb1-35">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># one entry per tool</span></span>
+<span id="cb1-36">}</span></code></pre></div></div>
+<p><code>TOOLS</code> is what the model sees: each tool’s name, what it does, and what arguments it takes, written in the format the model provider (OpenAI, Anthropic) expects. <code>DISPATCH</code> is how the host gets from the name the model picked back to the function that runs. Both grow by one entry every time you add a tool.</p>
+<p>Notice that the two sources are not even the same kind of work. The town data arrived as a Python package I can import. The weather service did not, so the HTTP call, the error handling, and the digging into the response body are all mine. Every new source is its own small integration project, and the shape of it depends on what the owner happened to ship.</p>
+<p>Notice what the <code>TOOLS</code> entry actually is. Someone else wrote <code>get_housing</code>, and they decided it takes one argument called <code>town</code>. My <code>TOOLS</code> entry is my handwritten copy of that decision. Nothing checks that the copy is still right. If they release a new version where <code>get_housing</code> also requires a <code>year</code>, my copy still tells the model there is one argument, and the model keeps calling it the old way.</p>
+</section>
+<section id="with-mcp-the-catalog-arrives-at-runtime" class="level2">
+<h2 class="anchored" data-anchor-id="with-mcp-the-catalog-arrives-at-runtime">With MCP: the catalog arrives at runtime</h2>
+<section id="the-server-declares-its-tools-once" class="level3">
+<h3 class="anchored" data-anchor-id="the-server-declares-its-tools-once">The server declares its tools once</h3>
+<p>Now the same tools, but the owner has wrapped them in an MCP server instead of shipping a package. On their side, each tool is an ordinary function with a decorator on it. <code>FastMCP</code> is the class that turns a Python module into an MCP server, and <code>@mcp.tool()</code> marks a function as something the server should offer:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> mcp.server.fastmcp <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> FastMCP</span>
+<span id="cb2-2"></span>
+<span id="cb2-3">mcp <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> FastMCP(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"towns"</span>)</span>
+<span id="cb2-4"></span>
+<span id="cb2-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">@mcp.tool</span>()</span>
+<span id="cb2-6"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> get_housing(town: <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">str</span>) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-&gt;</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">dict</span>:</span>
+<span id="cb2-7">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">"""Median home price for one town, in USD."""</span></span>
+<span id="cb2-8">    ...</span></code></pre></div></div>
+<p>That decorator is doing the work that <code>TOOLS</code> used to do. FastMCP reads the function’s signature and builds the argument schema from it: the parameter name <code>town</code> becomes a property, the <code>str</code> annotation becomes <code>"type": "string"</code>, and because the parameter has no default it goes into the required list. The docstring becomes the tool’s description, which is the sentence the model reads when deciding whether to call it. Asking the server what it offers returns exactly that:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb3-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb3-2">  <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"name"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"get_housing"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb3-3">  <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"description"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Median home price for one town, in USD."</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb3-4">  <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"inputSchema"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb3-5">    <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"type"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"object"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb3-6">    <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"properties"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">{</span><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"town"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">{</span><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"title"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Town"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"type"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"string"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">}},</span></span>
+<span id="cb3-7">    <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"required"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">[</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"town"</span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">]</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb3-8">    <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"title"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"get_housingArguments"</span></span>
+<span id="cb3-9">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">}</span></span>
+<span id="cb3-10"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">}</span></span></code></pre></div></div>
+<p>The tool owner wrote a function and a docstring. Everything else was generated.</p>
+<p>The weather service gets the same treatment. Its server is a thin wrapper around the same HTTP call I wrote by hand earlier:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1">mcp <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> FastMCP(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"weather"</span>)</span>
+<span id="cb4-2"></span>
+<span id="cb4-3"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">@mcp.tool</span>()</span>
+<span id="cb4-4"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> get_forecast(lat: <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">float</span>, lon: <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">float</span>) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-&gt;</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">dict</span>:</span>
+<span id="cb4-5">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">"""Weather forecast for a coordinate."""</span></span>
+<span id="cb4-6">    r <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> requests.get(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"https://api.example.com/forecast"</span>,</span>
+<span id="cb4-7">                     params<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>{<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"lat"</span>: lat, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"lon"</span>: lon})</span>
+<span id="cb4-8">    r.raise_for_status()</span>
+<span id="cb4-9">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> r.json()[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"properties"</span>]</span></code></pre></div></div>
+<p>The GET request did not disappear. It moved into the server, where it belongs to whoever owns the service rather than to me.</p>
+</section>
+<section id="the-host-asks-what-is-available" class="level3">
+<h3 class="anchored" data-anchor-id="the-host-asks-what-is-available">The host asks what is available</h3>
+<p>Three names from the MCP Python SDK show up on this side, so briefly:</p>
+<ul>
+<li><code>StdioServerParameters</code> says how to start a server: a command and its arguments, the same thing you would type in a shell.</li>
+<li><code>stdio_client</code> runs that command as a child process and hands back two pipes, one to read from and one to write to. It moves bytes and knows nothing about MCP.</li>
+<li><code>ClientSession</code> wraps those pipes and speaks JSON-RPC, so <code>initialize</code>, <code>list_tools</code>, and <code>call_tool</code> are method calls rather than JSON messages you assemble yourself. This is the MCP client I mentioned earlier, the piece inside the host that manages one connection to one server.</li>
+</ul>
+<p>Here is a complete host program that connects to two servers, one for town data and one for weather, and builds the same two structures I would otherwise have written by hand:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> asyncio, sys</span>
+<span id="cb5-2"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> contextlib <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> AsyncExitStack</span>
+<span id="cb5-3"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> mcp <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> ClientSession, StdioServerParameters</span>
+<span id="cb5-4"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> mcp.client.stdio <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> stdio_client</span>
+<span id="cb5-5"></span>
+<span id="cb5-6"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Each server is just a command to run. Both of mine are Python,</span></span>
+<span id="cb5-7"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># but a server can be anything: an npm package, a Go binary, a remote URL.</span></span>
+<span id="cb5-8">SERVERS <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> {</span>
+<span id="cb5-9">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"towns"</span>:   [sys.executable, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"towns_server.py"</span>],</span>
+<span id="cb5-10">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"weather"</span>: [sys.executable, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"weather_server.py"</span>],</span>
+<span id="cb5-11">}</span>
+<span id="cb5-12"></span>
+<span id="cb5-13"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">async</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> main():</span>
+<span id="cb5-14">    tools <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> []      <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># what the model sees</span></span>
+<span id="cb5-15">    dispatch <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> {}   <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># how the host runs a call</span></span>
+<span id="cb5-16"></span>
+<span id="cb5-17">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">async</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">with</span> AsyncExitStack() <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> stack:   <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># bookkeeping: closes every connection on the way out</span></span>
+<span id="cb5-18">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">for</span> server_name, cmd <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> SERVERS.items():</span>
+<span id="cb5-19">            <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Start the server as a child process and open a session on it.</span></span>
+<span id="cb5-20">            params <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> StdioServerParameters(command<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>cmd[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>], args<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>cmd[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>:])</span>
+<span id="cb5-21">            read, write <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">await</span> stack.enter_async_context(stdio_client(params))</span>
+<span id="cb5-22">            session <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">await</span> stack.enter_async_context(ClientSession(read, write))</span>
+<span id="cb5-23">            <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">await</span> session.initialize()          <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># agree on protocol version</span></span>
+<span id="cb5-24"></span>
+<span id="cb5-25">            <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Ask this server what it offers, and record each tool twice:</span></span>
+<span id="cb5-26">            <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># once for the model to read, once so we know how to run it</span></span>
+<span id="cb5-27">            <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">for</span> t <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> (<span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">await</span> session.list_tools()).tools:</span>
+<span id="cb5-28">                <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># prefix the name: two servers can both offer "search"</span></span>
+<span id="cb5-29">                qualified <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f"</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>server_name<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">__</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>t<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span>name<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span></span>
+<span id="cb5-30">                tools.append({<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"name"</span>: qualified,</span>
+<span id="cb5-31">                              <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"description"</span>: t.description,</span>
+<span id="cb5-32">                              <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"parameters"</span>: t.inputSchema})</span>
+<span id="cb5-33">                dispatch[qualified] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> (session, t.name)</span>
+<span id="cb5-34"></span>
+<span id="cb5-35">        <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Later, when the model picks a tool by its qualified name:</span></span>
+<span id="cb5-36">        session, real_name <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> dispatch[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"towns__get_housing"</span>]</span>
+<span id="cb5-37">        result <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">await</span> session.call_tool(real_name, {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"town"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Winchester"</span>})</span>
+<span id="cb5-38">        <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">""</span>.join(b.text <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">for</span> b <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> result.content))</span>
+<span id="cb5-39"></span>
+<span id="cb5-40">asyncio.run(main())</span></code></pre></div></div>
+<p>Running it prints the three tools the two servers between them offer, and then the result of the call:</p>
+<pre class="text"><code>towns__get_housing    | Median home price for one town, in USD.       | ['town']
+towns__get_schools    | School district rating for one town, 1 to 10. | ['town']
+weather__get_forecast | Weather forecast for a coordinate.            | ['lat', 'lon']
+
+{"town": "Winchester", "median_home_price": 1250000}</code></pre>
+<p><code>tools</code> and <code>dispatch</code> are the same two structures as before, doing the same two jobs. The difference is that nothing in the host program describes a tool. The loop asks each server and writes down the answer, and the host program would be identical if the servers offered thirty tools instead of three.</p>
+<p>Without MCP, the two structures grow linearly: every tool added means one more hand-written entry in each. With MCP they do not grow at all.</p>
+<p>That is a specific claim, and I want to keep it specific. Plenty of other things still grow as you add tools: the context the schemas take up, the validation you write, the permissions you decide, the tests. Adding tools still costs something. The bookkeeping is what went away.</p>
+<div id="fig-before-after" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two panels. Without MCP, the host holds a TOOLS list and a DISPATCH map with one hand-written entry per tool source, wired separately to each source. With MCP, the host still has TOOLS and DISPATCH, but builds both at startup from what each server reports over tools/list, and each server owns its own tool descriptions.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-before-after-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/what-an-agent-actually-is/03-what-mcp-removes/before-after-mcp.png" class="img-fluid figure-img" alt="Two panels. Without MCP, the host holds a TOOLS list and a DISPATCH map with one hand-written entry per tool source, wired separately to each source. With MCP, the host still has TOOLS and DISPATCH, but builds both at startup from what each server reports over tools/list, and each server owns its own tool descriptions.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-before-after-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: The same host, written twice. On the left, every tool source adds one entry to TOOLS, describing the tool for the model, and one entry to DISPATCH, pointing the tool’s name at the function that runs it. Both are written by hand, both are copies of decisions made in somebody else’s code, and both grow with each source added. On the right the host still has TOOLS and DISPATCH, but it no longer writes them: it asks each server what it offers at startup and fills both structures from the answer. The descriptions did not disappear, they moved to the party that owns the function.
+</figcaption>
+</figure>
+</div>
+</section>
+</section>
+<section id="discovery-is-the-part-doing-the-work" class="level2">
+<h2 class="anchored" data-anchor-id="discovery-is-the-part-doing-the-work">Discovery is the part doing the work</h2>
+<p>This is the drift problem from earlier. Without tool discovery via <code>session.list_tools()</code>, the host is holding its own description of somebody else’s function. It is right on the day you write it, and after that nobody is checking. The model can only work from what that description says, so when it goes stale the model is the one calling the tool wrongly.</p>
+<div id="fig-schema-drift" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two columns. On the left, the tool owner's function. On the right, the host's hand-written copy of its description. At first both say get_housing takes one argument, town, and they match. Later the owner adds a second required argument, year, but the host copy still says one argument, so the model calls the tool the old way.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-schema-drift-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://yeesengchan.com/posts/series/what-an-agent-actually-is/03-what-mcp-removes/schema-drift.png" class="img-fluid figure-img" alt="Two columns. On the left, the tool owner's function. On the right, the host's hand-written copy of its description. At first both say get_housing takes one argument, town, and they match. Later the owner adds a second required argument, year, but the host copy still says one argument, so the model calls the tool the old way.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-schema-drift-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Why the hand-written copy is a liability. At first the two agree, because the copy was written by reading the function. Later the tool owner adds a second required argument, and nothing connects that change to the host’s copy, so the copy keeps describing the old version. The result is either a TypeError when the arguments reach a function that no longer accepts them, or a wrong answer that nobody notices. Neither side did anything wrong, which is what makes it easy to miss.
+</figcaption>
+</figure>
+</div>
+<p><code>tools/list</code> fixes this by asking the server every time the host starts. The server owns its tools, so the server’s description is the correct one, and that is the description the model sees.</p>
+<p>MCP does more than discovery. It also standardizes how a session starts, how tools get invoked, how results and errors come back, and how the messages travel.</p>
+</section>
+<section id="what-mcp-does-not-solve" class="level2">
+<h2 class="anchored" data-anchor-id="what-mcp-does-not-solve">What MCP does not solve</h2>
+<p><strong>Provider adapters remain.</strong> MCP hands the host <code>tool.name</code>, <code>tool.description</code>, and <code>tool.inputSchema</code>, and stops there. The host still has to wrap those three fields in whatever shape the model provider expects, and every provider expects a different one:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> to_openai_tools(mcp_tools):</span>
+<span id="cb7-2">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> [{<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"type"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"function"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"name"</span>: t.name,</span>
+<span id="cb7-3">             <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"description"</span>: t.description,</span>
+<span id="cb7-4">             <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"parameters"</span>: normalize_for_openai(t.inputSchema)}</span>
+<span id="cb7-5">            <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">for</span> t <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> mcp_tools]</span>
+<span id="cb7-6"></span>
+<span id="cb7-7"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> to_claude_tools(mcp_tools):</span>
+<span id="cb7-8">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> [{<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"name"</span>: t.name, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"description"</span>: t.description,</span>
+<span id="cb7-9">             <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"input_schema"</span>: normalize_for_claude(t.inputSchema)}</span>
+<span id="cb7-10">            <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">for</span> t <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> mcp_tools]</span></code></pre></div></div>
+<p>These are short because OpenAI, Anthropic, and MCP all describe tool arguments using JSON Schema, so most of the time only the wrapper around the schema changes. It does not always copy cleanly, though: FastMCP emits fields like <code>title</code> that providers do not need, and providers support different subsets of JSON Schema, so a real adapter normalizes rather than passes through.</p>
+<p>The useful thing about this cost is that it does not grow. You write one adapter per provider, and it stays the same whether you connect four tools or forty.</p>
+<p><strong>Tool schemas cost you context.</strong> If your host sends the whole tool list with every request, which is the obvious way to write it, the model re-reads all those schemas every turn. The fix is host-side: keep the full definitions in your own memory, show the model names and descriptions, and load a schema only when it picks that tool. The protocol does not help here, and the <a href="https://modelcontextprotocol.io/docs/develop/clients/client-best-practices">MCP client best practices</a> are explicit that this is the host’s problem.</p>
+</section>
+<section id="when-mcp-is-worth-it" class="level2">
+<h2 class="anchored" data-anchor-id="when-mcp-is-worth-it">When MCP is worth it</h2>
+<p>If the tool is a Python function I wrote myself, importing it is simpler. Calling it is a dictionary lookup. Going through MCP means starting a subprocess, opening a session, and making the whole host async to get to the same function. For one host and a handful of stable local tools, MCP can easily cost more than it saves.</p>
+<p>The reasons to use it anyway are not about writing less code.</p>
+<p>It becomes worth it when at least one of these holds:</p>
+<ul>
+<li>The tool is owned by someone else, so their schema changes propagate without my involvement.</li>
+<li>The tool is written in another language.</li>
+<li>The tool runs in another process or remotely.</li>
+<li>Dependency or crash isolation matters. An ordinary import runs inside the host interpreter and creates no process boundary.</li>
+<li>The application is a general-purpose host whose users connect it to servers I have never seen.</li>
+</ul>
+</section>
+<section id="code-companion" class="level2">
+<h2 class="anchored" data-anchor-id="code-companion">Code companion</h2>
+<p>The <a href="https://github.com/chanys/mcp-town-explorer">mcp-town-explorer repo</a> has the server, the command-line host, and the LLM host. The command-line host takes a <code>--verbose</code> flag that prints every protocol message to stderr, which is the fastest way to see what initialization, discovery, and invocation actually look like on the wire.</p>
+</section>
+<section id="closing" class="level2">
+<h2 class="anchored" data-anchor-id="closing">Closing</h2>
+<p>The host no longer writes a schema entry and a dispatch entry for every tool. The server publishes them, the host asks at startup, and the copy that used to go stale no longer exists.</p>
+<p>What MCP moved is the tool description, back to the party that owns the tool, with one standard way for the host to discover and invoke it.</p>
+
+
+</section>
+
+ ]]></description>
+  <category>What an agent actually is</category>
+  <guid>https://yeesengchan.com/posts/series/what-an-agent-actually-is/03-what-mcp-removes/</guid>
+  <pubDate>Thu, 23 Jul 2026 00:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Behind the scenes of AI agent frameworks</title>
   <dc:creator>Yee Seng Chan</dc:creator>
@@ -34,10 +765,10 @@
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-What an agent actually is
+<p>What an agent actually is</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -45,6 +776,7 @@ What an agent actually is
 <ol type="1">
 <li><a href="../01-what-is-an-agent/">What the heck is an AI agent?</a></li>
 <li><a href="../02-agent-frameworks/">Behind the scenes of AI agent frameworks</a></li>
+<li><a href="../03-what-mcp-removes/">What MCP Actually Removes From a Host</a></li>
 </ol>
 </div>
 <p><a href="../../../../posts/series/what-an-agent-actually-is/01-what-is-an-agent/index.html">The first article</a> treated “agent” as a region on a spectrum. This one goes inside one specific point on that spectrum, the loop-with-tools agent, and shows what’s actually happening when you call <code>Runner.run(agent, message)</code> or its equivalent.</p>
@@ -793,10 +1525,10 @@ font-style: inherit;"># dict</span></span></code></pre></div></div>
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-What an agent actually is
+<p>What an agent actually is</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -804,6 +1536,7 @@ What an agent actually is
 <ol type="1">
 <li><a href="../01-what-is-an-agent/">What the heck is an AI agent?</a></li>
 <li><a href="../02-agent-frameworks/">Behind the scenes of AI agent frameworks</a></li>
+<li><a href="../03-what-mcp-removes/">What MCP Actually Removes From a Host</a></li>
 </ol>
 </div>
 <p>“Agent” has become the most overloaded word in AI engineering. Vendors apply it to everything from a single tool-use LLM call to systems that run autonomously for days. The definitions in serious use don’t agree with each other, and the disagreement isn’t going to resolve.</p>

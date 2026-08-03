@@ -14,7 +14,7 @@
 <title>LLM evaluation, honestly — series</title>
 <link>https://yeesengchan.com/posts/series/llm-evaluation-honestly/</link>
 </image>
-<generator>quarto-1.9.38</generator>
+<generator>quarto-1.10.18</generator>
 <lastBuildDate>Fri, 05 Jun 2026 00:00:00 GMT</lastBuildDate>
 <item>
   <title>Your eval system also drifts</title>
@@ -34,10 +34,10 @@
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-LLM evaluation, honestly
+<p>LLM evaluation, honestly</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -135,10 +135,10 @@ LLM evaluation, honestly
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-LLM evaluation, honestly
+<p>LLM evaluation, honestly</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -266,10 +266,10 @@ Figure&nbsp;1: One bad answer, five different bugs. The same wrong answer (“30
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-LLM evaluation, honestly
+<p>LLM evaluation, honestly</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -497,10 +497,10 @@ Figure&nbsp;3: Small eval sets can’t see small gains. The smallest improvement
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-LLM evaluation, honestly
+<p>LLM evaluation, honestly</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -641,10 +641,10 @@ F1 on FAIL            = (2 * P * R) / (P + R) = 41%</code></pre>
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-LLM evaluation, honestly
+<p>LLM evaluation, honestly</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -846,10 +846,10 @@ Figure&nbsp;1: One number can’t tell you what broke. The composite quality_jud
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-LLM evaluation, honestly
+<p>LLM evaluation, honestly</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -948,10 +948,10 @@ Figure&nbsp;1: Design the dataset on two axes. Coverage is what situations the s
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-LLM evaluation, honestly
+<p>LLM evaluation, honestly</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)

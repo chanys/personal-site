@@ -14,7 +14,7 @@
 <title>How LLMs learn to reason — series</title>
 <link>https://yeesengchan.com/posts/series/how-llms-learn-to-reason/</link>
 </image>
-<generator>quarto-1.9.38</generator>
+<generator>quarto-1.10.18</generator>
 <lastBuildDate>Sat, 14 Mar 2026 00:00:00 GMT</lastBuildDate>
 <item>
   <title>How reasoning models learn to use tools</title>
@@ -34,10 +34,10 @@
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-How LLMs learn to reason
+<p>How LLMs learn to reason</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -383,10 +383,10 @@ Qian, Cheng, Emre Can Acikgoz, Qi He, et al. 2026. <span>“ToolRL: Reward Is Al
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-How LLMs learn to reason
+<p>How LLMs learn to reason</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -534,10 +534,10 @@ Wang, Xuezhi, and Denny Zhou. 2024. <span>“Chain-of-Thought Reasoning Without 
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-How LLMs learn to reason
+<p>How LLMs learn to reason</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -715,10 +715,10 @@ Tunstall, Lewis, Edward Beeching, Nathan Lambert, et al. 2023. <span>“Zephyr: 
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-How LLMs learn to reason
+<p>How LLMs learn to reason</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -906,10 +906,10 @@ Shao, Zhihong, Peiyi Wang, Qihao Zhu, et al. 2024. <span>“DeepSeekMath: Pushin
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-How LLMs learn to reason
+<p>How LLMs learn to reason</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -1337,10 +1337,10 @@ Schulman, John, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. 
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-How LLMs learn to reason
+<p>How LLMs learn to reason</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -1492,10 +1492,10 @@ Figure&nbsp;2
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-How LLMs learn to reason
+<p>How LLMs learn to reason</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)

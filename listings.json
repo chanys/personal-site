@@ -10,35 +10,6 @@
     ]
   },
   {
-    "listing": "/posts/series/the-agent-harness/index.html",
-    "items": [
-      "/posts/series/the-agent-harness/01-demos-break/index.html",
-      "/posts/series/the-agent-harness/02-harness-is-the-product/index.html",
-      "/posts/series/the-agent-harness/03-state-not-transcript/index.html",
-      "/posts/series/the-agent-harness/04-prompts-gate/index.html",
-      "/posts/series/the-agent-harness/05-traces/index.html"
-    ]
-  },
-  {
-    "listing": "/posts/series/what-an-agent-actually-is/index.html",
-    "items": [
-      "/posts/series/what-an-agent-actually-is/01-what-is-an-agent/index.html",
-      "/posts/series/what-an-agent-actually-is/02-agent-frameworks/index.html"
-    ]
-  },
-  {
-    "listing": "/posts/series/how-llms-learn-to-reason/index.html",
-    "items": [
-      "/posts/series/how-llms-learn-to-reason/00-reinforce-foundations/index.html",
-      "/posts/series/how-llms-learn-to-reason/00-reinforce-gradient/index.html",
-      "/posts/series/how-llms-learn-to-reason/01-ppo/index.html",
-      "/posts/series/how-llms-learn-to-reason/02-grpo/index.html",
-      "/posts/series/how-llms-learn-to-reason/03-dpo/index.html",
-      "/posts/series/how-llms-learn-to-reason/04-r1/index.html",
-      "/posts/series/how-llms-learn-to-reason/05-tool-use/index.html"
-    ]
-  },
-  {
     "listing": "/posts/series/llm-evaluation-honestly/index.html",
     "items": [
       "/posts/series/llm-evaluation-honestly/01-stop-vibe-checking/index.html",
@@ -61,8 +32,31 @@
     ]
   },
   {
+    "listing": "/posts/series/how-llms-learn-to-reason/index.html",
+    "items": [
+      "/posts/series/how-llms-learn-to-reason/00-reinforce-foundations/index.html",
+      "/posts/series/how-llms-learn-to-reason/00-reinforce-gradient/index.html",
+      "/posts/series/how-llms-learn-to-reason/01-ppo/index.html",
+      "/posts/series/how-llms-learn-to-reason/02-grpo/index.html",
+      "/posts/series/how-llms-learn-to-reason/03-dpo/index.html",
+      "/posts/series/how-llms-learn-to-reason/04-r1/index.html",
+      "/posts/series/how-llms-learn-to-reason/05-tool-use/index.html"
+    ]
+  },
+  {
+    "listing": "/posts/series/the-agent-harness/index.html",
+    "items": [
+      "/posts/series/the-agent-harness/01-demos-break/index.html",
+      "/posts/series/the-agent-harness/02-harness-is-the-product/index.html",
+      "/posts/series/the-agent-harness/03-state-not-transcript/index.html",
+      "/posts/series/the-agent-harness/04-prompts-gate/index.html",
+      "/posts/series/the-agent-harness/05-traces/index.html"
+    ]
+  },
+  {
     "listing": "/writing.html",
     "items": [
+      "/posts/series/what-an-agent-actually-is/03-what-mcp-removes/index.html",
       "/posts/series/llm-evaluation-honestly/07-eval-drift/index.html",
       "/posts/series/llm-evaluation-honestly/06-rag-evaluation/index.html",
       "/posts/series/llm-evaluation-honestly/05-scores-are-samples/index.html",
@@ -89,6 +83,14 @@
       "/posts/series/how-llms-learn-to-reason/01-ppo/index.html",
       "/posts/series/how-llms-learn-to-reason/00-reinforce-gradient/index.html",
       "/posts/series/how-llms-learn-to-reason/00-reinforce-foundations/index.html"
+    ]
+  },
+  {
+    "listing": "/posts/series/what-an-agent-actually-is/index.html",
+    "items": [
+      "/posts/series/what-an-agent-actually-is/01-what-is-an-agent/index.html",
+      "/posts/series/what-an-agent-actually-is/02-agent-frameworks/index.html",
+      "/posts/series/what-an-agent-actually-is/03-what-mcp-removes/index.html"
     ]
   }
 ]
