@@ -1,6 +1,6 @@
 ---
-title: "The agent is the easy part"
-description: "AnswerTrail's research agent is a small stateless loop; the engineering that makes it trustworthy is the corpus pipeline behind it and the AWS stack around it."
+title: "AnswerTrail: building a deep-research agent over a bounded corpus"
+description: "How AnswerTrail turns one YouTube channel into a searchable corpus, answers over it with a citation-validating ReAct agent, and runs in production on AWS."
 date: "2026-08-02"
 categories: ["agents", "RAG", "retrieval", "AWS"]
 draft: false

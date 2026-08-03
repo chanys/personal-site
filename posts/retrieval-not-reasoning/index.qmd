@@ -1,6 +1,6 @@
 ---
-title: "The gap is retrieval, not reasoning"
-description: "AnswerTrail answers single-fact questions well and change-over-time questions poorly, and a nugget-based evaluation with a calibrated cross-family judge shows the gap is dominantly retrieval coverage."
+title: "AnswerTrail: evaluating a deep-research agent over a bounded corpus"
+description: "A nugget-based gold set and a calibrated cross-family judge show that AnswerTrail's factual-versus-longitudinal gap is dominantly a retrieval problem, not a reasoning one."
 date: "2026-08-02"
 categories: ["evaluation", "RAG", "retrieval", "LLM judge"]
 draft: false
