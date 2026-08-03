@@ -41,7 +41,7 @@ A deep-research agent that answers questions over one AI/LLM YouTube channel's t
   </g>
 </svg>
 ```
-[`Python · 2023–2026 · proprietary`]{.project-meta}
+[`Python · 2025–2026 · proprietary`]{.project-meta}
 
 [LLM workflow]{.proj-chip} [structured extraction]{.proj-chip} [clinical NLP]{.proj-chip}
 
