@@ -1,6 +1,6 @@
 ---
 title: "AnswerTrail: evaluating a deep-research agent over a bounded corpus"
-description: "A nugget-based gold set, a judge calibrated against a human at Cohen's kappa 0.879, and what the agent scores: 85% on factual questions, 32% on longitudinal."
+description: "A nugget-based gold set, a judge calibrated against a human at Cohen's kappa 0.88, and what the agent scores: 85% on factual questions, 32% on longitudinal."
 date: "2026-08-02"
 categories: ["evaluation", "RAG", "retrieval", "LLM judge"]
 draft: false
@@ -19,7 +19,7 @@ Far fewer report what one actually scores, and fewer still say how much to trust
 Most of this article is about how that measurement was built and checked:
 
 - **Data curation.** 26,240 claims are extracted from the transcripts and composed into questions with their answers. The pipeline is semi-automatic: an LLM proposes at every stage, and a human adjudicates what survives. The result is 25 factual questions and 35 longitudinal questions, each carrying the facts its answer must state.
-- **LLM judge calibration.** Scoring uses one LLM judge, drawn from a different model family than the agent it grades. It agrees with a human on 66 blind-labeled pairs at Cohen's kappa 0.879.
+- **LLM judge calibration.** Scoring uses one LLM judge, drawn from a different model family than the agent it grades. It agrees with a human on 66 blind-labeled pairs at Cohen's kappa 0.88.
 
 ## How do you score a paragraph?
 
@@ -120,7 +120,7 @@ n3  He concluded the anticipated agentic-AI revolution had stalled [early 2026]
 ## One judge, three metrics
 
 With the gold built, the question is how the frozen agent scores against it.
-Scoring uses a single LLM judge that runs on a different model family, Claude Sonnet 5, from the OpenAI `gpt-5.4` agent it grades, so the system never grades its own output.
+Scoring uses a single LLM judge that runs on a different model family, Claude Sonnet 5, from the OpenAI `gpt-5.4` agent it grades, so no model ever marks its own answers.
 The judge always does the same thing: given a CLAIM and a TEXT, it decides HIT or MISS on whether the text supports the claim.
 A snippet of the judge prompt:
 
@@ -153,16 +153,28 @@ We draw 66 claim-text pairs and hand each to both the judge and a human, who eac
 The pairs cover all three metrics: recall, retrieval, and groundedness.
 Each metric needs both clear hits and clear misses.
 Groundedness is almost always a hit, so we add a few constructed misses: one of the agent's own claims paired with the chunks retrieved for a different, unrelated question, which cannot support it.
+Those constructed pairs mean the kappa below is measured on a negative-enriched sample rather than on the distribution groundedness actually sees at scoring time, where genuine misses are rare.
 The human labels all 66 blind, seeing only each claim and its text, with the judge's verdict and reasoning hidden.
-Across the 66 pairs the judge called 36 hits and 30 misses, while the human labeled 32 hits and 34 misses.
+Across the 66 pairs the judge called 37 hits and 29 misses, while the human labeled 33 of each.
 
 The calibration score is Cohen's kappa: how often the two agree, corrected for the agreement expected by chance, where $p_o$ is the observed agreement and $p_e$ the agreement expected if each labeled at its own hit and miss rate.
 
 $$\kappa = \frac{p_o - p_e}{1 - p_e}
-       = \frac{0.9394 - 0.4986}{1 - 0.4986} = 0.879$$
+       = \frac{0.9394 - 0.5000}{1 - 0.5000} = 0.88$$
 
-The two agreed on 62 of the 66 pairs, so $p_o = 0.9394$, and the chance agreement implied by the two label distributions is $p_e = \frac{36}{66}\cdot\frac{32}{66} + \frac{30}{66}\cdot\frac{34}{66} = 0.4986$.
-A kappa of 0.879 is high agreement, so the scores below reflect the agent's behavior rather than the judge's quirks.
+The two agreed on 62 of the 66 pairs, so $p_o = 0.9394$, and the chance agreement implied by the two label distributions is $p_e = \frac{37}{66}\cdot\frac{33}{66} + \frac{29}{66}\cdot\frac{33}{66} = 0.5000$.
+A kappa of 0.88 is high agreement, so the scores below reflect the agent's behavior rather than the judge's quirks.
+The judge matched the human on all 33 hits and on 29 of the 33 misses.
+
+What calibration does not rule out.
+
+The judge never grades its own answers, but Sonnet 5 wrote the gold: it extracted the claims and composed the nuggets for both tiers.
+The judge may recognise its own family's phrasing more readily than a human's, which would inflate every recall number here.
+
+Two things bound the risk.
+A human vetted every gold item and cut most of what the model proposed, and a human matched the judge on 62 of 66 blind pairs.
+Neither settles it.
+That would take a hand-written gold subset or a third-family judge.
 
 ## The results
 
@@ -183,30 +195,45 @@ The agent (`gpt-5.4`, reasoning effort low, dense pgvector retrieval, top-10 per
 
 Groundedness stays high on both tiers, so the low longitudinal score is not a case of the agent inventing content, and almost everything it asserts is backed by the chunks it retrieved.
 
-Every figure here is pooled: a ratio of totals across all runs, rather than an average of per-question scores.
-The first two segments of a bar in the figure do not add up to the retrieval ceiling.
-For the longitudinal questions, 97 + 48 = 145 of 306 would be 47.4%, while the ceiling is 133 of 306, or 43.5%.
-The difference is 12 nuggets whose evidence was never retrieved but which the answer stated anyway, so they sit in the expressed segment while counting as not retrieved.
-The factual side has one such case, which is why 135 + 4 = 139 becomes a ceiling of 138 of 159.
-
 The two tiers even work differently.
 A factual run took about 5 reasoning loops and about 4 searches, and surfaced about 19 chunks for synthesis.
 A longitudinal run worked harder, about 7 loops and about 9 searches, often firing several searches in one loop, and surfaced about 40 chunks.
+The extra work shows up on the bill.
+A factual run averaged $0.05 in model calls and a longitudinal run $0.12.
 
 Longitudinal questions are inherently harder to answer, so the lower score there is expected.
 A factual answer needs one fact that usually sits in one place, while a longitudinal answer has to find several stances spread across a year and then connect them.
+
+### How the numbers are computed
+
+Every figure is pooled: a ratio of totals across all runs, not an average of per-question scores.
+Intervals are bootstrapped over questions, since nuggets within a question are not independent.
+
+- Factual recall: 84.9%, 95% interval [70, 97]
+- Longitudinal recall: 31.7%, [24, 39]
+
+The factual interval is wide because 25 questions is the effective sample size, not 159 nugget-instances.
+
+### Why the bars do not add up
+
+Expressed plus retrieved-but-unused should equal the retrieval ceiling.
+It does not.
+
+- Longitudinal: 97 + 48 = 145 of 306, or 47.4%, against a ceiling of 133 of 306, or 43.5%.
+- The 12-nugget gap is nuggets the answer stated without ever retrieving the evidence. They count as expressed but not as retrieved.
+- Factual has one such case: 135 + 4 = 139 against a ceiling of 138 of 159.
 
 ## What would move it
 
 With a judge we can trust, we can perform two pre-registered ablations.
 
-- **Hybrid retrieval.** Swap dense retrieval for dense plus BM25, fused with reciprocal rank fusion, on the longitudinal questions. The single hybrid run landed about 3 points below the dense baseline on both recall and the retrieval ceiling.
-- **No agent loop.** Replace the ReAct loop with one dense retrieval on the raw question and one synthesis call. Recall falls from 84.9% to 79.2% on factual questions and from 31.7% to 23.5% on longitudinal ones, so looping and issuing several different queries is worth 5.7 and 8.2 points.
+- **Hybrid retrieval.** Swap dense retrieval for dense plus BM25, fused with reciprocal rank fusion, on the longitudinal questions. The single hybrid run landed 3.3 points below the dense baseline on recall, but a paired bootstrap over the 35 questions puts that difference at [-4, +11], so this run cannot separate the two.
+- **No agent loop.** Replace the ReAct loop with one dense retrieval on the raw question and one synthesis call. Recall falls from 84.9% to 79.2% on factual questions and from 31.7% to 23.5% on longitudinal ones, so looping and issuing several different queries is worth 5.7 and 8.2 points. On longitudinal the paired interval is [+1, +15], which excludes zero.
 
 ## In short
 
 The factual-versus-longitudinal gap, 85% against 32%, is dominantly a retrieval problem: evidence for barely 44% of what a trajectory answer must say is ever retrieved.
-A better ranker does not get past it.
+Hybrid retrieval did not help here.
 The agent's reasoning is not the bottleneck.
 The next thing worth building is retrieval that can surface evidence spread thinly across time, which is a different problem from making the agent smarter.
 
