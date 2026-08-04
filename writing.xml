@@ -9,8 +9,8 @@
 <link>https://yeesengchan.com/writing.html</link>
 <atom:link href="https://yeesengchan.com/writing.xml" rel="self" type="application/rss+xml"/>
 <description>Essays on how modern language models work, and on building and evaluating the systems around them.</description>
-<generator>quarto-1.9.37</generator>
-<lastBuildDate>Sun, 02 Aug 2026 04:00:00 GMT</lastBuildDate>
+<generator>quarto-1.10.18</generator>
+<lastBuildDate>Sun, 02 Aug 2026 00:00:00 GMT</lastBuildDate>
 <item>
   <title>AnswerTrail: building a deep-research agent over a bounded corpus</title>
   <dc:creator>Yee Seng Chan</dc:creator>
@@ -27,7 +27,7 @@
 <section id="what-answertrail-is" class="level2">
 <h2 class="anchored" data-anchor-id="what-answertrail-is">What AnswerTrail is</h2>
 <p>AnswerTrail is a deep-research agent over a <strong>bounded corpus</strong>, a fixed body of text the agent is allowed to read and nothing else. The corpus here is the video transcripts of a single AI/LLM YouTube channel. Given a question, the agent runs a ReAct loop written by hand: it searches the transcripts, reads what comes back, decides whether it has enough, and writes an answer whose citations are validated against the corpus. Retrieval is dense-only over Postgres, the model is stateless, and the agent drives its own exploration until it decides it is ready to answer.</p>
-<p>Bounding the corpus to one channel is the point, not a limitation. The model has no parametric knowledge of what these particular videos say, so every answer has to come from what the agent retrieves rather than from the model’s own memory. And because the agent may only read those transcripts, “the corpus cannot answer this” is a real outcome the system can reach and report, rather than a prompt it papers over. The live corpus is 475 videos from the channel’s most recent 16 months, cut into 25,401 transcript chunks, about 52 per video. It is live at <code>answertrail.yeesengchan.com</code>, though the site may be taken down at times to avoid running costs.</p>
+<p>Bounding the corpus to one channel is the point, not a limitation. The model has no parametric knowledge of what these particular videos say, so every answer has to come from what the agent retrieves rather than from the model’s own memory. And because the agent may only read those transcripts, “the corpus cannot answer this” is a real outcome the system can reach and report, rather than a prompt it papers over. The live corpus is 475 videos from the channel’s most recent 16 months, cut into 25,401 transcript chunks, about 53 per video. It is live at <code>answertrail.yeesengchan.com</code>, though the site may be taken down at times to avoid running costs.</p>
 </section>
 <section id="the-corpus-is-built-once-offline" class="level2">
 <h2 class="anchored" data-anchor-id="the-corpus-is-built-once-offline">The corpus is built once, offline</h2>
@@ -65,7 +65,7 @@ Figure&nbsp;1: The agent is a stateless ReAct loop with two moves each turn: sea
 <li><strong><code>submit_answer</code></strong> delivers the final answer, whose citations are ids only (<code>video_id</code>, <code>start_ts</code>, <code>end_ts</code>). The loop checks every citation against the index before accepting the answer, so a fabricated one is rejected and sent back to be corrected.</li>
 </ul>
 <p>Making the answer a tool is the design choice that carries the reliability, because producing the answer then runs through the same loop as searching. A rejected citation comes back on the normal tool-result channel to be fixed, an accepted answer is the loop’s stop signal, and <code>tool_choice</code> can force the <code>submit_answer</code> call when the step budget runs out.</p>
-<p>Two guardrails keep the loop honest. The model must run at least a couple of distinct searches before it may answer, so it cannot answer without exploring. And a run that keeps searching but finds nothing still stops, reporting that the corpus cannot answer rather than looping forever.</p>
+<p>Two guardrails keep the loop honest. The model must run at least 2 distinct searches before it may answer, so it cannot answer without exploring. And a run that keeps searching but finds nothing still stops, reporting that the corpus cannot answer rather than looping forever.</p>
 <p>Every run is recorded as a <code>RunEvidenceState</code>: its searches and queries, the chunks retrieved and cited, the token usage and cost, and the outcome, stamped with the recipe version and the git SHA. That provenance is what lets the <a href="../../posts/answertrail-evaluation/index.html">second article</a> freeze one agent and score every variant against it.</p>
 </section>
 <section id="deployment-on-aws" class="level2">
@@ -105,7 +105,7 @@ Figure&nbsp;2: AnswerTrail on AWS. The browser loads a static site from S3 throu
   <category>retrieval</category>
   <category>AWS</category>
   <guid>https://yeesengchan.com/posts/answertrail-agent/</guid>
-  <pubDate>Sun, 02 Aug 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sun, 02 Aug 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>AnswerTrail: evaluating a deep-research agent over a bounded corpus</title>
@@ -394,7 +394,7 @@ Pradeep, Ronak, Nandan Thakur, Shivani Upadhyay, Daniel Campos, Nick Craswell, a
   <category>retrieval</category>
   <category>LLM judge</category>
   <guid>https://yeesengchan.com/posts/answertrail-evaluation/</guid>
-  <pubDate>Sun, 02 Aug 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sun, 02 Aug 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>What MCP Actually Removes From a Host</title>
@@ -414,10 +414,10 @@ Pradeep, Ronak, Nandan Thakur, Shivani Upadhyay, Daniel Campos, Nick Craswell, a
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-What an agent actually is
+<p>What an agent actually is</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -1125,7 +1125,7 @@ font-style: inherit;">in</span> mcp_tools]</span></code></pre></div></div>
  ]]></description>
   <category>What an agent actually is</category>
   <guid>https://yeesengchan.com/posts/series/what-an-agent-actually-is/03-what-mcp-removes/</guid>
-  <pubDate>Thu, 23 Jul 2026 04:00:00 GMT</pubDate>
+  <pubDate>Thu, 23 Jul 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Your eval system also drifts</title>
@@ -1145,10 +1145,10 @@ font-style: inherit;">in</span> mcp_tools]</span></code></pre></div></div>
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-LLM evaluation, honestly
+<p>LLM evaluation, honestly</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -1226,7 +1226,7 @@ LLM evaluation, honestly
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/07-eval-drift/</guid>
-  <pubDate>Fri, 05 Jun 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 05 Jun 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Your RAG score hides the diagnosis</title>
@@ -1246,10 +1246,10 @@ LLM evaluation, honestly
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-LLM evaluation, honestly
+<p>LLM evaluation, honestly</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -1357,7 +1357,7 @@ Figure&nbsp;1: One bad answer, five different bugs. The same wrong answer (“30
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/06-rag-evaluation/</guid>
-  <pubDate>Mon, 01 Jun 2026 04:00:00 GMT</pubDate>
+  <pubDate>Mon, 01 Jun 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Eval scores are samples, not truth</title>
@@ -1377,10 +1377,10 @@ Figure&nbsp;1: One bad answer, five different bugs. The same wrong answer (“30
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-LLM evaluation, honestly
+<p>LLM evaluation, honestly</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -1588,7 +1588,7 @@ Figure&nbsp;3: Small eval sets can’t see small gains. The smallest improvement
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/05-scores-are-samples/</guid>
-  <pubDate>Fri, 29 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 29 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Your LLM judge is a classifier</title>
@@ -1608,10 +1608,10 @@ Figure&nbsp;3: Small eval sets can’t see small gains. The smallest improvement
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-LLM evaluation, honestly
+<p>LLM evaluation, honestly</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -1732,7 +1732,7 @@ F1 on FAIL            = (2 * P * R) / (P + R) = 41%</code></pre>
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/04-judge-is-classifier/</guid>
-  <pubDate>Tue, 26 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 26 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Don’t ask an LLM judge what code can check</title>
@@ -1752,10 +1752,10 @@ F1 on FAIL            = (2 * P * R) / (P + R) = 41%</code></pre>
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-LLM evaluation, honestly
+<p>LLM evaluation, honestly</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -1937,7 +1937,7 @@ Figure&nbsp;1: One number can’t tell you what broke. The composite quality_jud
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/03-judge-vs-code/</guid>
-  <pubDate>Fri, 22 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 22 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Read traces before you write the labeling guide</title>
@@ -1957,10 +1957,10 @@ Figure&nbsp;1: One number can’t tell you what broke. The composite quality_jud
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-LLM evaluation, honestly
+<p>LLM evaluation, honestly</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -2039,7 +2039,7 @@ Figure&nbsp;1: Design the dataset on two axes. Coverage is what situations the s
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/02-eval-dataset/</guid>
-  <pubDate>Tue, 19 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 19 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Stop vibe-checking your agent</title>
@@ -2059,10 +2059,10 @@ Figure&nbsp;1: Design the dataset on two axes. Coverage is what situations the s
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-LLM evaluation, honestly
+<p>LLM evaluation, honestly</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -2270,7 +2270,7 @@ font-style: inherit;">"No refund-promise language"</span>)</span></code></pre></
  ]]></description>
   <category>LLM evaluation, honestly</category>
   <guid>https://yeesengchan.com/posts/series/llm-evaluation-honestly/01-stop-vibe-checking/</guid>
-  <pubDate>Fri, 15 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 15 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Traces are how agents get better</title>
@@ -2290,10 +2290,10 @@ font-style: inherit;">"No refund-promise language"</span>)</span></code></pre></
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-The agent harness
+<p>The agent harness</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -2684,7 +2684,7 @@ Figure&nbsp;1: The hardening loop. A failure produces a trace; the trace identif
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/05-traces/</guid>
-  <pubDate>Sun, 10 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sun, 10 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Prompts guide. Gates enforce</title>
@@ -2704,10 +2704,10 @@ Figure&nbsp;1: The hardening loop. A failure produces a trace; the trace identif
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-The agent harness
+<p>The agent harness</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -3001,7 +3001,7 @@ The harness verifies.</code></pre>
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/04-prompts-gate/</guid>
-  <pubDate>Fri, 01 May 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 01 May 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>State, not transcript, is agent memory</title>
@@ -3021,10 +3021,10 @@ The harness verifies.</code></pre>
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-The agent harness
+<p>The agent harness</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -3387,7 +3387,7 @@ font-style: inherit;">True</span></span></code></pre></div></div>
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/03-state-not-transcript/</guid>
-  <pubDate>Tue, 28 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 28 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>The harness is the product</title>
@@ -3407,10 +3407,10 @@ font-style: inherit;">True</span></span></code></pre></div></div>
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-The agent harness
+<p>The agent harness</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -3515,7 +3515,7 @@ Figure&nbsp;2: Three nested levels of engineering. Each level encompasses the pr
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/02-harness-is-the-product/</guid>
-  <pubDate>Thu, 23 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Thu, 23 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Why AI agent demos break in production</title>
@@ -3535,10 +3535,10 @@ Figure&nbsp;2: Three nested levels of engineering. Each level encompasses the pr
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-The agent harness
+<p>The agent harness</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -3810,7 +3810,7 @@ Figure&nbsp;1: Six failure shapes mapped to the control surfaces that should hav
  ]]></description>
   <category>The agent harness</category>
   <guid>https://yeesengchan.com/posts/series/the-agent-harness/01-demos-break/</guid>
-  <pubDate>Sat, 18 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sat, 18 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Behind the scenes of AI agent frameworks</title>
@@ -3830,10 +3830,10 @@ Figure&nbsp;1: Six failure shapes mapped to the control surfaces that should hav
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-What an agent actually is
+<p>What an agent actually is</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -4570,7 +4570,7 @@ font-style: inherit;"># dict</span></span></code></pre></div></div>
  ]]></description>
   <category>What an agent actually is</category>
   <guid>https://yeesengchan.com/posts/series/what-an-agent-actually-is/02-agent-frameworks/</guid>
-  <pubDate>Tue, 14 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 14 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>What the heck is an AI agent?</title>
@@ -4590,10 +4590,10 @@ font-style: inherit;"># dict</span></span></code></pre></div></div>
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-What an agent actually is
+<p>What an agent actually is</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -4723,7 +4723,7 @@ Yao, Shunyu, Jeffrey Zhao, Dian Yu, et al. 2023. <span>“ReAct: Synergizing Rea
 </div></section></div> ]]></description>
   <category>What an agent actually is</category>
   <guid>https://yeesengchan.com/posts/series/what-an-agent-actually-is/01-what-is-an-agent/</guid>
-  <pubDate>Sat, 11 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sat, 11 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Information extraction didn’t disappear. It moved inside the workflow.</title>
@@ -4743,10 +4743,10 @@ Yao, Shunyu, Jeffrey Zhao, Dian Yu, et al. 2023. <span>“ReAct: Synergizing Rea
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-Research foundations of modern LLMs
+<p>Research foundations of modern LLMs</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -5018,7 +5018,7 @@ Zhang, Zikun, Wei You, Tongtao Wu, Xiaolong Wang, Jianxin Li, and Min Zhang. 202
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/05-information-extraction/</guid>
-  <pubDate>Sun, 05 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sun, 05 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>The fine-tuning stack: one loss, different data</title>
@@ -5038,10 +5038,10 @@ Zhang, Zikun, Wei You, Tongtao Wu, Xiaolong Wang, Jianxin Li, and Min Zhang. 202
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-Research foundations of modern LLMs
+<p>Research foundations of modern LLMs</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -5177,7 +5177,7 @@ Zhou, Chunting, Pengfei Liu, Puxin Xu, et al. 2023. <span>“LIMA: Less Is More 
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/04-fine-tuning-stack/</guid>
-  <pubDate>Tue, 31 Mar 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 31 Mar 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Retrieval is older than RAG: from DPR to end-to-end</title>
@@ -5197,10 +5197,10 @@ Zhou, Chunting, Pengfei Liu, Puxin Xu, et al. 2023. <span>“LIMA: Less Is More 
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-Research foundations of modern LLMs
+<p>Research foundations of modern LLMs</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -5367,7 +5367,7 @@ Siriwardhana, Shamane, Rivindu Weerasekera, Elliott Wen, Tharindu Kaluarachchi, 
 </div></section></div> ]]></description>
   <category>Research foundations of modern LLMs</category>
   <guid>https://yeesengchan.com/posts/series/research-foundations-of-modern-llms/03-retrieval/</guid>
-  <pubDate>Fri, 27 Mar 2026 04:00:00 GMT</pubDate>
+  <pubDate>Fri, 27 Mar 2026 00:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>

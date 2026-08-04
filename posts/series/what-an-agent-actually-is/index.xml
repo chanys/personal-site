@@ -14,8 +14,8 @@
 <title>What an agent actually is — series</title>
 <link>https://yeesengchan.com/posts/series/what-an-agent-actually-is/</link>
 </image>
-<generator>quarto-1.9.37</generator>
-<lastBuildDate>Thu, 23 Jul 2026 04:00:00 GMT</lastBuildDate>
+<generator>quarto-1.10.18</generator>
+<lastBuildDate>Thu, 23 Jul 2026 00:00:00 GMT</lastBuildDate>
 <item>
   <title>What MCP Actually Removes From a Host</title>
   <dc:creator>Yee Seng Chan</dc:creator>
@@ -34,10 +34,10 @@
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-What an agent actually is
+<p>What an agent actually is</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -745,7 +745,7 @@ font-style: inherit;">in</span> mcp_tools]</span></code></pre></div></div>
  ]]></description>
   <category>What an agent actually is</category>
   <guid>https://yeesengchan.com/posts/series/what-an-agent-actually-is/03-what-mcp-removes/</guid>
-  <pubDate>Thu, 23 Jul 2026 04:00:00 GMT</pubDate>
+  <pubDate>Thu, 23 Jul 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Behind the scenes of AI agent frameworks</title>
@@ -765,10 +765,10 @@ font-style: inherit;">in</span> mcp_tools]</span></code></pre></div></div>
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-What an agent actually is
+<p>What an agent actually is</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -1505,7 +1505,7 @@ font-style: inherit;"># dict</span></span></code></pre></div></div>
  ]]></description>
   <category>What an agent actually is</category>
   <guid>https://yeesengchan.com/posts/series/what-an-agent-actually-is/02-agent-frameworks/</guid>
-  <pubDate>Tue, 14 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Tue, 14 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>What the heck is an AI agent?</title>
@@ -1525,10 +1525,10 @@ font-style: inherit;"># dict</span></span></code></pre></div></div>
      Files starting with "_" are never rendered as their own page. -->
 <div class="series-nav">
 <div class="series-label">
-Part of a series
+<p>Part of a series</p>
 </div>
 <div class="series-name">
-What an agent actually is
+<p>What an agent actually is</p>
 </div>
 <!-- Add parts as an ordered list below as you publish, e.g.
      1. [Part title](../01-slug/)
@@ -1658,7 +1658,7 @@ Yao, Shunyu, Jeffrey Zhao, Dian Yu, et al. 2023. <span>“ReAct: Synergizing Rea
 </div></section></div> ]]></description>
   <category>What an agent actually is</category>
   <guid>https://yeesengchan.com/posts/series/what-an-agent-actually-is/01-what-is-an-agent/</guid>
-  <pubDate>Sat, 11 Apr 2026 04:00:00 GMT</pubDate>
+  <pubDate>Sat, 11 Apr 2026 00:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
