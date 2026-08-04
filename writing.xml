@@ -126,7 +126,7 @@ Figure&nbsp;2: AnswerTrail on AWS. The browser loads a static site from S3 throu
 <p>Plenty of write-ups show how to build a retrieval agent. Far fewer report what one actually scores, and fewer still say how much to trust the score. Most of this article is about how that measurement was built and checked:</p>
 <ul>
 <li><strong>Data curation.</strong> 26,240 claims are extracted from the transcripts and composed into questions with their answers. The pipeline is semi-automatic: an LLM proposes at every stage, and a human adjudicates what survives. The result is 25 factual questions and 35 longitudinal questions, each carrying the facts its answer must state.</li>
-<li><strong>LLM judge calibration.</strong> Scoring uses one LLM judge, drawn from a different model family than the agent it grades. It agrees with a human on 66 blind-labeled pairs at Cohen’s kappa 0.879.</li>
+<li><strong>LLM judge calibration.</strong> Scoring uses one LLM judge, drawn from a different model family than the agent it grades. It agrees with a human on 66 blind-labeled pairs at Cohen’s kappa 0.88.</li>
 </ul>
 <section id="how-do-you-score-a-paragraph" class="level2">
 <h2 class="anchored" data-anchor-id="how-do-you-score-a-paragraph">How do you score a paragraph?</h2>
@@ -265,7 +265,7 @@ n3  He concluded the anticipated agentic-AI revolution had stalled [early 2026]<
 </section>
 <section id="one-judge-three-metrics" class="level2">
 <h2 class="anchored" data-anchor-id="one-judge-three-metrics">One judge, three metrics</h2>
-<p>With the gold built, the question is how the frozen agent scores against it. Scoring uses a single LLM judge that runs on a different model family, Claude Sonnet 5, from the OpenAI <code>gpt-5.4</code> agent it grades, so the system never grades its own output. The judge always does the same thing: given a CLAIM and a TEXT, it decides HIT or MISS on whether the text supports the claim. A snippet of the judge prompt:</p>
+<p>With the gold built, the question is how the frozen agent scores against it. Scoring uses a single LLM judge that runs on a different model family, Claude Sonnet 5, from the OpenAI <code>gpt-5.4</code> agent it grades, so no model ever marks its own answers. The judge always does the same thing: given a CLAIM and a TEXT, it decides HIT or MISS on whether the text supports the claim. A snippet of the judge prompt:</p>
 <pre><code>You decide whether a single CLAIM is supported by a given TEXT. Output a binary
 verdict - HIT or MISS - and a one-sentence reason. There is no middle category...
 Be strict about substance and lenient about wording. Do not reward a text that is
@@ -313,10 +313,13 @@ merely on the same topic; require that it actually supports the specific claim.<
 <section id="can-we-trust-the-judge" class="level2">
 <h2 class="anchored" data-anchor-id="can-we-trust-the-judge">Can we trust the judge?</h2>
 <p>Every number rests on the judge’s verdicts, and an LLM judge is itself a fallible model, so before relying on it we calibrate it against a human. We draw 66 claim-text pairs and hand each to both the judge and a human, who each say HIT or MISS on whether the claim is supported by the text.</p>
-<p>The pairs cover all three metrics: recall, retrieval, and groundedness. Each metric needs both clear hits and clear misses. Groundedness is almost always a hit, so we add a few constructed misses: one of the agent’s own claims paired with the chunks retrieved for a different, unrelated question, which cannot support it. The human labels all 66 blind, seeing only each claim and its text, with the judge’s verdict and reasoning hidden. Across the 66 pairs the judge called 36 hits and 30 misses, while the human labeled 32 hits and 34 misses.</p>
+<p>The pairs cover all three metrics: recall, retrieval, and groundedness. Each metric needs both clear hits and clear misses. Groundedness is almost always a hit, so we add a few constructed misses: one of the agent’s own claims paired with the chunks retrieved for a different, unrelated question, which cannot support it. Those constructed pairs mean the kappa below is measured on a negative-enriched sample rather than on the distribution groundedness actually sees at scoring time, where genuine misses are rare. The human labels all 66 blind, seeing only each claim and its text, with the judge’s verdict and reasoning hidden. Across the 66 pairs the judge called 37 hits and 29 misses, while the human labeled 33 of each.</p>
 <p>The calibration score is Cohen’s kappa: how often the two agree, corrected for the agreement expected by chance, where <img src="https://latex.codecogs.com/png.latex?p_o"> is the observed agreement and <img src="https://latex.codecogs.com/png.latex?p_e"> the agreement expected if each labeled at its own hit and miss rate.</p>
-<p><img src="https://latex.codecogs.com/png.latex?%5Ckappa%20=%20%5Cfrac%7Bp_o%20-%20p_e%7D%7B1%20-%20p_e%7D%0A%20%20%20%20%20%20%20=%20%5Cfrac%7B0.9394%20-%200.4986%7D%7B1%20-%200.4986%7D%20=%200.879"></p>
-<p>The two agreed on 62 of the 66 pairs, so <img src="https://latex.codecogs.com/png.latex?p_o%20=%200.9394">, and the chance agreement implied by the two label distributions is <img src="https://latex.codecogs.com/png.latex?p_e%20=%20%5Cfrac%7B36%7D%7B66%7D%5Ccdot%5Cfrac%7B32%7D%7B66%7D%20+%20%5Cfrac%7B30%7D%7B66%7D%5Ccdot%5Cfrac%7B34%7D%7B66%7D%20=%200.4986">. A kappa of 0.879 is high agreement, so the scores below reflect the agent’s behavior rather than the judge’s quirks.</p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Ckappa%20=%20%5Cfrac%7Bp_o%20-%20p_e%7D%7B1%20-%20p_e%7D%0A%20%20%20%20%20%20%20=%20%5Cfrac%7B0.9394%20-%200.5000%7D%7B1%20-%200.5000%7D%20=%200.88"></p>
+<p>The two agreed on 62 of the 66 pairs, so <img src="https://latex.codecogs.com/png.latex?p_o%20=%200.9394">, and the chance agreement implied by the two label distributions is <img src="https://latex.codecogs.com/png.latex?p_e%20=%20%5Cfrac%7B37%7D%7B66%7D%5Ccdot%5Cfrac%7B33%7D%7B66%7D%20+%20%5Cfrac%7B29%7D%7B66%7D%5Ccdot%5Cfrac%7B33%7D%7B66%7D%20=%200.5000">. A kappa of 0.88 is high agreement, so the scores below reflect the agent’s behavior rather than the judge’s quirks. The judge matched the human on all 33 hits and on 29 of the 33 misses.</p>
+<p>What calibration does not rule out.</p>
+<p>The judge never grades its own answers, but Sonnet 5 wrote the gold: it extracted the claims and composed the nuggets for both tiers. The judge may recognise its own family’s phrasing more readily than a human’s, which would inflate every recall number here.</p>
+<p>Two things bound the risk. A human vetted every gold item and cut most of what the model proposed, and a human matched the judge on 62 of 66 blind pairs. Neither settles it. That would take a hand-written gold subset or a third-family judge.</p>
 </section>
 <section id="the-results" class="level2">
 <h2 class="anchored" data-anchor-id="the-results">The results</h2>
@@ -360,21 +363,38 @@ Figure&nbsp;1: Every gold nugget, by what happened to it. The leftmost segment i
 </tbody>
 </table>
 <p>Groundedness stays high on both tiers, so the low longitudinal score is not a case of the agent inventing content, and almost everything it asserts is backed by the chunks it retrieved.</p>
-<p>Every figure here is pooled: a ratio of totals across all runs, rather than an average of per-question scores. The first two segments of a bar in the figure do not add up to the retrieval ceiling. For the longitudinal questions, 97 + 48 = 145 of 306 would be 47.4%, while the ceiling is 133 of 306, or 43.5%. The difference is 12 nuggets whose evidence was never retrieved but which the answer stated anyway, so they sit in the expressed segment while counting as not retrieved. The factual side has one such case, which is why 135 + 4 = 139 becomes a ceiling of 138 of 159.</p>
-<p>The two tiers even work differently. A factual run took about 5 reasoning loops and about 4 searches, and surfaced about 19 chunks for synthesis. A longitudinal run worked harder, about 7 loops and about 9 searches, often firing several searches in one loop, and surfaced about 40 chunks.</p>
+<p>The two tiers even work differently. A factual run took about 5 reasoning loops and about 4 searches, and surfaced about 19 chunks for synthesis. A longitudinal run worked harder, about 7 loops and about 9 searches, often firing several searches in one loop, and surfaced about 40 chunks. The extra work shows up on the bill. A factual run averaged $0.05 in model calls and a longitudinal run $0.12.</p>
 <p>Longitudinal questions are inherently harder to answer, so the lower score there is expected. A factual answer needs one fact that usually sits in one place, while a longitudinal answer has to find several stances spread across a year and then connect them.</p>
+<section id="how-the-numbers-are-computed" class="level3">
+<h3 class="anchored" data-anchor-id="how-the-numbers-are-computed">How the numbers are computed</h3>
+<p>Every figure is pooled: a ratio of totals across all runs, not an average of per-question scores. Intervals are bootstrapped over questions, since nuggets within a question are not independent.</p>
+<ul>
+<li>Factual recall: 84.9%, 95% interval [70, 97]</li>
+<li>Longitudinal recall: 31.7%, [24, 39]</li>
+</ul>
+<p>The factual interval is wide because 25 questions is the effective sample size, not 159 nugget-instances.</p>
+</section>
+<section id="why-the-bars-do-not-add-up" class="level3">
+<h3 class="anchored" data-anchor-id="why-the-bars-do-not-add-up">Why the bars do not add up</h3>
+<p>Expressed plus retrieved-but-unused should equal the retrieval ceiling. It does not.</p>
+<ul>
+<li>Longitudinal: 97 + 48 = 145 of 306, or 47.4%, against a ceiling of 133 of 306, or 43.5%.</li>
+<li>The 12-nugget gap is nuggets the answer stated without ever retrieving the evidence. They count as expressed but not as retrieved.</li>
+<li>Factual has one such case: 135 + 4 = 139 against a ceiling of 138 of 159.</li>
+</ul>
+</section>
 </section>
 <section id="what-would-move-it" class="level2">
 <h2 class="anchored" data-anchor-id="what-would-move-it">What would move it</h2>
 <p>With a judge we can trust, we can perform two pre-registered ablations.</p>
 <ul>
-<li><strong>Hybrid retrieval.</strong> Swap dense retrieval for dense plus BM25, fused with reciprocal rank fusion, on the longitudinal questions. The single hybrid run landed about 3 points below the dense baseline on both recall and the retrieval ceiling.</li>
-<li><strong>No agent loop.</strong> Replace the ReAct loop with one dense retrieval on the raw question and one synthesis call. Recall falls from 84.9% to 79.2% on factual questions and from 31.7% to 23.5% on longitudinal ones, so looping and issuing several different queries is worth 5.7 and 8.2 points.</li>
+<li><strong>Hybrid retrieval.</strong> Swap dense retrieval for dense plus BM25, fused with reciprocal rank fusion, on the longitudinal questions. The single hybrid run landed 3.3 points below the dense baseline on recall, but a paired bootstrap over the 35 questions puts that difference at [-4, +11], so this run cannot separate the two.</li>
+<li><strong>No agent loop.</strong> Replace the ReAct loop with one dense retrieval on the raw question and one synthesis call. Recall falls from 84.9% to 79.2% on factual questions and from 31.7% to 23.5% on longitudinal ones, so looping and issuing several different queries is worth 5.7 and 8.2 points. On longitudinal the paired interval is [+1, +15], which excludes zero.</li>
 </ul>
 </section>
 <section id="in-short" class="level2">
 <h2 class="anchored" data-anchor-id="in-short">In short</h2>
-<p>The factual-versus-longitudinal gap, 85% against 32%, is dominantly a retrieval problem: evidence for barely 44% of what a trajectory answer must say is ever retrieved. A better ranker does not get past it. The agent’s reasoning is not the bottleneck. The next thing worth building is retrieval that can surface evidence spread thinly across time, which is a different problem from making the agent smarter.</p>
+<p>The factual-versus-longitudinal gap, 85% against 32%, is dominantly a retrieval problem: evidence for barely 44% of what a trajectory answer must say is ever retrieved. Hybrid retrieval did not help here. The agent’s reasoning is not the bottleneck. The next thing worth building is retrieval that can surface evidence spread thinly across time, which is a different problem from making the agent smarter.</p>
 </section>
 <section id="code-companion" class="level2">
 <h2 class="anchored" data-anchor-id="code-companion">Code companion</h2>
