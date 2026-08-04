@@ -26,7 +26,7 @@ Retrieval is dense-only over Postgres, the model is stateless, and the agent dri
 Bounding the corpus to one channel is the point, not a limitation.
 The model has no parametric knowledge of what these particular videos say, so every answer has to come from what the agent retrieves rather than from the model's own memory.
 And because the agent may only read those transcripts, "the corpus cannot answer this" is a real outcome the system can reach and report, rather than a prompt it papers over.
-The live corpus is 475 videos from the channel's most recent 16 months, cut into 25,401 transcript chunks, about 52 per video.
+The live corpus is 475 videos from the channel's most recent 16 months, cut into 25,401 transcript chunks, about 53 per video.
 It is live at `answertrail.yeesengchan.com`, though the site may be taken down at times to avoid running costs.
 
 ## The corpus is built once, offline
@@ -69,7 +69,7 @@ Making the answer a tool is the design choice that carries the reliability, beca
 A rejected citation comes back on the normal tool-result channel to be fixed, an accepted answer is the loop's stop signal, and `tool_choice` can force the `submit_answer` call when the step budget runs out.
 
 Two guardrails keep the loop honest.
-The model must run at least a couple of distinct searches before it may answer, so it cannot answer without exploring.
+The model must run at least 2 distinct searches before it may answer, so it cannot answer without exploring.
 And a run that keeps searching but finds nothing still stops, reporting that the corpus cannot answer rather than looping forever.
 
 Every run is recorded as a `RunEvidenceState`: its searches and queries, the chunks retrieved and cited, the token usage and cost, and the outcome, stamped with the recipe version and the git SHA.
