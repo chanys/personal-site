@@ -24,6 +24,11 @@
 <p>AnswerTrail answers questions about one AI/LLM YouTube channel by reading that channel’s video transcripts, and it checks every citation in its answer against those transcripts before you ever see the answer. It runs live on AWS.</p>
 <p>The agent itself is the small part. The loop that drives it is about a page of control flow, and its answers hold up because of a citation check and two guardrails. The work is everything around the model, and it takes two articles.</p>
 <p>This one builds the system that produces the answers: the corpus it reads, the agent harness that searches and cites over that corpus, and the AWS stack that serves the whole thing. The <a href="../../posts/answertrail-evaluation/index.html">second article</a> is the evaluation: curating the gold data and running the experiments that measure how well the agent answers.</p>
+<section id="watch-the-demo" class="level2">
+<h2 class="anchored" data-anchor-id="watch-the-demo">Watch the demo</h2>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/yY83UsH2xXY" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+<p>A single question, start to finish: the agent searches, decides when it has enough, writes the answer, and every citation is validated before the answer appears. The last few seconds click a citation and land on the exact moment in the source video.</p>
+</section>
 <section id="what-answertrail-is" class="level2">
 <h2 class="anchored" data-anchor-id="what-answertrail-is">What AnswerTrail is</h2>
 <p>AnswerTrail is a deep-research agent over a <strong>bounded corpus</strong>, a fixed body of text the agent is allowed to read and nothing else. The corpus here is the video transcripts of a single AI/LLM YouTube channel. Given a question, the agent runs a ReAct loop written by hand: it searches the transcripts, reads what comes back, decides whether it has enough, and writes an answer whose citations are validated against the corpus. Retrieval is dense-only over Postgres, the model is stateless, and the agent drives its own exploration until it decides it is ready to answer.</p>

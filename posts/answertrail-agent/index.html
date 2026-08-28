@@ -49,9 +49,9 @@ ul.task-list li input[type="checkbox"] {
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-b536773ea9642060c833a78fc319e66a.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-5dddf4721a94098b9627856476617ab3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-26b7c3e7b0b32923c223cb3852583406.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-5dddf4721a94098b9627856476617ab3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-400ce268a5b35b24779d887f1d2b932b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-b3d046edf56f26c53f61784ad3c5a12d.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-400ce268a5b35b24779d887f1d2b932b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -348,7 +348,8 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">Contents</h2>
    
   <ul class="collapse">
-  <li><a href="#what-answertrail-is" id="toc-what-answertrail-is" class="nav-link active" data-scroll-target="#what-answertrail-is">What AnswerTrail is</a></li>
+  <li><a href="#watch-the-demo" id="toc-watch-the-demo" class="nav-link active" data-scroll-target="#watch-the-demo">Watch the demo</a></li>
+  <li><a href="#what-answertrail-is" id="toc-what-answertrail-is" class="nav-link" data-scroll-target="#what-answertrail-is">What AnswerTrail is</a></li>
   <li><a href="#the-corpus-is-built-once-offline" id="toc-the-corpus-is-built-once-offline" class="nav-link" data-scroll-target="#the-corpus-is-built-once-offline">The corpus is built once, offline</a></li>
   <li><a href="#the-agent-is-a-small-loop" id="toc-the-agent-is-a-small-loop" class="nav-link" data-scroll-target="#the-agent-is-a-small-loop">The agent is a small loop</a></li>
   <li><a href="#deployment-on-aws" id="toc-deployment-on-aws" class="nav-link" data-scroll-target="#deployment-on-aws">Deployment on AWS</a></li>
@@ -406,6 +407,11 @@ ul.task-list li input[type="checkbox"] {
 <p>AnswerTrail answers questions about one AI/LLM YouTube channel by reading that channel’s video transcripts, and it checks every citation in its answer against those transcripts before you ever see the answer. It runs live on AWS.</p>
 <p>The agent itself is the small part. The loop that drives it is about a page of control flow, and its answers hold up because of a citation check and two guardrails. The work is everything around the model, and it takes two articles.</p>
 <p>This one builds the system that produces the answers: the corpus it reads, the agent harness that searches and cites over that corpus, and the AWS stack that serves the whole thing. The <a href="../../posts/answertrail-evaluation/index.html">second article</a> is the evaluation: curating the gold data and running the experiments that measure how well the agent answers.</p>
+<section id="watch-the-demo" class="level2">
+<h2 class="anchored" data-anchor-id="watch-the-demo">Watch the demo</h2>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/yY83UsH2xXY" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+<p>A single question, start to finish: the agent searches, decides when it has enough, writes the answer, and every citation is validated before the answer appears. The last few seconds click a citation and land on the exact moment in the source video.</p>
+</section>
 <section id="what-answertrail-is" class="level2">
 <h2 class="anchored" data-anchor-id="what-answertrail-is">What AnswerTrail is</h2>
 <p>AnswerTrail is a deep-research agent over a <strong>bounded corpus</strong>, a fixed body of text the agent is allowed to read and nothing else. The corpus here is the video transcripts of a single AI/LLM YouTube channel. Given a question, the agent runs a ReAct loop written by hand: it searches the transcripts, reads what comes back, decides whether it has enough, and writes an answer whose citations are validated against the corpus. Retrieval is dense-only over Postgres, the model is stateless, and the agent drives its own exploration until it decides it is ready to answer.</p>
