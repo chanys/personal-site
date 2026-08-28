@@ -27,7 +27,7 @@ format:
 
 A deep-research agent that answers questions over one AI/LLM YouTube channel's transcripts, with [every citation validated against the corpus]{.gt-span .gt-b} before an answer is returned. A hand-written ReAct loop searches dense retrieval over Postgres, the whole system deploys live on AWS from a single-command Terraform stack, and a nugget-based evaluation with a [cross-family judge calibrated to Cohen's kappa 0.879]{.gt-span} measures how well it answers.
 
-[Building it →](/posts/answertrail-agent/){.proj-cta} [Evaluating it →](/posts/answertrail-evaluation/){.proj-cta} [Code →](https://github.com/chanys/bounded-deep-research){.proj-cta}
+[Watch the demo →](/posts/answertrail-agent/#watch-the-demo){.proj-cta} [Building it →](/posts/answertrail-agent/){.proj-cta} [Evaluating it →](/posts/answertrail-evaluation/){.proj-cta} [Code →](https://github.com/chanys/bounded-deep-research){.proj-cta}
 
 ## Clinical documentation pipeline
 ```{=html}
