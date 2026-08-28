@@ -16,6 +16,12 @@ The work is everything around the model, and it takes two articles.
 This one builds the system that produces the answers: the corpus it reads, the agent harness that searches and cites over that corpus, and the AWS stack that serves the whole thing.
 The [second article](/posts/answertrail-evaluation/index.qmd) is the evaluation: curating the gold data and running the experiments that measure how well the agent answers.
 
+## Watch the demo
+
+{{< video https://www.youtube.com/watch?v=yY83UsH2xXY >}}
+
+A single question, start to finish: the agent searches, decides when it has enough, writes the answer, and every citation is validated before the answer appears. The last few seconds click a citation and land on the exact moment in the source video.
+
 ## What AnswerTrail is
 
 AnswerTrail is a deep-research agent over a **bounded corpus**, a fixed body of text the agent is allowed to read and nothing else.
