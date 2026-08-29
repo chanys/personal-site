@@ -9,6 +9,13 @@
 <link>https://yeesengchan.com/writing.html</link>
 <atom:link href="https://yeesengchan.com/writing.xml" rel="self" type="application/rss+xml"/>
 <description>Essays on how modern language models work, and on building and evaluating the systems around them.</description>
+<image>
+<url>https://yeesengchan.com/writing-thumbnail.png</url>
+<title>Yee Seng Chan — Writing</title>
+<link>https://yeesengchan.com/writing.html</link>
+<height>76</height>
+<width>144</width>
+</image>
 <generator>quarto-1.10.18</generator>
 <lastBuildDate>Sun, 02 Aug 2026 00:00:00 GMT</lastBuildDate>
 <item>
