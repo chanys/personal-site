@@ -1,6 +1,10 @@
 ---
 title: "Writing"
 description: "Essays on how modern language models work, and on building and evaluating the systems around them."
+# Social-card image (og:image). Quarto only auto-derives og:image from the
+# first image in the rendered page, and this listing renders none, so without
+# this line LinkedIn and other crawlers show the link with no thumbnail.
+image: writing-thumbnail.png
 page-layout: full
 format:
   html:
