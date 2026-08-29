@@ -4,6 +4,7 @@ project:
     - CNAME
     - profile.svg
     - series-placeholder.svg
+    - writing-thumbnail.png
 
 website:
   title: "Yee Seng Chan"
